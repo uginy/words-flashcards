@@ -195,6 +195,7 @@ export const useWords = () => {
 
   const clearAllWords = () => {
     // Reset to initial state - this will trigger our useEffect which saves to localStorage
+    saveToLocalStorage({ words: [], currentIndex: 0 });
     setState(initialState);
     toast({
       title: "Успех!",

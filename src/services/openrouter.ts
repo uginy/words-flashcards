@@ -123,8 +123,8 @@ Provide ONLY the JSON object with the "words" array in your response, with no ot
     const completion = await openai.chat.completions.create({
       model: modelIdentifier,
       messages: [{ role: 'user', content: prompt }],
-      temperature: 0.3,
       response_format: { type: "json_object" },
+      stream: false // Explicitly disable streaming
     });
 
     if (!completion.choices || completion.choices.length === 0 || !completion.choices[0].message || !completion.choices[0].message.content) {
