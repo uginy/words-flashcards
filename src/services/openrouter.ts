@@ -8,29 +8,13 @@ interface LLMBatchResponseItem {
   transcription: string;
   russian: string;
   conjugations?: {
-    past?: { [key: string]: string };
-    present?: { [key: string]: string };
-    future?: { [key: string]: string };
-    imperative?: { [key: string]: string };
+    past?: { [pronoun: string]: string }; // Hebrew pronouns like אני, אתה, etc.
+    present?: { [pronoun: string]: string };
+    future?: { [pronoun: string]: string };
+    imperative?: { [pronoun: string]: string };
   };
   example?: string;
   error?: string; // If the LLM reports an error for a specific word
-}
-
-// Interface for the expected structure of a single item from the LLM single word response
-interface LLMSingleResponse {
-  category?: WordCategory;
-  hebrew?: string;
-  transcription?: string;
-  russian?: string;
-  conjugations?: {
-    past?: { [key: string]: string };
-    present?: { [key: string]: string };
-    future?: { [key: string]: string };
-    imperative?: { [key: string]: string };
-  };
-  example?: string;
-  error?: string; // If the LLM cannot process the word
 }
 
 export async function enrichWordsWithLLM(
@@ -56,6 +40,7 @@ export async function enrichWordsWithLLM(
   const prompt = `For each Hebrew word or phrase in the following list [${wordsListString}], provide the following information.
 Your response must be a single JSON object. This object must have a key named "words", and its value must be a JSON array.
 Each item in the "words" array should be a JSON object corresponding to one word or phrase from the input list.
+All conjugations must be provided in Hebrew only, with Hebrew pronouns.
 
 IMPORTANT RULES FOR PROCESSING:
 1. If the input contains spaces (multiple words), translate it as a complete phrase, preserving its meaning.
@@ -129,7 +114,8 @@ The JSON object for each word/phrase should look like this:
 }
 
 Focus on providing accurate hebrew, transcription, russian, and category fields.
-For verbs (פועל), always include complete conjugation tables.
+For verbs (פועל), always include complete conjugation tables using Hebrew pronouns (אני, אתה, את, הוא, היא, אנחנו, אתם, אתן, הם, הן).
+All conjugations must be in Hebrew only, do not transliterate them.
 For multi-word inputs, ensure the translation preserves the full meaning of the phrase.
 If you cannot process a specific word/phrase, include an "error" field in its JSON object with a brief explanation, but still try to process other entries.
 Provide ONLY the JSON object with the "words" array in your response, with no other text before or after it. The array should contain one object for each word in the input list you were given at the beginning of this prompt.`;
@@ -229,169 +215,5 @@ Provide ONLY the JSON object with the "words" array in your response, with no ot
       throw new Error(`OpenAI API Error: ${error.status} ${error.name} ${error.message}`);
     }
     throw error;
-  }
-}
-
-export async function enrichWordWithLLM(
-  hebrewWord: string,
-  apiKey: string,
-  modelIdentifier: string
-): Promise<Word | null> {
-  if (!apiKey || !modelIdentifier) {
-    throw new Error('API key or model not configured.');
-  }
-
-  const openai = new OpenAI({
-    baseURL: "https://openrouter.ai/api/v1",
-    apiKey: apiKey,
-    dangerouslyAllowBrowser: true,
-  });
-
-  const prompt = `For the Hebrew word or phrase "${hebrewWord}", provide the following information strictly in JSON format.
-Your response must be a single JSON object.
-
-IMPORTANT RULES FOR PROCESSING:
-1. If the input contains spaces (multiple words), translate it as a complete phrase, preserving its meaning.
-2. For phrases and compound words, try to categorize them appropriately in Hebrew:
-   - If it's a verbal phrase or a verb -> categorize as "פועל" (verb - po'al)
-   - If it's a noun phrase -> categorize as "שם עצם" (noun - shem etzem)
-   - If it describes quality -> categorize as "שם תואר" (adjective - shem to'ar)
-   - If unsure -> categorize as "אחר" (other - acher)
-
-The JSON object should look like this:
-{
-  "id": "...", // Will be set by the app
-  "hebrew": "${hebrewWord}",
-  "transcription": "...", // Romanized transcription of the full phrase
-  "russian": "...", // Russian translation of the full phrase
-  "category": "שם עצם", // Only one of: שם עצם, פועל, שם תואר, אחר
-  "showTranslation": false,
-  "learned": false,
-  "learningStage": 0,
-  "lastReviewed": null,
-  "nextReview": null,
-  "dateAdded": null, // Will be set by the app
-  "conjugations": { // Only for verbs (פועל), omit for other categories
-    "past": {
-      "я (м)": "...",
-      "я (ж)": "...",
-      "ты (м)": "...",
-      "ты (ж)": "...",
-      "он": "...",
-      "она": "...",
-      "мы": "...",
-      "вы (м)": "...",
-      "вы (ж)": "...",
-      "они (м)": "...",
-      "они (ж)": "..."
-    },
-    "present": {
-      "я (м)": "...",
-      "я (ж)": "...",
-      "ты (м)": "...",
-      "ты (ж)": "...",
-      "он": "...",
-      "она": "...",
-      "мы": "...",
-      "вы (м)": "...",
-      "вы (ж)": "...",
-      "они (м)": "...",
-      "они (ж)": "..."
-    },
-    "future": {
-      "я (м)": "...",
-      "я (ж)": "...",
-      "ты (м)": "...",
-      "ты (ж)": "...",
-      "он": "...",
-      "она": "...",
-      "мы": "...",
-      "вы (м)": "...",
-      "вы (ж)": "...",
-      "они (м)": "...",
-      "они (ж)": "..."
-    },
-    "imperative": {
-      "ты (м)": "...",
-      "ты (ж)": "...",
-      "вы (м)": "...",
-      "вы (ж)": "..."
-    }
-  },
-  "example": "..." // Optional Hebrew example sentence using this word/phrase
-}
-
-Focus on providing accurate hebrew, transcription, russian, and category fields.
-For verbs (פועל), always include complete conjugation tables.
-For multi-word inputs, ensure the translation preserves the full meaning of the phrase.
-If you cannot process the word/phrase or find the required information, your JSON response should be an object with an "error" key, like this: { "error": "Could not process the word/phrase [reason]" }.
-Provide ONLY the JSON object in your response, with no other text before or after it.`;
-
-  try {
-    const completion = await openai.chat.completions.create({
-      model: modelIdentifier,
-      messages: [{ role: 'user', content: prompt }],
-      temperature: 0.3,
-      response_format: { type: "json_object" },
-    });
-
-    if (!completion.choices || completion.choices.length === 0 || !completion.choices[0].message || !completion.choices[0].message.content) {
-      console.error(`Invalid LLM response structure (single for "${hebrewWord}"): No content or choices.`, completion);
-      throw new Error(`Invalid LLM response structure (single for "${hebrewWord}"): No content or choices.`);
-    }
-    const content = completion.choices[0].message.content;
-
-    let wordObject: LLMSingleResponse;
-    try {
-      wordObject = JSON.parse(content);
-    } catch (e) {
-      console.error(`Failed to parse LLM response content as JSON (single for "${hebrewWord}"). Content:`, content, 'Error:', e);
-      throw new Error(`LLM response content for "${hebrewWord}" was not valid JSON.`);
-    }
-
-    if (wordObject.error) {
-      console.warn(`LLM reported error for word "${hebrewWord}": ${String(wordObject.error)}`);
-      return null;
-    }
-
-    const hebrew = String(wordObject.hebrew || '');
-    const transcription = String(wordObject.transcription || '');
-    const russian = String(wordObject.russian || '');
-    const category = String(wordObject.category || 'other');
-
-    if (!hebrew || !transcription || !russian) {
-      console.warn(`LLM response for "${hebrewWord}" missing critical fields (hebrew, transcription, russian) after stringification:`, {
-        originalObject: wordObject,
-        processed: { hebrew, transcription, russian, category }
-      });
-      return null;
-    }
-
-    return {
-      id: String(Date.now()) + Math.random().toString(36).substring(2, 9),
-      hebrew: hebrew,
-      transcription: transcription,
-      russian: russian,
-      category: category as Word['category'],
-      conjugations: wordObject.conjugations,
-      example: wordObject.example ? String(wordObject.example) : undefined,
-      showTranslation: false,
-      learned: false, // Changed from isLearned to learned
-      learningStage: 0,
-      lastReviewed: null,
-      nextReview: null,
-      dateAdded: Date.now(),
-    };
-
-  } catch (error) {
-    console.error(`Error enriching word "${hebrewWord}" with LLM (single):`, error);
-    if (error instanceof OpenAI.APIError) {
-      throw new Error(`OpenAI API Error for "${hebrewWord}": ${error.status} ${error.name} ${error.message}`);
-    }
-    // Ensure a generic error is thrown if it's not already an Error instance
-    if (error instanceof Error) {
-        throw error;
-    }
-    throw new Error(`An unknown error occurred during LLM single word enrichment for "${hebrewWord}".`);
   }
 }
