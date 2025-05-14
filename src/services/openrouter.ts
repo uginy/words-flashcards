@@ -1,24 +1,34 @@
-import { Word } from '../types';
+import { Word, WordCategory } from '../types';
 import OpenAI from 'openai';
 
 // Interface for the expected structure of a single item from the LLM batch response
 interface LLMBatchResponseItem {
-  category: string;
+  category: WordCategory;
   hebrew: string;
   transcription: string;
   russian: string;
-  conjugation?: string;
+  conjugations?: {
+    past?: { [key: string]: string };
+    present?: { [key: string]: string };
+    future?: { [key: string]: string };
+    imperative?: { [key: string]: string };
+  };
   example?: string;
   error?: string; // If the LLM reports an error for a specific word
 }
 
 // Interface for the expected structure of a single item from the LLM single word response
 interface LLMSingleResponse {
-  category?: string;
+  category?: WordCategory;
   hebrew?: string;
   transcription?: string;
   russian?: string;
-  conjugation?: string;
+  conjugations?: {
+    past?: { [key: string]: string };
+    present?: { [key: string]: string };
+    future?: { [key: string]: string };
+    imperative?: { [key: string]: string };
+  };
   example?: string;
   error?: string; // If the LLM cannot process the word
 }
@@ -43,21 +53,85 @@ export async function enrichWordsWithLLM(
 
   const wordsListString = hebrewWords.map(word => `"${word}"`).join(', ');
 
-  const prompt = `For each Hebrew word in the following list [${wordsListString}], provide the following information.
+  const prompt = `For each Hebrew word or phrase in the following list [${wordsListString}], provide the following information.
 Your response must be a single JSON object. This object must have a key named "words", and its value must be a JSON array.
-Each item in the "words" array should be a JSON object corresponding to one word from the input list.
-The JSON object for each word should look like this:
+Each item in the "words" array should be a JSON object corresponding to one word or phrase from the input list.
+
+IMPORTANT RULES FOR PROCESSING:
+1. If the input contains spaces (multiple words), translate it as a complete phrase, preserving its meaning.
+2. For phrases and compound words, try to categorize them appropriately in Hebrew:
+   - If it's a verbal phrase or a verb -> categorize as "פועל" (verb - po'al)
+   - If it's a noun phrase -> categorize as "שם עצם" (noun - shem etzem)
+   - If it describes quality -> categorize as "שם תואר" (adjective - shem to'ar)
+   - If unsure -> categorize as "אחר" (other - acher)
+
+The JSON object for each word/phrase should look like this:
 {
-  "category": "...", // Noun, Verb, Adjective, Adverb, Preposition, Conjunction, Pronoun, Other
-  "hebrew": "THE_ORIGINAL_HEBREW_WORD_HERE",
-  "transcription": "...",
-  "russian": "...",
-  "conjugation": "...", // Optional, empty string or omit if not applicable
-  "example": "..."     // Optional, empty string or omit if not applicable
+  "id": "...", // Will be set by the app
+  "hebrew": "THE_ORIGINAL_HEBREW_INPUT_HERE",
+  "transcription": "...", // Romanized transcription of the full phrase
+  "russian": "...", // Russian translation of the full phrase
+  "category": "שם עצם", // Only one of: שם עצם, פועל, שם תואר, אחר
+  "showTranslation": false,
+  "learned": false,
+  "learningStage": 0,
+  "lastReviewed": null,
+  "nextReview": null,
+  "dateAdded": null, // Will be set by the app
+  "conjugations": { // Only for verbs (פועל), omit for other categories
+    "past": {
+      "я (м)": "...",
+      "я (ж)": "...",
+      "ты (м)": "...",
+      "ты (ж)": "...",
+      "он": "...",
+      "она": "...",
+      "мы": "...",
+      "вы (м)": "...",
+      "вы (ж)": "...",
+      "они (м)": "...",
+      "они (ж)": "..."
+    },
+    "present": {
+      "я (м)": "...",
+      "я (ж)": "...",
+      "ты (м)": "...",
+      "ты (ж)": "...",
+      "он": "...",
+      "она": "...",
+      "мы": "...",
+      "вы (м)": "...",
+      "вы (ж)": "...",
+      "они (м)": "...",
+      "они (ж)": "..."
+    },
+    "future": {
+      "я (м)": "...",
+      "я (ж)": "...",
+      "ты (м)": "...",
+      "ты (ж)": "...",
+      "он": "...",
+      "она": "...",
+      "мы": "...",
+      "вы (м)": "...",
+      "вы (ж)": "...",
+      "они (м)": "...",
+      "они (ж)": "..."
+    },
+    "imperative": {
+      "ты (м)": "...",
+      "ты (ж)": "...",
+      "вы (м)": "...",
+      "вы (ж)": "..."
+    }
+  },
+  "example": "..." // Optional Hebrew example sentence using this word/phrase
 }
-Ensure the transcription is accurate and the Russian translation is common.
-If conjugation or an example sentence is not easily determined, provide an empty string or omit the field.
-If you cannot process a specific word, include an "error" field in its JSON object with a brief explanation, but still try to process other words.
+
+Focus on providing accurate hebrew, transcription, russian, and category fields.
+For verbs (פועל), always include complete conjugation tables.
+For multi-word inputs, ensure the translation preserves the full meaning of the phrase.
+If you cannot process a specific word/phrase, include an "error" field in its JSON object with a brief explanation, but still try to process other entries.
 Provide ONLY the JSON object with the "words" array in your response, with no other text before or after it. The array should contain one object for each word in the input list you were given at the beginning of this prompt.`;
 
   try {
@@ -137,7 +211,7 @@ Provide ONLY the JSON object with the "words" array in your response, with no ot
         transcription: transcription,
         russian: russian,
         category: category as Word['category'],
-        conjugation: currentItem.conjugation ? String(currentItem.conjugation) : undefined,
+        conjugations: currentItem.conjugations,
         example: currentItem.example ? String(currentItem.example) : undefined,
         showTranslation: false,
         learned: false, // Changed from isLearned to learned
@@ -173,22 +247,84 @@ export async function enrichWordWithLLM(
     dangerouslyAllowBrowser: true,
   });
 
-  const prompt = `For the Hebrew word "${hebrewWord}", provide the following information strictly in JSON format.
+  const prompt = `For the Hebrew word or phrase "${hebrewWord}", provide the following information strictly in JSON format.
 Your response must be a single JSON object.
+
+IMPORTANT RULES FOR PROCESSING:
+1. If the input contains spaces (multiple words), translate it as a complete phrase, preserving its meaning.
+2. For phrases and compound words, try to categorize them appropriately in Hebrew:
+   - If it's a verbal phrase or a verb -> categorize as "פועל" (verb - po'al)
+   - If it's a noun phrase -> categorize as "שם עצם" (noun - shem etzem)
+   - If it describes quality -> categorize as "שם תואר" (adjective - shem to'ar)
+   - If unsure -> categorize as "אחר" (other - acher)
+
 The JSON object should look like this:
 {
-  "category": "...", // Noun, Verb, Adjective, Adverb, Preposition, Conjunction, Pronoun, Other
+  "id": "...", // Will be set by the app
   "hebrew": "${hebrewWord}",
-  "transcription": "...",
-  "russian": "...",
-  "conjugation": "...", // Optional, empty string or omit if not applicable
-  "example": "..."     // Optional, empty string or omit if not applicable
+  "transcription": "...", // Romanized transcription of the full phrase
+  "russian": "...", // Russian translation of the full phrase
+  "category": "שם עצם", // Only one of: שם עצם, פועל, שם תואר, אחר
+  "showTranslation": false,
+  "learned": false,
+  "learningStage": 0,
+  "lastReviewed": null,
+  "nextReview": null,
+  "dateAdded": null, // Will be set by the app
+  "conjugations": { // Only for verbs (פועל), omit for other categories
+    "past": {
+      "я (м)": "...",
+      "я (ж)": "...",
+      "ты (м)": "...",
+      "ты (ж)": "...",
+      "он": "...",
+      "она": "...",
+      "мы": "...",
+      "вы (м)": "...",
+      "вы (ж)": "...",
+      "они (м)": "...",
+      "они (ж)": "..."
+    },
+    "present": {
+      "я (м)": "...",
+      "я (ж)": "...",
+      "ты (м)": "...",
+      "ты (ж)": "...",
+      "он": "...",
+      "она": "...",
+      "мы": "...",
+      "вы (м)": "...",
+      "вы (ж)": "...",
+      "они (м)": "...",
+      "они (ж)": "..."
+    },
+    "future": {
+      "я (м)": "...",
+      "я (ж)": "...",
+      "ты (м)": "...",
+      "ты (ж)": "...",
+      "он": "...",
+      "она": "...",
+      "мы": "...",
+      "вы (м)": "...",
+      "вы (ж)": "...",
+      "они (м)": "...",
+      "они (ж)": "..."
+    },
+    "imperative": {
+      "ты (м)": "...",
+      "ты (ж)": "...",
+      "вы (м)": "...",
+      "вы (ж)": "..."
+    }
+  },
+  "example": "..." // Optional Hebrew example sentence using this word/phrase
 }
-Ensure the transcription is accurate and the Russian translation is common.
-The category should be one of: Noun, Verb, Adjective, Adverb, Preposition, Conjunction, Pronoun, Other.
-If conjugation is not applicable or not easily determined, provide an empty string or omit the field.
-If an example sentence is not easily determined, provide an empty string or omit the field.
-If you cannot process the word or find the required information, your JSON response should be an object with an "error" key, like this: { "error": "Could not process the word [reason]" }.
+
+Focus on providing accurate hebrew, transcription, russian, and category fields.
+For verbs (פועל), always include complete conjugation tables.
+For multi-word inputs, ensure the translation preserves the full meaning of the phrase.
+If you cannot process the word/phrase or find the required information, your JSON response should be an object with an "error" key, like this: { "error": "Could not process the word/phrase [reason]" }.
 Provide ONLY the JSON object in your response, with no other text before or after it.`;
 
   try {
@@ -237,7 +373,7 @@ Provide ONLY the JSON object in your response, with no other text before or afte
       transcription: transcription,
       russian: russian,
       category: category as Word['category'],
-      conjugation: wordObject.conjugation ? String(wordObject.conjugation) : undefined,
+      conjugations: wordObject.conjugations,
       example: wordObject.example ? String(wordObject.example) : undefined,
       showTranslation: false,
       learned: false, // Changed from isLearned to learned

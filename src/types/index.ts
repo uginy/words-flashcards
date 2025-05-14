@@ -1,4 +1,4 @@
-export type WordCategory = 'noun' | 'verb' | 'adjective' | 'other';
+export type WordCategory = 'שם עצם' | 'פועל' | 'שם תואר' | 'אחר';  // существительное | глагол | прилагательное | другое
 
 export interface Word {
   id: string;
@@ -6,7 +6,12 @@ export interface Word {
   russian: string;
   transcription: string;
   category: WordCategory;
-  conjugation?: string;
+  conjugations?: {
+    past?: { [key: string]: string };     // прошедшее время
+    present?: { [key: string]: string };  // настоящее время
+    future?: { [key: string]: string };   // будущее время
+    imperative?: { [key: string]: string }; // повелительное наклонение
+  };
   example?: string; // Added for usage examples
   learned: boolean;
   dateAdded: number;

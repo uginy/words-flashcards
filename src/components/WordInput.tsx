@@ -164,7 +164,7 @@ const WordInput: React.FC<WordInputProps> = ({ onAddWords }) => {
           )}
           <div className="mb-3">
             <label htmlFor="wordInput" className="block text-sm font-medium text-gray-700 mb-1">
-              Добавляйте список слов, каждое слово должно להיות на новой строке. Мы сами проанализируем его и корректно добавим в базу.
+              Добавляйте список слов, каждое слово должно быть на новой строке. Мы сами проанализируем его и корректно добавим в базу.
             </label>
             <textarea
               id="wordInput"
