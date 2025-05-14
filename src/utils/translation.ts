@@ -46,7 +46,7 @@ export const parseAndTranslateWords = (text: string): Word[] => {
       category,
       conjugation: conjugation || undefined,
       example: example || undefined,
-      learned: false,
+      isLearned: false, // Corrected from 'learned' to 'isLearned'
       dateAdded: Date.now(),
     });
   });
@@ -54,16 +54,4 @@ export const parseAndTranslateWords = (text: string): Word[] => {
   return newWords;
 };
 
-// CategorizeWord might be less relevant if category is always provided,
-// but can be kept as a utility or for other purposes.
-export const categorizeWord = (word: string): WordCategory => {
-  // This logic might need adjustment or could be deprecated
-  // if categories are strictly enforced by the input format.
-  if (word.startsWith('ל')) {
-    return 'verb';
-  }
-  if (/[ת]$/.test(word) || word.includes('-')) {
-    return 'adjective';
-  }
-  return 'noun'; // Defaulting to noun, adjust as needed
-};
+// Removed categorizeWord function as it is no longer used.

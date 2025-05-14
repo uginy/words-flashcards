@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { parseAndTranslateWords } from '../utils/translation';
-import { enrichWordWithLLM } from '../services/openrouter';
+import { enrichWordsWithLLM } from '../services/openrouter'; // Removed unused enrichWordWithLLM
 import { Word } from '../types';
 
 interface WordInputProps {
@@ -19,12 +19,16 @@ const WordInput: React.FC<WordInputProps> = ({ onAddWords }) => {
 
     setIsLoading(true);
     setError(null);
+    let wordsToAdd: Word[] = [];
+    let pathTaken: 'structured' | 'llm' | 'none' = 'none';
+    let hebrewWordsForLlm: string[] = []; // Declare here for wider scope
 
     try {
-      let wordsToAdd: Word[] = [];
-      if (inputText.includes(' - ')) { // Heuristic for structured input
+      if (inputText.includes(' - ')) {
+        pathTaken = 'structured';
         wordsToAdd = parseAndTranslateWords(inputText);
       } else {
+        pathTaken = 'llm';
         const apiKey = localStorage.getItem('openRouterApiKey');
         const model = localStorage.getItem('openRouterModel');
 
@@ -34,38 +38,58 @@ const WordInput: React.FC<WordInputProps> = ({ onAddWords }) => {
           return;
         }
 
-        const hebrewWords = inputText.split('\\n').map(word => word.trim()).filter(word => word);
-        if (hebrewWords.length === 0) {
-          setError('No Hebrew words provided for enrichment.');
+        // Assign to the higher-scoped variable
+        hebrewWordsForLlm = inputText.split('\n').map(word => word.trim()).filter(word => word);
+        if (hebrewWordsForLlm.length === 0) {
+          setError('No Hebrew words provided for enrichment. Please enter some words.');
           setIsLoading(false);
           return;
         }
         
-        // Process words sequentially to avoid overwhelming the API or hitting rate limits quickly.
-        // For a better UX with many words, consider parallel requests with a concurrency limit.
-        for (const hebrewWord of hebrewWords) {
-          try {
-            const enrichedWord = await enrichWordWithLLM(hebrewWord, apiKey, model);
-            if (enrichedWord) {
-              wordsToAdd.push(enrichedWord);
-            }
-          } catch (enrichError: any) {
-            console.error(`Error enriching word "${hebrewWord}":`, enrichError);
-            setError(`Failed to enrich "${hebrewWord}": ${enrichError.message}. Some words may not have been added.`);
-            // Optionally, decide if you want to stop or continue with other words
+        try {
+          // Use the higher-scoped variable
+          const enrichedWordsArray = await enrichWordsWithLLM(hebrewWordsForLlm, apiKey, model);
+          wordsToAdd = enrichedWordsArray;
+
+          if (wordsToAdd.length < hebrewWordsForLlm.length) {
+            const successfullyProcessedCount = wordsToAdd.length;
+            const failedCount = hebrewWordsForLlm.length - successfullyProcessedCount;
+            setError(
+              `Processed ${hebrewWordsForLlm.length} words. ` +
+              `${successfullyProcessedCount} added successfully. ` +
+              `${failedCount} word(s) could not be enriched (e.g., missing info or LLM error). Check console for details.`
+            );
+          } else if (wordsToAdd.length === 0 && hebrewWordsForLlm.length > 0) {
+             setError('LLM processing completed, but no information could be generated for any of the words. Please check the words or try a different LLM model.');
           }
+
+        } catch (batchError: any) {
+          console.error('Error enriching words in batch:', batchError);
+          setError(`Batch LLM enrichment failed: ${batchError.message}`);
         }
       }
 
       if (wordsToAdd.length > 0) {
         onAddWords(wordsToAdd);
         setInputText('');
-        setIsOpen(false); // Close accordion on successful submission
-      } else if (!error) { // If no words were added and no specific error was set for enrichment
-        setError('No words were processed or added. Please check your input or API configuration.');
+        if (!error || (pathTaken === 'llm' && wordsToAdd.length === hebrewWordsForLlm.length)) {
+            setIsOpen(false);
+        }
+      } else { // wordsToAdd is empty
+        if (!error) { // And no specific error was set during the process
+          if (pathTaken === 'llm') {
+            setError('LLM processing completed, but no information could be generated for any of the words. Please check the words or try a different LLM model.');
+          } else if (pathTaken === 'structured') {
+            setError('Input was processed, but no words could be extracted. Please check your input format, e.g., Категория - Иврит - Транскрипция - Русский - [Спряжение] - [Пример]');
+          } else {
+            setError('No words were processed. Please check your input.');
+          }
+        }
+        // If 'error' IS set (e.g. API key missing, or individual LLM calls failed and set the error),
+        // that error is already displayed. Nothing more to do here for that case.
       }
 
-    } catch (err: any) {
+    } catch (err: any) { // Catch errors from parseAndTranslateWords or other unexpected errors
       console.error('Error processing words:', err);
       setError(err.message || 'An unexpected error occurred.');
     } finally {
@@ -128,7 +152,7 @@ const WordInput: React.FC<WordInputProps> = ({ onAddWords }) => {
             )}
             <div className="mb-3">
               <label htmlFor="wordInput" className="block text-sm font-medium text-gray-700 mb-1">
-                Добавляйте список слов, каждое слово должно быть на новой строке. Мы сами проанализируем его и корректно добавим в базу.
+                Добавляйте список слов, каждое слово должно להיות на новой строке. Мы сами проанализируем его и корректно добавим в базу.
               </label>
               <textarea
                 id="wordInput"
