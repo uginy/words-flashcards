@@ -138,7 +138,7 @@ const WordInput: React.FC<WordInputProps> = ({ onAddWords }) => {
                 onChange={(e) => setInputText(e.target.value)}
                 onPaste={handlePaste}
                 dir="auto" // Changed to auto to better support mixed LTR/RTL for instructions and RTL for Hebrew
-                placeholder="Пример структурированного ввода:&#10;Глагол - ללמוד - лильмוד - учить - [לומד, לומדת] - [אני אוהב ללמוד עברית.]&#10;&#10;Пример для LLM обогащения:&#10;שלום&#10;תודה"
+                placeholder="שלום&#10;תודה רבה&#10;ספר טוב&#10;ללמוד"
               />
             </div>
             

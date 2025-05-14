@@ -1,8 +1,7 @@
-
 import React, { useState, useEffect } from 'react';
 
-const OPENROUTER_API_KEY_STORAGE_KEY = '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';
-const OPENROUTER_SELECTED_MODEL_STORAGE_KEY = 'meta-llama/llama-4-maverick:free';
+const OPENROUTER_API_KEY_STORAGE_KEY = 'openRouterApiKey';
+const OPENROUTER_SELECTED_MODEL_STORAGE_KEY = 'openRouterModel';
 
 interface OpenRouterModel {
   id: string;
