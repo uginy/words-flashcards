@@ -1,8 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react'; // Added useRef
+import toast from 'react-hot-toast'; // For notifications
 import { Word } from '../types';
+import { useWords } from '../hooks/useWords'; // Import useWords
 
 interface WordTableProps {
-  words: Word[];
+  words: Word[]; // This prop contains filtered words, for export we'll use all words from the hook
   onMarkLearned: (id: string) => void;
   onMarkNotLearned: (id: string) => void;
   onDeleteWord: (id: string) => void;
@@ -12,10 +14,93 @@ const WordTable: React.FC<WordTableProps> = ({
   words, 
   onMarkLearned, 
   onMarkNotLearned, 
-  onDeleteWord 
+  onDeleteWord
 }) => {
+  const { words: allWords, replaceAllWords } = useWords(); // Get all words for export and replaceAllWords
   const [filter, setFilter] = useState<'all' | 'learned' | 'not-learned'>('all');
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
+  const fileInputRef = useRef<HTMLInputElement>(null); // Ref for the file input
+
+  // Function to handle word export
+  const handleExportWords = () => {
+    if (!allWords || allWords.length === 0) {
+      alert('Нет слов для экспорта.'); // Or use a more sophisticated notification
+      return;
+    }
+
+    // Convert words array to JSON string
+    const jsonString = JSON.stringify(allWords, null, 2); // null, 2 for pretty printing
+    // Create a Blob from the JSON string
+    const blob = new Blob([jsonString], { type: 'application/json' });
+    // Create an object URL for the Blob
+    const url = URL.createObjectURL(blob);
+    // Create a temporary anchor element
+    const a = document.createElement('a');
+    // Set the anchor's href attribute to the object URL
+    a.href = url;
+    // Set the anchor's download attribute to a filename
+    a.download = 'words-flashcards-export.json';
+    // Programmatically click the anchor element to trigger the download
+    document.body.appendChild(a); // Append to body to ensure it's clickable
+    a.click();
+    // Clean up by removing the anchor and revoking the object URL
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
+  // Function to handle word import
+  const handleImportWords = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) {
+      return;
+    }
+
+    const reader = new FileReader();
+
+    reader.onload = (e) => {
+      try {
+        const content = e.target?.result;
+        if (typeof content !== 'string') {
+          toast.error('Не удалось прочитать файл.');
+          return;
+        }
+        const parsedWords = JSON.parse(content);
+
+        // Validate structure of parsedWords
+        if (!Array.isArray(parsedWords) || !parsedWords.every(word =>
+            typeof word.id === 'string' &&
+            typeof word.hebrew === 'string' &&
+            typeof word.russian === 'string' &&
+            // Add other essential property checks if needed
+            // For example: typeof word.transcription === 'string', typeof word.category === 'string', typeof word.learned === 'boolean'
+            Object.prototype.hasOwnProperty.call(word, 'id') && Object.prototype.hasOwnProperty.call(word, 'hebrew') && Object.prototype.hasOwnProperty.call(word, 'russian')
+        )) {
+          toast.error('Неверный формат файла. Убедитесь, что это JSON массив объектов Word.');
+          return;
+        }
+        
+        replaceAllWords(parsedWords as Word[]);
+        toast.success('Слова успешно импортированы!');
+      } catch (error) {
+        console.error("Ошибка при импорте слов:", error);
+        toast.error('Ошибка при импорте слов. Проверьте консоль для деталей.');
+      } finally {
+        // Reset file input to allow importing the same file again
+        if (event.target) {
+          event.target.value = '';
+        }
+      }
+    };
+
+    reader.onerror = () => {
+      toast.error('Ошибка при чтении файла.');
+      if (event.target) {
+        event.target.value = '';
+      }
+    };
+
+    reader.readAsText(file);
+  };
   
   const filteredWords = words.filter(word => {
     const matchesLearnedFilter = 
@@ -83,6 +168,30 @@ const WordTable: React.FC<WordTableProps> = ({
                   </option>
                 ))}
               </select>
+            </div>
+          </div>
+          <div className="mt-4 flex gap-2">
+            <button
+              onClick={handleExportWords} // Connect the export function
+              className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
+            >
+              Экспорт слов
+            </button>
+            <div>
+              <label
+                htmlFor="import-file"
+                className="cursor-pointer px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-50"
+              >
+                Импорт слов
+              </label>
+              <input
+                id="import-file"
+                type="file"
+                accept=".json"
+                className="hidden"
+                onChange={handleImportWords}
+                ref={fileInputRef} // Assign ref
+              />
             </div>
           </div>
         </div>

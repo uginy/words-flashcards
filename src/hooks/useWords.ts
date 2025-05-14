@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { toast } from 'react-hot-toast';
-import type { Word, WordCategory, WordsState } from '../types';
+import type { Word, WordsState } from '../types';
 import { saveToLocalStorage, loadFromLocalStorage } from '../utils/storage';
 
 const initialState: WordsState = {
@@ -170,9 +170,26 @@ export const useWords = () => {
     }));
   };
 
+  const replaceAllWords = (newWords: Word[]) => {
+    setState(() => {
+      const newCurrentIndex = newWords.length > 0 ? 0 : 0;
+      if (newWords.length === 0) {
+        toast.success('Список слов очищен.', {
+          id: 'replaceAllWordsEmpty',
+          duration: 3000,
+          position: 'top-right',
+        });
+      }
+      return {
+        words: newWords,
+        currentIndex: newCurrentIndex,
+      };
+    });
+  };
+
   // Calculated values
-  const currentWord = state.words.length > 0 && state.currentIndex < state.words.length 
-    ? state.words[state.currentIndex] 
+  const currentWord = state.words.length > 0 && state.currentIndex < state.words.length
+    ? state.words[state.currentIndex]
     : undefined;
 
   const totalWords = state.words.length;
@@ -183,18 +200,19 @@ export const useWords = () => {
     remaining: totalWords - learnedCount,
   };
 
-  return { 
+  return {
     words: state.words,
     currentIndex: state.currentIndex,
     currentWord,
     stats,
-    addWords, 
-    markAsLearned, 
+    addWords,
+    markAsLearned,
     markAsNotLearned,
-    toggleTranslation, 
-    nextWord, 
+    toggleTranslation,
+    nextWord,
     resetProgress: resetWords,
     deleteWord,
     updateWord,
+    replaceAllWords,
   };
 };
