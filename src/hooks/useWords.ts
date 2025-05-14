@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Word, WordsState } from '../types';
 import { saveToLocalStorage, loadFromLocalStorage } from '../utils/storage';
-import { parseAndTranslateWords } from '../utils/translation';
 
 const initialState: WordsState = {
   words: [],
@@ -21,25 +20,32 @@ export const useWords = () => {
   
   // Save to localStorage whenever state changes
   useEffect(() => {
-    if (state.words.length > 0) {
+    if (state.words.length > 0 || state.currentIndex > 0) { // Also save if currentIndex changed but words didn't, to persist view state
       saveToLocalStorage(state);
     }
   }, [state]);
   
-  // Add new words from text input
-  const addWords = (text: string) => {
-    const newWords = parseAndTranslateWords(text);
+  // Add new words. Accepts an array of Word objects.
+  const addWords = (newWords: Word[]) => {
     if (newWords.length === 0) return;
     
     setState(prevState => {
-      // Filter out duplicates
+      // Filter out duplicates based on Hebrew word
       const filteredNewWords = newWords.filter(
         newWord => !prevState.words.some(word => word.hebrew === newWord.hebrew)
       );
       
+      if (filteredNewWords.length === 0) {
+        // Optionally, provide feedback to the user that all words were duplicates
+        console.log("All provided words are duplicates and were not added.");
+        return prevState; // No change if all are duplicates
+      }
+
       return {
         ...prevState,
         words: [...prevState.words, ...filteredNewWords],
+        // Optionally, set currentIndex to the start of the newly added words
+        // currentIndex: prevState.words.length 
       };
     });
   };
@@ -48,87 +54,87 @@ export const useWords = () => {
   const markAsLearned = (id: string) => {
     setState(prevState => {
       const updatedWords = prevState.words.map(word => 
-        word.id === id ? { ...word, learned: true } : word
+        word.id === id ? { ...word, isLearned: true } : word // Corrected to isLearned
       );
-      
-      return {
-        ...prevState,
-        words: updatedWords,
-      };
+      return { ...prevState, words: updatedWords };
     });
   };
-  
-  // Mark a word as not learned (to review again)
-  const markAsNotLearned = (id: string) => {
+
+  // Toggle translation visibility for a word
+  const toggleTranslation = (id: string) => {
     setState(prevState => {
-      const updatedWords = prevState.words.map(word => 
-        word.id === id ? { ...word, learned: false } : word
+      const updatedWords = prevState.words.map(word =>
+        word.id === id ? { ...word, showTranslation: !word.showTranslation } : word
       );
-      
-      return {
-        ...prevState,
-        words: updatedWords,
-      };
+      return { ...prevState, words: updatedWords };
     });
   };
-  
-  // Get the next word to learn
+
+  // Move to the next word
   const nextWord = () => {
     setState(prevState => {
-      // Find words that haven't been learned yet
-      const unlearned = prevState.words.filter(word => !word.learned);
-      if (unlearned.length === 0) return prevState;
+      if (prevState.words.length === 0) return prevState;
+      // Hide translation of current card before moving to next
+      const wordsWithHiddenTranslation = prevState.words.map((word, index) => 
+        index === prevState.currentIndex ? { ...word, showTranslation: false } : word
+      );
       
-      // Calculate next index, wrapping around if needed
-      const nextIndex = (prevState.currentIndex + 1) % unlearned.length;
-      
+      const newIndex = (prevState.currentIndex + 1) % wordsWithHiddenTranslation.length;
+      return { ...prevState, words: wordsWithHiddenTranslation, currentIndex: newIndex };
+    });
+  };
+
+  // Reset all words (clear learned status, etc.) - example, can be expanded
+  const resetWords = () => {
+    setState(prevState => ({
+      ...prevState,
+      words: prevState.words.map(word => ({
+        ...word,
+        isLearned: false,
+        showTranslation: false,
+        learningStage: 0,
+        lastReviewed: null,
+        nextReview: null,
+      })),
+      currentIndex: prevState.words.length > 0 ? 0 : 0, // Reset to first word or 0 if no words
+    }));
+  };
+
+  // Delete a word by its ID
+  const deleteWord = (id: string) => {
+    setState(prevState => {
+      const updatedWords = prevState.words.filter(word => word.id !== id);
+      let newCurrentIndex = prevState.currentIndex;
+      if (prevState.currentIndex >= updatedWords.length && updatedWords.length > 0) {
+        newCurrentIndex = updatedWords.length - 1;
+      } else if (updatedWords.length === 0) {
+        newCurrentIndex = 0;
+      }
       return {
         ...prevState,
-        currentIndex: nextIndex,
+        words: updatedWords,
+        currentIndex: newCurrentIndex,
       };
     });
   };
   
-  // Get the current word to display
-  const getCurrentWord = (): Word | null => {
-    const unlearned = state.words.filter(word => !word.learned);
-    if (unlearned.length === 0) return null;
-    
-    const safeIndex = Math.min(state.currentIndex, unlearned.length - 1);
-    return unlearned[safeIndex];
-  };
-  
-  // Reset all progress (mark all words as not learned)
-  const resetProgress = () => {
+  // Update an existing word
+  const updateWord = (updatedWord: Word) => {
     setState(prevState => ({
       ...prevState,
-      words: prevState.words.map(word => ({ ...word, learned: false })),
-      currentIndex: 0,
+      words: prevState.words.map(word => (word.id === updatedWord.id ? updatedWord : word)),
     }));
   };
-  
-  // Delete a word
-  const deleteWord = (id: string) => {
-    setState(prevState => ({
-      ...prevState,
-      words: prevState.words.filter(word => word.id !== id),
-      currentIndex: 0,
-    }));
-  };
-  
-  return {
-    words: state.words,
-    currentWord: getCurrentWord(),
-    addWords,
-    markAsLearned,
-    markAsNotLearned,
-    nextWord,
-    resetProgress,
+
+
+  return { 
+    ...state, 
+    addWords, 
+    markAsLearned, 
+    toggleTranslation, 
+    nextWord, 
+    resetWords,
     deleteWord,
-    stats: {
-      total: state.words.length,
-      learned: state.words.filter(word => word.learned).length,
-      remaining: state.words.filter(word => !word.learned).length,
-    },
+    updateWord,
   };
 };
