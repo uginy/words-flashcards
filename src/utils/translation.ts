@@ -12,7 +12,7 @@ export const parseAndTranslateWords = (text: string): Word[] => {
       return; // Expect at least category, hebrew, transcription, russian
     }
 
-    const [categoryStr, hebrew, transcription, russian, conjugation, example] = parts;
+    const [categoryStr, hebrew, transcription, russian, conjugations, example] = parts;
 
     let category: WordCategory;
     switch (categoryStr.toLowerCase()) {
@@ -44,7 +44,7 @@ export const parseAndTranslateWords = (text: string): Word[] => {
       russian,
       transcription,
       category,
-      conjugation: conjugation || undefined,
+      conjugations: conjugations || undefined,
       example: example || undefined,
       isLearned: false, // Corrected from 'learned' to 'isLearned'
       dateAdded: Date.now(),

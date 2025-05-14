@@ -56,29 +56,18 @@ const FlashCard: React.FC<FlashCardProps> = ({ word, onMarkLearned, onNext }) =>
             role="button"
             tabIndex={0}
           >
-            <div className={`px-2 py-1 rounded-full text-xs ${getCategoryColor(word.category)}`}>
-              {word.category === 'verb' ? 'глагол' : 
-               word.category === 'noun' ? 'существительное' : 
-               word.category === 'adjective' ? 'прилагательное' : 'другое'}
+            <div className={`px-2 py-1 rounded-full text-md ${getCategoryColor(word.category)}`}>
+              {word.category}
             </div>
             
             <div className="text-center">
-              <h2 className="text-4xl font-bold mb-2 text-gray-800" dir="rtl">{word.hebrew}</h2>
-              <p className="text-lg text-gray-600 mb-2" dir="rtl">[{word.transcription}]</p>
+              <h2 className="text-5xl font-bold mb-2 text-gray-800">{word.hebrew}</h2>
+              <p className="text-3xl text-gray-600 mb-2">[{word.transcription}]</p>
               <p className="text-sm text-gray-500">Нажмите, чтобы увидеть перевод</p>
             </div>
             
             <div className="w-full flex justify-between items-center">
-              <button 
-                className="px-3 py-1 rounded-md bg-gray-200 text-gray-700 text-sm hover:bg-gray-300 transition-colors"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleSkip();
-                }}
-              >
-                Далее
-              </button>
-              
+          
               <button
                 className="px-3 py-1 rounded-md bg-green-500 text-white text-sm hover:bg-green-600 transition-colors"
                 onClick={(e) => {
@@ -88,6 +77,17 @@ const FlashCard: React.FC<FlashCardProps> = ({ word, onMarkLearned, onNext }) =>
               >
                 Знаю
               </button>
+
+              <button 
+                className="px-3 py-1 rounded-md bg-gray-200 text-gray-700 text-sm hover:bg-gray-300 transition-colors"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleSkip();
+                }}
+              >
+                Далее
+              </button>
+
             </div>
           </div>
           
@@ -99,19 +99,17 @@ const FlashCard: React.FC<FlashCardProps> = ({ word, onMarkLearned, onNext }) =>
             role="button"
             tabIndex={0}
           >
-            <div className={`px-2 py-1 rounded-full text-xs ${getCategoryColor(word.category)}`}>
-              {word.category === 'verb' ? 'глагол' : 
-               word.category === 'noun' ? 'существительное' : 
-               word.category === 'adjective' ? 'прилагательное' : 'другое'}
+            <div className={`px-2 py-1 rounded-full text-md ${getCategoryColor(word.category)}`}>
+              {word.category}
             </div>
             
             <div className="text-center">
               <h3 className="text-xl font-medium mb-1 text-gray-700">{word.russian}</h3>
               <p className="text-sm text-gray-500">[{word.transcription}]</p>
-              {word.conjugation && (
+              {word.conjugations && (
                 <div className="mt-2 text-xs text-gray-600">
                   <p>Спряжение:</p>
-                  <p dir="rtl" className="font-medium mt-1">{word.conjugation}</p>
+                  <p dir="rtl" className="font-medium mt-1">{JSON.stringify(word.conjugations) ?? ''}</p>
                 </div>
               )}
             </div>

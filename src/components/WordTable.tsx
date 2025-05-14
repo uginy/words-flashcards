@@ -2,6 +2,8 @@ import React, { useState, useRef } from 'react';
 import { useToast } from '@/hooks/use-toast'; // shadcn/ui toast
 import { Word } from '../types';
 import { useWords } from '../hooks/useWords'; // Import useWords
+import EditWordDialog from './EditWordDialog';
+import ConjugationDisplay from './ConjugationDisplay';
 import {
   Select,
   SelectContent,
@@ -26,20 +28,34 @@ interface WordTableProps {
   onMarkLearned: (id: string) => void;
   onMarkNotLearned: (id: string) => void;
   onDeleteWord: (id: string) => void;
+  onEditWord?: (word: Word) => void; // New prop for editing
 }
 
 const WordTable: React.FC<WordTableProps> = ({ 
-  words, 
   onMarkLearned, 
   onMarkNotLearned, 
-  onDeleteWord
+  onDeleteWord,
+  onEditWord
 }) => {
-  const { words: allWords, replaceAllWords, clearAllWords } = useWords(); // Get all words for export, replaceAllWords, and clearAllWords
+  const { words: allWords, replaceAllWords, clearAllWords } = useWords();
   const [filter, setFilter] = useState<'all' | 'learned' | 'not-learned'>('all');
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
-  const fileInputRef = useRef<HTMLInputElement>(null); // Ref for the file input
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
-  
+  const [editingWord, setEditingWord] = useState<Word | null>(null);
+
+  // Function to handle saving edited word
+  const handleSaveEdit = (editedWord: Word) => {
+    const updatedWords = allWords.map(word => 
+      word.id === editedWord.id ? editedWord : word
+    );
+    replaceAllWords(updatedWords);
+    if (onEditWord) {
+      onEditWord(editedWord);
+    }
+    toast({ title: "Успех", description: 'Слово успешно обновлено.' });
+  };
+
   // Function to handle word export
   const handleExportWords = () => {
     if (!allWords || allWords.length === 0) {
@@ -152,8 +168,19 @@ const WordTable: React.FC<WordTableProps> = ({
   // Get unique categories from words
   const categories = ['all', ...new Set(allWords.map(w => w.category))];
   
+
   return (
     <div className="w-full">
+      {/* Existing dialog code */}
+      {editingWord && (
+        <EditWordDialog
+          word={editingWord}
+          isOpen={true}
+          onClose={() => setEditingWord(null)}
+          onSave={handleSaveEdit}
+        />
+      )}
+
       <div className="bg-white rounded-lg shadow-md overflow-hidden">
         <div className="p-4 border-b">
           <div className="flex justify-between items-center mb-3">
@@ -283,8 +310,10 @@ const WordTable: React.FC<WordTableProps> = ({
                   <tr key={word.id} className="hover:bg-gray-50">
                     <td className="px-4 py-3 whitespace-nowrap">
                       <div className="text-base font-medium text-gray-900" dir="rtl">{word.hebrew}</div>
-                      {word.conjugation && (
-                        <div className="text-xs text-gray-500 mt-1" dir="rtl">{word.conjugation}</div>
+                      {word.conjugations && (
+                        <div className="text-xs mt-1">
+                          <ConjugationDisplay conjugations={word.conjugations} />
+                        </div>
                       )}
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap">
@@ -295,14 +324,12 @@ const WordTable: React.FC<WordTableProps> = ({
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap">
                       <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
-                        ${word.category === 'verb' ? 'bg-blue-100 text-blue-800' : 
-                          word.category === 'noun' ? 'bg-green-100 text-green-800' : 
-                          word.category === 'adjective' ? 'bg-purple-100 text-purple-800' : 
+                        ${word.category === 'פועל' ? 'bg-blue-100 text-blue-800' : 
+                          word.category === 'שם עצם' ? 'bg-green-100 text-green-800' : 
+                          word.category === 'שם תואר' ? 'bg-purple-100 text-purple-800' : 
                           'bg-gray-100 text-gray-800'}`}
                       >
-                        {word.category === 'verb' ? 'глагол' : 
-                         word.category === 'noun' ? 'сущ.' : 
-                         word.category === 'adjective' ? 'прил.' : 'другое'}
+                        {word.category}
                       </span>
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap">
@@ -313,8 +340,16 @@ const WordTable: React.FC<WordTableProps> = ({
                       </span>
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap text-right text-sm font-medium">
+                      <button
+                        type="button"
+                        onClick={() => setEditingWord(word)}
+                        className="text-blue-600 hover:text-blue-900 mr-3"
+                      >
+                        Изменить
+                      </button>
                       {word.learned ? (
                         <button
+                          type="button"
                           onClick={() => onMarkNotLearned(word.id)}
                           className="text-blue-600 hover:text-blue-900 mr-3"
                         >
@@ -322,6 +357,7 @@ const WordTable: React.FC<WordTableProps> = ({
                         </button>
                       ) : (
                         <button
+                          type="button"
                           onClick={() => onMarkLearned(word.id)}
                           className="text-green-600 hover:text-green-900 mr-3"
                         >
@@ -329,6 +365,7 @@ const WordTable: React.FC<WordTableProps> = ({
                         </button>
                       )}
                       <button
+                        type="button"
                         onClick={() => onDeleteWord(word.id)}
                         className="text-red-600 hover:text-red-900"
                       >
