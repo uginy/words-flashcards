@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Toaster } from 'react-hot-toast';
 import Layout from './components/Layout';
 import FlashCard from './components/FlashCard';
@@ -7,7 +7,6 @@ import WordTable from './components/WordTable';
 import Statistics from './components/Statistics';
 import { useWords } from './hooks/useWords';
 import Settings from './components/Settings';
-import { parseAndTranslateWords } from './utils/translation';
 
 function App() {
   const [activeTab, setActiveTab] = useState('learn');
@@ -75,44 +74,6 @@ function App() {
       ),
     },
   ];
-
-  // Add default words if none exist
-  useEffect(() => {
-    const hasAddedDefaultWords = sessionStorage.getItem('hasAddedDefaultWords');
-    if (words.length === 0 && !hasAddedDefaultWords) {
-      sessionStorage.setItem('hasAddedDefaultWords', 'true');
-      const defaultWordsStructured = `
-noun - ניסיון - нисайон - опыт
-noun - מוצר - муцар - продукт
-noun - מידע - мэйда - информация
-noun - כמות - камут - количество
-noun - אחריות - ахрают - ответственность
-noun - יכולת - йехолет - способность
-verb - להשפיע על - леашпиа аль - влиять на - משפיע, השפיע, ישפיע
-verb - לבחור ב, את - ливхор - выбирать - בוחר, בחר, יבחר
-verb - להתלבט בין לבין - леитлабет бейн лебейн - колебаться между - מתלבט, התלבט, יתלבט
-verb - להתחרט על - леитхарет аль - сожалеть о - מתחרט, התחרט, יתחרט
-verb - להציע את ל - леациа эт ле - предлагать кому-либо - מציע, הציע, יציע
-verb - להתבגר - леитבагер - взрослеть - מתבגר, התבגר, יתבגר
-verb - להתווכח - леитвакеах - спорить - מתווכח, התווכח, יתווכח
-verb - להתרכז - леитракез - концентрироваться - מתרכז, התרכז, יתרכז
-adjective - מתבגר-ת - митבагер-эт - взрослеющий(-ая)
-adjective - אחראי-ת - ахраи-т - ответственный(-ая)
-adjective - מוכשר-ת - мухшар-эт - талантливый(-ая)
-adjective - מבולבל-ת - мевульбаль-эт - запутанный(-ая)
-adjective - מרוכז-ת - меруказ-эт - сосредоточенный(-ая)
-other - היכן - эйхан - где`.trim();
-      
-      try {
-        const parsedWords = parseAndTranslateWords(defaultWordsStructured);
-        if (Array.isArray(parsedWords) && parsedWords.length > 0) {
-          addWords(parsedWords);
-        }
-      } catch (error) {
-        console.error('Error parsing default words:', error);
-      }
-    }
-  }, [words.length, addWords]);
 
   // Render different content based on active tab
   const renderContent = () => {

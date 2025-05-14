@@ -1,4 +1,7 @@
 import React, { useState, useEffect } from 'react';
+import { useWords } from '../hooks/useWords';
+import { toast } from 'react-hot-toast';
+import type { Word } from '../types';
 
 const OPENROUTER_API_KEY_STORAGE_KEY = 'openRouterApiKey';
 const OPENROUTER_SELECTED_MODEL_STORAGE_KEY = 'openRouterModel';
@@ -22,6 +25,7 @@ const Settings: React.FC = () => {
   const [isLoadingModels, setIsLoadingModels] = useState<boolean>(false);
   const [showFreeOnly, setShowFreeOnly] = useState<boolean>(true);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const { words } = useWords();
 
   useEffect(() => {
     const storedApiKey = localStorage.getItem(OPENROUTER_API_KEY_STORAGE_KEY);
@@ -87,9 +91,85 @@ const Settings: React.FC = () => {
     }
   };
 
+  // Export words as JSON
+  const handleExportWords = () => {
+    if (words.length === 0) {
+      toast.error('Нет слов для экспорта');
+      return;
+    }
+
+    const wordsJson = JSON.stringify(words, null, 2);
+    const blob = new Blob([wordsJson], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `words-export-${new Date().toISOString().split('T')[0]}.json`;
+    document.body.appendChild(a);
+    a.click();
+    
+    // Cleanup
+    setTimeout(() => {
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }, 100);
+    
+    toast.success('Слова экспортированы успешно');
+  };
+
+  // Import words from JSON file
+  const handleImportWords = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const content = e.target?.result as string;
+        const importedWords = JSON.parse(content) as Word[];
+        
+        if (!Array.isArray(importedWords)) {
+          throw new Error('Некорректный формат файла');
+        }
+        
+        // Validate each word has required fields
+        const validWords = importedWords.filter(word => 
+          word.id && word.hebrew && word.russian && word.category
+        );
+        
+        if (validWords.length === 0) {
+          throw new Error('Не найдено корректных слов в файле');
+        }
+        
+        if (validWords.length !== importedWords.length) {
+          toast.error(`Импортировано ${validWords.length} из ${importedWords.length} слов. Некоторые слова были пропущены из-за некорректного формата.`);
+        }
+        
+        // Reset file input
+        event.target.value = '';
+        
+        // Convert to expected format for addWords
+        const wordsText = validWords.map(word => 
+          `${word.category} - ${word.hebrew} - ${word.transcription} - ${word.russian}`
+        ).join('\n');
+        
+        // We need to properly call addWords here from a parent component
+        localStorage.setItem('importedWords', wordsText);
+        toast.success(`Подготовлено ${validWords.length} слов для импорта. Перейдите на вкладку "Добавить" и нажмите "Импортировать".`);
+      } catch (error) {
+        console.error('Error importing words:', error);
+        toast.error(error instanceof Error ? error.message : 'Ошибка при импорте файла');
+        // Reset file input
+        event.target.value = '';
+      }
+    };
+    
+    reader.readAsText(file);
+  };
+
   return (
     <div className="w-full max-w-2xl mx-auto p-4 sm:p-6 bg-white rounded-lg shadow-md">
-      <h2 className="text-2xl font-semibold text-gray-800 mb-6">LLM Settings (OpenRouter)</h2>
+      <h2 className="text-2xl font-semibold text-gray-800 mb-6">Настройки</h2>
 
       {message && (
         <div
@@ -102,6 +182,38 @@ const Settings: React.FC = () => {
       )}
 
       <div className="space-y-6">
+        {/* Words Import/Export Section */}
+        <div className="border-b pb-6">
+          <h3 className="text-lg font-medium text-gray-800 mb-4">Управление словами</h3>
+          
+          <div className="flex flex-col sm:flex-row gap-3">
+            <button
+              type="button"
+              onClick={handleExportWords}
+              className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition-colors focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
+            >
+              Экспорт слов
+            </button>
+            
+            <label className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 cursor-pointer inline-block text-center">
+              Импорт слов
+              <input
+                type="file"
+                accept=".json"
+                onChange={handleImportWords}
+                className="hidden"
+              />
+            </label>
+          </div>
+          
+          <p className="text-xs text-gray-500 mt-2">
+            Экспортируйте слова для резервного копирования или импортируйте из ранее сохраненного файла.
+          </p>
+        </div>
+
+        {/* OpenRouter Settings */}
+        <h3 className="text-lg font-medium text-gray-800 mb-4">Настройки LLM (OpenRouter)</h3>
+        
         <div>
           <label htmlFor="apiKey" className="block text-sm font-medium text-gray-700 mb-1">
             OpenRouter API Key
