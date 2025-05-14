@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react'; // Removed unused useEffect
-import toast from 'react-hot-toast'; // For notifications
+import { useToast } from '@/hooks/use-toast'; // shadcn/ui toast
 import { Word } from '../types';
 import { useWords } from '../hooks/useWords'; // Import useWords
 import {
@@ -27,11 +27,12 @@ const WordTable: React.FC<WordTableProps> = ({
   const [filter, setFilter] = useState<'all' | 'learned' | 'not-learned'>('all');
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
   const fileInputRef = useRef<HTMLInputElement>(null); // Ref for the file input
- 
+  const { toast } = useToast();
+  
   // Function to handle word export
   const handleExportWords = () => {
     if (!allWords || allWords.length === 0) {
-      alert('Нет слов для экспорта.'); // Or use a more sophisticated notification
+      toast({ title: "Информация", description: 'Нет слов для экспорта.' });
       return;
     }
 
@@ -68,7 +69,7 @@ const WordTable: React.FC<WordTableProps> = ({
       try {
         const content = e.target?.result;
         if (typeof content !== 'string') {
-          toast.error('Не удалось прочитать файл.');
+          toast({ title: "Ошибка", description: 'Не удалось прочитать файл.', variant: "destructive" });
           return;
         }
         const parsedWords = JSON.parse(content);
@@ -82,15 +83,15 @@ const WordTable: React.FC<WordTableProps> = ({
             // For example: typeof word.transcription === 'string', typeof word.category === 'string', typeof word.learned === 'boolean'
             Object.prototype.hasOwnProperty.call(word, 'id') && Object.prototype.hasOwnProperty.call(word, 'hebrew') && Object.prototype.hasOwnProperty.call(word, 'russian')
         )) {
-          toast.error('Неверный формат файла. Убедитесь, что это JSON массив объектов Word.');
+          toast({ title: "Ошибка", description: 'Неверный формат файла. Убедитесь, что это JSON массив объектов Word.', variant: "destructive" });
           return;
         }
         
         replaceAllWords(parsedWords as Word[]);
-        toast.success('Слова успешно импортированы!');
+        toast({ title: "Успех", description: 'Слова успешно импортированы!' });
       } catch (error) {
         console.error("Ошибка при импорте слов:", error);
-        toast.error('Ошибка при импорте слов. Проверьте консоль для деталей.');
+        toast({ title: "Ошибка", description: 'Ошибка при импорте слов. Проверьте консоль для деталей.', variant: "destructive" });
       } finally {
         // Reset file input to allow importing the same file again
         if (event.target) {
@@ -100,7 +101,7 @@ const WordTable: React.FC<WordTableProps> = ({
     };
 
     reader.onerror = () => {
-      toast.error('Ошибка при чтении файла.');
+      toast({ title: "Ошибка", description: 'Ошибка при чтении файла.', variant: "destructive" });
       if (event.target) {
         event.target.value = '';
       }

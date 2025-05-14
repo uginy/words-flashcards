@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { toast } from 'react-hot-toast';
+import { useToast } from '../hooks/use-toast'; // shadcn/ui toast
 import type { Word, WordsState } from '../types';
 import { saveToLocalStorage, loadFromLocalStorage } from '../utils/storage';
 
@@ -10,6 +10,7 @@ const initialState: WordsState = {
 
 export const useWords = () => {
   const [state, setState] = useState<WordsState>(initialState);
+  const { toast } = useToast();
   
 
   // Load from localStorage on initial render
@@ -41,10 +42,10 @@ export const useWords = () => {
 
       if (validNewWords.length === 0) {
         // It's possible all incoming words were invalid or empty.
-        toast.error('No valid words to add.', {
-          id: 'noValidWordsToAdd',
-          duration: 3000,
-          position: 'top-right',
+        toast({
+          title: "Ошибка",
+          description: 'Нет валидных слов для добавления.',
+          variant: "destructive",
         });
         return; // Exit if no valid words
       }
@@ -58,10 +59,10 @@ export const useWords = () => {
         );
 
         if (uniqueNewWords.length === 0) {
-          toast.error('These words already exist in your collection', {
-            id: 'duplicateWordsError',
-            duration: 3000,
-            position: 'top-right',
+          toast({
+            title: "Ошибка",
+            description: 'Эти слова уже существуют в вашей коллекции.',
+            variant: "destructive",
           });
           return prev;
         }
@@ -70,10 +71,9 @@ export const useWords = () => {
         const wordForm = count === 1 ? 'слово' : 
                         (count >= 2 && count <= 4) ? 'слова' : 'слов';
         const successMessage = `Добавлено ${count} ${wordForm}`;
-        toast.success(successMessage, {
-          id: 'addWordsSuccess',
-          duration: 3000,
-          position: 'top-right',
+        toast({
+          title: "Успех!",
+          description: successMessage,
         });
         
         return { 
@@ -83,13 +83,10 @@ export const useWords = () => {
       });
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Failed to add words';
-      toast.error(errorMessage, {
-        id: 'addWordsError',
-        duration: 3000,
-        style: {
-          background: '#DC2626',
-          color: '#fff',
-        },
+      toast({
+        title: "Ошибка",
+        description: errorMessage,
+        variant: "destructive",
       });
     }
   };
@@ -174,10 +171,9 @@ export const useWords = () => {
     setState(() => {
       const newCurrentIndex = newWords.length > 0 ? 0 : 0;
       if (newWords.length === 0) {
-        toast.success('Список слов очищен.', {
-          id: 'replaceAllWordsEmpty',
-          duration: 3000,
-          position: 'top-right',
+        toast({
+          title: "Успех!",
+          description: 'Список слов очищен.',
         });
       }
       return {

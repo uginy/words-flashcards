@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Toaster } from 'react-hot-toast';
+import { Toaster } from '@/components/ui/toaster'; // shadcn/ui Toaster
 import Layout from './components/Layout';
 import FlashCard from './components/FlashCard';
 import WordInput from './components/WordInput';
@@ -162,29 +162,7 @@ function App() {
 
   return (
     <div>
-      <Toaster
-        position="top-right"
-        toastOptions={{
-          className: '',
-          duration: 3000,
-          style: {
-            padding: '16px',
-            borderRadius: '8px',
-          },
-          success: {
-            style: {
-              background: '#059669',
-              color: '#fff',
-            },
-          },
-          error: {
-            style: {
-              background: '#DC2626',
-              color: '#fff',
-            },
-          },
-        }}
-      />
+      <Toaster />
       <Layout tabs={tabs} activeTab={activeTab} onTabChange={setActiveTab}>
         {renderContent()}
       </Layout>
