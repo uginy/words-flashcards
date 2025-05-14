@@ -7,29 +7,34 @@ interface CompactConjugationProps {
 
 const CompactConjugation: React.FC<CompactConjugationProps> = ({ conjugations }) => {
   const sections = {
-    present: 'Настоящее',
     past: 'Прошедшее',
+    present: 'Настоящее',
     future: 'Будущее',
     imperative: 'Повелительное'
   };
 
-  // Приоритет отображения форм для компактного вида
-  const priorityForms = ['я (м)', 'ты (м)', 'он', 'мы'];
+  // Наиболее важные формы для каждого времени
+  const mainForms = {
+    past: ['я (м)', 'ты (м)', 'он', 'мы'],
+    present: ['я (м)', 'ты (м)', 'он', 'мы'],
+    future: ['я (м)', 'ты (м)', 'он', 'мы'],
+    imperative: ['ты (м)']
+  };
 
   return (
-    <div className="grid grid-cols-1 gap-2 text-sm">
+    <div className="space-y-3 text-sm">
       {(Object.entries(conjugations) as [keyof typeof sections, Record<string, string>][])
         .filter(([tense, forms]) => forms && Object.keys(forms).length > 0)
         .map(([tense, forms]) => (
-          <div key={tense} className="text-gray-600">
-            <div className="font-medium mb-0.5">{sections[tense]}:</div>
-            <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
+          <div key={tense}>
+            <div className="font-medium mb-1">{sections[tense]}:</div>
+            <div className="grid grid-cols-2 gap-x-8 gap-y-0.5">
               {Object.entries(forms)
-                .filter(([person]) => priorityForms.includes(person))
+                .filter(([person]) => mainForms[tense].includes(person))
                 .map(([person, form]) => (
-                  <div key={person} className="flex justify-between items-center">
-                    <span className="text-gray-500 text-xs">{person}:</span>
-                    <span className="font-medium" dir="rtl">{form}</span>
+                  <div key={person} className="flex justify-between items-center text-sm">
+                    <span className="text-gray-600">{person}:</span>
+                    <span className="text-gray-900" dir="rtl">{form}</span>
                   </div>
                 ))}
             </div>

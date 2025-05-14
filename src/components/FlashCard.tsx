@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Word } from '../types';
 import { Popover, PopoverContent, PopoverTrigger } from './ui/popover';
 import ConjugationDisplay from './ConjugationDisplay';
+import CompactConjugation from './CompactConjugation';
 
 interface FlashCardProps {
   word: Word;
@@ -48,8 +49,8 @@ const FlashCard: React.FC<FlashCardProps> = ({ word, onMarkLearned, onNext }) =>
 
   return (
     <div className="w-full max-w-xl mx-auto">
-      <div className="card-container h-64">
-        <div className={`card h-full ${flipped ? 'flipped' : ''}`}>
+      <div className="card-container">
+        <div className={`card ${flipped ? 'flipped' : ''}`}>
           {/* Front side - Hebrew */}
           <div
             className="card-front bg-white rounded-xl p-6 flex flex-col justify-between items-center shadow-lg"
@@ -58,14 +59,18 @@ const FlashCard: React.FC<FlashCardProps> = ({ word, onMarkLearned, onNext }) =>
             role="button"
             tabIndex={0}
           >
-            <div className={`px-2 py-1 rounded-full text-md ${getCategoryColor(word.category)}`}>
-              {word.category}
-            </div>
-
             <div className="text-center">
-              <h2 className="text-5xl font-bold mb-2 text-gray-800">{word.hebrew}</h2>
-              <p className="text-3xl text-gray-600 mb-2">[{word.transcription}]</p>
-              <p className="text-sm text-gray-500">Нажмите, чтобы увидеть перевод</p>
+              <div className={`inline-block px-2 py-1 rounded-full text-sm ${getCategoryColor(word.category)} mb-2`}>
+                {word.category}
+              </div>
+              <h2 className="text-4xl font-bold mb-2 text-gray-800" dir="rtl">{word.hebrew}</h2>
+              <p className="text-xl text-gray-600 mb-3">[{word.transcription}]</p>
+              {word.conjugations && (
+                <div className="text-left mx-auto max-w-[400px] px-2">
+                  <CompactConjugation conjugations={word.conjugations} />
+                </div>
+              )}
+              <p className="text-sm text-gray-500 mt-2">Нажмите, чтобы увидеть перевод</p>
             </div>
 
             <div className="w-full flex justify-between items-center">
@@ -101,15 +106,15 @@ const FlashCard: React.FC<FlashCardProps> = ({ word, onMarkLearned, onNext }) =>
             role="button"
             tabIndex={0}
           >
-            <div className={`px-2 py-1 rounded-full text-md ${getCategoryColor(word.category)}`}>
-              {word.category}
-            </div>
-
             <div className="text-center">
               <h3 className="text-xl font-medium mb-1 text-gray-700">{word.russian}</h3>
               <p className="text-sm text-gray-500">[{word.transcription}]</p>
               {word.conjugations && (
-                <ConjugationDisplay conjugations={word.conjugations} />
+                <div className="max-h-[200px] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 px-2 my-2">
+                  <div className="text-left mx-auto max-w-[400px]">
+                    <CompactConjugation conjugations={word.conjugations} />
+                  </div>
+                </div>
               )}
             </div>
 
