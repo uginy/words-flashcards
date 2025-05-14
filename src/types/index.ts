@@ -7,6 +7,7 @@ export interface Word {
   transcription: string;
   category: WordCategory;
   conjugation?: string;
+  example?: string; // Added for usage examples
   learned: boolean;
   dateAdded: number;
 }
