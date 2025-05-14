@@ -49,7 +49,7 @@ const FlashCard: React.FC<FlashCardProps> = ({ word, onMarkLearned, onNext }) =>
 
   return (
     <div className="w-full max-w-xl mx-auto">
-      <div className="card-container">
+      <div className="card-container relative">
         <div className={`card ${flipped ? 'flipped' : ''}`}>
           {/* Front side - Hebrew */}
           <div
@@ -65,11 +65,6 @@ const FlashCard: React.FC<FlashCardProps> = ({ word, onMarkLearned, onNext }) =>
               </div>
               <h2 className="text-4xl font-bold mb-2 text-gray-800" dir="rtl">{word.hebrew}</h2>
               <p className="text-xl text-gray-600 mb-3">[{word.transcription}]</p>
-              {word.conjugations && (
-                <div className="text-left mx-auto max-w-[400px] px-2">
-                  <CompactConjugation conjugations={word.conjugations} />
-                </div>
-              )}
               <p className="text-sm text-gray-500 mt-2">Нажмите, чтобы увидеть перевод</p>
             </div>
 
@@ -107,13 +102,11 @@ const FlashCard: React.FC<FlashCardProps> = ({ word, onMarkLearned, onNext }) =>
             tabIndex={0}
           >
             <div className="text-center">
-              <h3 className="text-xl font-medium mb-1 text-gray-700">{word.russian}</h3>
-              <p className="text-sm text-gray-500">[{word.transcription}]</p>
+              <h3 className="text-4xl font-medium mb-1 text-gray-700">{word.russian}</h3>
+              <p className="text-xl text-gray-500">[{word.transcription}]</p>
               {word.conjugations && (
-                <div className="max-h-[200px] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 px-2 my-2">
-                  <div className="text-left mx-auto max-w-[400px]">
-                    <CompactConjugation conjugations={word.conjugations} />
-                  </div>
+                <div className="text-left mx-auto max-w-[400px] px-2 my-2">
+                  <CompactConjugation conjugations={word.conjugations} />
                 </div>
               )}
             </div>
