@@ -78,11 +78,10 @@ const WordInput: React.FC<WordInputProps> = ({ onAddWords }) => {
     setInputText(paste);
   };
 
-  const sampleText = `Существительное - ניסיון - нисайон - опыт - [נסיונות] - [יש לי ניסיון רב בתחום הזה.]
-Глагол - להשפיע על - леhашпиа аль - влиять на - [משפיע, משפיעה, משפיעים, משפיעות] - [המצב הכלכלי משפיע על כולם.]
-Прилагательное - אחראי - ахраи - ответственный - [אחראית, אחראים, אחראיות] - [הוא עובד אחראי מאוד.]
-ИвритСловоДляОбогащения1
-ИвритСловоДляОбогащения2`;
+  const sampleText = `שלום
+תודה רבה
+ספר טוב
+ללמוד`;
 
   return (
     <div className="w-full max-w-md mx-auto mt-6">
@@ -129,8 +128,7 @@ const WordInput: React.FC<WordInputProps> = ({ onAddWords }) => {
             )}
             <div className="mb-3">
               <label htmlFor="wordInput" className="block text-sm font-medium text-gray-700 mb-1">
-                Введите слова в формате: <code className="text-xs bg-gray-100 p-1 rounded">Категория - Иврит - Транскрипция - Русский - [Спряжение] - [Пример]</code><br/>
-                Или введите только ивритские слова (каждое на новой строке) для автоматического обогащения через LLM.
+                Добавляйте список слов, каждое слово должно быть на новой строке. Мы сами проанализируем его и корректно добавим в базу.
               </label>
               <textarea
                 id="wordInput"
@@ -140,7 +138,7 @@ const WordInput: React.FC<WordInputProps> = ({ onAddWords }) => {
                 onChange={(e) => setInputText(e.target.value)}
                 onPaste={handlePaste}
                 dir="auto" // Changed to auto to better support mixed LTR/RTL for instructions and RTL for Hebrew
-                placeholder="Пример структурированного ввода:&#10;Глагол - ללמוד - лильмод - учить - [לומד, לומדת] - [אני אוהב ללמוד עברית.]&#10;&#10;Пример для LLM обогащения:&#10;שלום&#10;תודה"
+                placeholder="Пример структурированного ввода:&#10;Глагол - ללמוד - лильмוד - учить - [לומד, לומדת] - [אני אוהב ללמוד עברית.]&#10;&#10;Пример для LLM обогащения:&#10;שלום&#10;תודה"
               />
             </div>
             
