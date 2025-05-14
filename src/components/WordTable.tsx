@@ -130,7 +130,34 @@ const WordTable: React.FC<WordTableProps> = ({
     <div className="w-full">
       <div className="bg-white rounded-lg shadow-md overflow-hidden">
         <div className="p-4 border-b">
-          <h3 className="text-lg font-medium text-gray-800 mb-3">Список слов</h3>
+          <div className="flex justify-between items-center mb-3">
+            <h3 className="text-lg font-medium text-gray-800">Список слов</h3>
+            <div className="flex gap-2 items-center"> {/* Added items-center */}
+              <button
+                type="button" // Added explicit type
+                onClick={handleExportWords} // Connect the export function
+                className="px-4 h-9 bg-blue-500 text-white rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
+              >
+                Экспорт слов
+              </button>
+              <div>
+                <label
+                  htmlFor="import-file"
+                  className="cursor-pointer px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-50"
+                >
+                  Импорт слов
+                </label>
+                <input
+                  id="import-file"
+                  type="file"
+                  accept=".json"
+                  className="hidden"
+                  onChange={handleImportWords}
+                  ref={fileInputRef} // Assign ref
+                />
+              </div>
+            </div>
+          </div>
           
           <div className="flex flex-wrap gap-2 sm:flex-row">
             <div className="mr-4">
@@ -168,30 +195,6 @@ const WordTable: React.FC<WordTableProps> = ({
                   </option>
                 ))}
               </select>
-            </div>
-          </div>
-          <div className="mt-4 flex gap-2">
-            <button
-              onClick={handleExportWords} // Connect the export function
-              className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
-            >
-              Экспорт слов
-            </button>
-            <div>
-              <label
-                htmlFor="import-file"
-                className="cursor-pointer px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-50"
-              >
-                Импорт слов
-              </label>
-              <input
-                id="import-file"
-                type="file"
-                accept=".json"
-                className="hidden"
-                onChange={handleImportWords}
-                ref={fileInputRef} // Assign ref
-              />
             </div>
           </div>
         </div>
