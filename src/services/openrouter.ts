@@ -45,8 +45,8 @@ Provide ONLY the JSON object in your response, with no other text before or afte
       body: JSON.stringify({
         model: model,
         messages: [{ role: 'user', content: prompt }],
-        temperature: 0.3, // Lower temperature for more deterministic output
-        // response_format: { type: "json_object" } // Removed this line
+        temperature: 0.3,
+        // response_format: { type: "json_object" } // Removed, as the model returns a stringified array in content
       }),
     });
 
@@ -206,70 +206,69 @@ Provide ONLY the JSON array in your response, with no other text before or after
       throw new Error('Invalid LLM response structure (batch).');
     }
 
-    const content = data.choices[0].message.content;
+    const content = data.choices[0].message.content; // content is a string, e.g., "[{...},{...}]"
     let parsedArray: LLMBatchResponseItem[];
 
     try {
+      // Attempt to parse the content string directly.
       const potentialObjectOrArray = JSON.parse(content);
+
       if (Array.isArray(potentialObjectOrArray)) {
         parsedArray = potentialObjectOrArray;
       } else if (typeof potentialObjectOrArray === 'object' && potentialObjectOrArray !== null) {
-        // Check if it's a single word input AND the object itself is the item (data or error for that word)
-        // AND it's not an object that itself contains an array property (which would be handled next).
+        // Handle cases where content is a stringified object that might contain the array
+        // or is a single word object for a single word input.
         if (
           hebrewWords.length === 1 &&
-          ('hebrew' in potentialObjectOrArray || 'russian' in potentialObjectOrArray || 'category' in potentialObjectOrArray || 'error' in potentialObjectOrArray) && // Check for characteristic properties
+          ('hebrew' in potentialObjectOrArray || 'russian' in potentialObjectOrArray || 'category' in potentialObjectOrArray || 'error' in potentialObjectOrArray) && 
           !Object.keys(potentialObjectOrArray).some(key => Array.isArray((potentialObjectOrArray as any)[key]))
         ) {
           parsedArray = [potentialObjectOrArray as LLMBatchResponseItem];
-          console.log('LLM returned a single object for a single word input (or a word-specific error), wrapped into an array.');
+          console.log('LLM returned a single object (from parsed content string) for a single word input, wrapped into an array.');
         } else {
-          // Otherwise, it might be multiple words input, or an object that contains an array property.
           const keys = Object.keys(potentialObjectOrArray);
           const arrayKeyFound = keys.find(key => Array.isArray((potentialObjectOrArray as any)[key]));
           if (arrayKeyFound) {
             parsedArray = (potentialObjectOrArray as any)[arrayKeyFound];
-            console.log(`LLM returned an object, extracted array from key: ${arrayKeyFound}`);
+            console.log(`LLM returned an object (from parsed content string), extracted array from key: ${arrayKeyFound}`);
           } else {
-            // This case means it's an object, not for a single word (or not matching that pattern), and no array property found.
-            throw new Error('LLM response was a JSON object but did not directly contain an array, no array property was found, or it was an unhandled single item format.');
+            throw new Error('LLM response (from parsed content string) was an object but did not directly contain an array, and no array property was found.');
           }
         }
       } else {
-         throw new Error('LLM response was not a JSON array or a JSON object containing an array.');
+         throw new Error('LLM response (from parsed content string) was not a JSON array or a JSON object.');
       }
     } catch (e1) {
-      console.warn('Direct JSON.parse of LLM content as array/object failed. Attempting to extract JSON array block.', e1 instanceof Error ? e1.message : e1);
-      const jsonMatch = content.match(/\\\\[[\\\\s\\\\S]*\\\\]/m); 
-      if (jsonMatch && jsonMatch[0]) {
+      console.warn('Initial JSON.parse of LLM content string failed or structure was unexpected. Error:', e1 instanceof Error ? e1.message : String(e1), "Attempting regex fallback. Raw content string:", content);
+      const jsonMatch = content.match(/\s*(\[[\s\S]*\])\s*/m); // Regex to find array string like " [...] "
+      if (jsonMatch && jsonMatch[1]) { // jsonMatch[1] is the captured array string itself
         try {
-          parsedArray = JSON.parse(jsonMatch[0]);
-          console.log('Successfully parsed extracted JSON array block from LLM response.');
+          parsedArray = JSON.parse(jsonMatch[1]);
+          console.log('Successfully parsed extracted JSON array block from LLM content string using regex fallback.');
         } catch (e2) {
-          console.error('Failed to parse extracted LLM response (array) as JSON. Original content:', content, 'Extracted block:', jsonMatch[0], e2 instanceof Error ? e2.message : e2);
-          throw new Error('LLM response was not valid JSON array, even after attempting to extract a block.');
+          console.error('Failed to parse extracted LLM response (array) as JSON using regex. Original content string:', content, 'Extracted block:', jsonMatch[1], 'Error:', e2 instanceof Error ? e2.message : String(e2));
+          throw new Error('LLM response content string was not valid JSON array, even after attempting to extract a block with regex.');
         }
       } else {
-        console.error('Failed to parse LLM response (array) as JSON and no JSON array-like block found. Original content:', content, e1 instanceof Error ? e1.message : e1);
-        throw new Error('LLM response was not valid JSON array and no JSON array block could be extracted.');
+        console.error('Failed to parse LLM response (array) from content string and no JSON array-like block found with regex. Original content string:', content, 'Initial error:', e1 instanceof Error ? e1.message : String(e1));
+        throw new Error('LLM response content string was not valid JSON array and no JSON array block could be extracted with regex.');
       }
     }
 
     const enrichedWords: Word[] = [];
     for (const currentItem of parsedArray) { 
       if (currentItem.error) {
-        console.warn(`LLM reported error for word \"${currentItem.hebrew || 'unknown'}\": ${currentItem.error}`);
+        console.warn(`LLM reported error for word "${String(currentItem.hebrew || 'unknown')}": ${String(currentItem.error)}`);
         continue; 
       }
       
-      // Ensure all required fields are present and are strings
       const hebrew = String(currentItem.hebrew || '');
       const transcription = String(currentItem.transcription || '');
       const russian = String(currentItem.russian || '');
       const category = String(currentItem.category || 'other');
 
-      if (!hebrew || !transcription || !russian || !category) {
-        console.warn('LLM response item missing required fields after attempting to stringify:', {
+      if (!hebrew || !transcription || !russian) { 
+        console.warn('LLM response item missing critical fields (hebrew, transcription, russian) after attempting to stringify:', {
           originalItem: currentItem,
           processed: { hebrew, transcription, russian, category }
         });
