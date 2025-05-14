@@ -4,7 +4,12 @@ const STORAGE_KEY = 'hebrew-flashcards-data';
 
 export const saveToLocalStorage = (state: WordsState): void => {
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    if (state.words.length === 0) {
+      // If clearing the words list, remove the entire storage
+      localStorage.removeItem(STORAGE_KEY);
+    } else {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    }
   } catch (error) {
     console.error('Error saving to localStorage:', error);
   }
