@@ -185,6 +185,19 @@ export const useWords = () => {
     });
   };
 
+  const clearAllWords = () => {
+    setState({
+      words: [],
+      currentIndex: 0,
+    });
+    // Clear words from localStorage
+    saveToLocalStorage({ words: [], currentIndex: 0 });
+    toast({
+      title: "Успех!",
+      description: "Все слова удалены.",
+    });
+  };
+ 
   // Calculated values
   const currentWord = state.words.length > 0 && state.currentIndex < state.words.length
     ? state.words[state.currentIndex]
@@ -212,5 +225,6 @@ export const useWords = () => {
     deleteWord,
     updateWord,
     replaceAllWords,
+    clearAllWords,
   };
 };

@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react'; // Removed unused useEffect
+import React, { useState, useRef } from 'react';
 import { useToast } from '@/hooks/use-toast'; // shadcn/ui toast
 import { Word } from '../types';
 import { useWords } from '../hooks/useWords'; // Import useWords
@@ -9,6 +9,17 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'; // shadcn/ui Select
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog'; // ShadCN UI AlertDialog
 
 interface WordTableProps {
   words: Word[]; // This prop contains filtered words, for export we'll use all words from the hook
@@ -23,7 +34,7 @@ const WordTable: React.FC<WordTableProps> = ({
   onMarkNotLearned, 
   onDeleteWord
 }) => {
-  const { words: allWords, replaceAllWords } = useWords(); // Get all words for export and replaceAllWords
+  const { words: allWords, replaceAllWords, clearAllWords } = useWords(); // Get all words for export, replaceAllWords, and clearAllWords
   const [filter, setFilter] = useState<'all' | 'learned' | 'not-learned'>('all');
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
   const fileInputRef = useRef<HTMLInputElement>(null); // Ref for the file input
@@ -56,6 +67,13 @@ const WordTable: React.FC<WordTableProps> = ({
     URL.revokeObjectURL(url);
   };
 
+  // Function to handle clearing all words
+  // Updated to use AlertDialog
+  const performClearAllWords = () => {
+    clearAllWords();
+    toast({ title: "Успех", description: 'Все слова удалены.' });
+  };
+ 
   // Function to handle word import
   const handleImportWords = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -164,6 +182,28 @@ const WordTable: React.FC<WordTableProps> = ({
                   ref={fileInputRef} // Assign ref
                 />
               </div>
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <button
+                    type="button"
+                    className="px-4 h-9 bg-red-500 text-white rounded-md hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-opacity-50"
+                  >
+                    Очистить все слова
+                  </button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Вы уверены?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      Это действие необратимо удалит все слова из вашего списка. Продолжить?
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Отмена</AlertDialogCancel>
+                    <AlertDialogAction onClick={performClearAllWords}>Удалить</AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
             </div>
           </div>
           
