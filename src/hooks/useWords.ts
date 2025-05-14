@@ -33,33 +33,26 @@ export const useWords = () => {
   }, [state]);
   
   // Add new words. Accepts an array of Word objects.
-  const addWords = async (text: string) => {
+  const addWords = async (newWordsFromInput: Word[]) => {
     try {
-      const newWords: Word[] = text.split('\n').map((line) => {
-        const [hebrew, russian = '', transcription = '', category = 'other'] = line.trim().split('|');
-        return {
-          id: crypto.randomUUID(),
-          hebrew: hebrew.trim(),
-          russian: russian.trim(),
-          transcription: transcription.trim(),
-          category: category.trim() as WordCategory,
-          learned: false,
-          dateAdded: Date.now(),
-          showTranslation: false,
-          learningStage: 0,
-          lastReviewed: null,
-          nextReview: null
-        };
-      }).filter(word => word.hebrew && word.russian);
+      // Input is now an array of Word objects, so no parsing is needed.
+      // Filter out any words that might be empty or invalid, though this should ideally be handled before calling addWords.
+      const validNewWords = newWordsFromInput.filter(word => word.hebrew && word.russian);
 
-      if (newWords.length === 0) {
-        throw new Error('No valid words found in the input');
+      if (validNewWords.length === 0) {
+        // It's possible all incoming words were invalid or empty.
+        toast.error('No valid words to add.', {
+          id: 'noValidWordsToAdd',
+          duration: 3000,
+          position: 'top-right',
+        });
+        return; // Exit if no valid words
       }
 
       setState(prev => {
-        const uniqueNewWords = newWords.filter(
-          newWord => !prev.words.some(existingWord => 
-            existingWord.hebrew === newWord.hebrew && 
+        const uniqueNewWords = validNewWords.filter(
+          newWord => !prev.words.some(existingWord =>
+            existingWord.hebrew === newWord.hebrew &&
             existingWord.russian === newWord.russian
           )
         );
