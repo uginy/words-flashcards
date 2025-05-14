@@ -26,7 +26,16 @@ const WordInput: React.FC<WordInputProps> = ({ onAddWords }) => {
     try {
       if (inputText.includes(' - ')) {
         pathTaken = 'structured';
-        wordsToAdd = parseAndTranslateWords(inputText);
+        try {
+          wordsToAdd = parseAndTranslateWords(inputText);
+          if (!Array.isArray(wordsToAdd)) {
+            throw new Error('Failed to parse words');
+          }
+        } catch (error) {
+          setError('Failed to parse the input text. Please check the format.');
+          setIsLoading(false);
+          return;
+        }
       } else {
         pathTaken = 'llm';
         const apiKey = localStorage.getItem('openRouterApiKey');

@@ -5,7 +5,8 @@ import WordInput from './components/WordInput';
 import WordTable from './components/WordTable';
 import Statistics from './components/Statistics';
 import { useWords } from './hooks/useWords';
-import Settings from './components/Settings'; // Import Settings component
+import Settings from './components/Settings';
+import { parseAndTranslateWords } from './utils/translation';
 
 function App() {
   const [activeTab, setActiveTab] = useState('learn');
@@ -97,9 +98,18 @@ adjective - אחראי-ת - ахраи-т - ответственный(-ая)
 adjective - מוכשר-ת - мухшар-эт - талантливый(-ая)
 adjective - מבולבל-ת - мевульбаль-эт - запутанный(-ая)
 adjective - מרוכז-ת - меруказ-эт - сосредоточенный(-ая)
-other - היכן - эйхан - где
-      `.trim();
-      addWords(defaultWordsStructured);
+other - היכן - эйхан - где`.trim();
+      
+      try {
+        const parsedWords = parseAndTranslateWords(defaultWordsStructured);
+        if (Array.isArray(parsedWords) && parsedWords.length > 0) {
+          addWords(parsedWords);
+        } else {
+          console.error('Failed to parse default words, or no words were parsed');
+        }
+      } catch (error) {
+        console.error('Error parsing default words:', error);
+      }
     }
   }, [words.length, addWords]);
 

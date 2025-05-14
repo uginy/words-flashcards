@@ -14,67 +14,81 @@ export const useWords = () => {
   useEffect(() => {
     const savedState = loadFromLocalStorage();
     if (savedState) {
-      setState(savedState);
+      // Ensure loaded state has at least the core properties
+      setState({
+        words: savedState.words || [],
+        currentIndex: savedState.currentIndex || 0,
+      });
     }
   }, []);
   
   // Save to localStorage whenever state changes
   useEffect(() => {
-    if (state.words.length > 0 || state.currentIndex > 0) { // Also save if currentIndex changed but words didn't, to persist view state
+    // Only save if there's something meaningful to save
+    if (state.words.length > 0 || state.currentIndex !== 0) { 
       saveToLocalStorage(state);
     }
   }, [state]);
   
   // Add new words. Accepts an array of Word objects.
   const addWords = (newWords: Word[]) => {
+    console.log('addWords called with:', typeof newWords, Array.isArray(newWords), newWords);
+    
+    // Ensure newWords is an array
+    if (!Array.isArray(newWords)) {
+      console.error('addWords received invalid input:', JSON.stringify(newWords));
+      return;
+    }
+    
     if (newWords.length === 0) return;
     
     setState(prevState => {
-      // Filter out duplicates based on Hebrew word
-      const filteredNewWords = newWords.filter(
-        newWord => !prevState.words.some(word => word.hebrew === newWord.hebrew)
+      const uniqueNewWords = newWords.filter(
+        newWord => !prevState.words.some(existingWord => existingWord.hebrew === newWord.hebrew)
       );
       
-      if (filteredNewWords.length === 0) {
-        // Optionally, provide feedback to the user that all words were duplicates
-        console.log("All provided words are duplicates and were not added.");
-        return prevState; // No change if all are duplicates
+      if (uniqueNewWords.length === 0) {
+        console.log("All provided words are duplicates or empty and were not added.");
+        return prevState;
       }
 
       return {
         ...prevState,
-        words: [...prevState.words, ...filteredNewWords],
-        // Optionally, set currentIndex to the start of the newly added words
-        // currentIndex: prevState.words.length 
+        words: [...prevState.words, ...uniqueNewWords],
       };
     });
   };
   
-  // Mark a word as learned
   const markAsLearned = (id: string) => {
-    setState(prevState => {
-      const updatedWords = prevState.words.map(word => 
-        word.id === id ? { ...word, isLearned: true } : word // Corrected to isLearned
-      );
-      return { ...prevState, words: updatedWords };
-    });
+    setState(prevState => ({
+      ...prevState,
+      words: prevState.words.map(word => 
+        word.id === id ? { ...word, isLearned: true } : word
+      ),
+    }));
   };
 
-  // Toggle translation visibility for a word
+  const markAsNotLearned = (id: string) => {
+    setState(prevState => ({
+      ...prevState,
+      words: prevState.words.map(word => 
+        word.id === id ? { ...word, isLearned: false, learningStage: 0 } : word 
+      ),
+    }));
+  };
+
   const toggleTranslation = (id: string) => {
-    setState(prevState => {
-      const updatedWords = prevState.words.map(word =>
+    setState(prevState => ({
+      ...prevState,
+      words: prevState.words.map(word =>
         word.id === id ? { ...word, showTranslation: !word.showTranslation } : word
-      );
-      return { ...prevState, words: updatedWords };
-    });
+      ),
+    }));
   };
 
-  // Move to the next word
   const nextWord = () => {
     setState(prevState => {
       if (prevState.words.length === 0) return prevState;
-      // Hide translation of current card before moving to next
       const wordsWithHiddenTranslation = prevState.words.map((word, index) => 
         index === prevState.currentIndex ? { ...word, showTranslation: false } : word
       );
@@ -84,8 +98,7 @@ export const useWords = () => {
     });
   };
 
-  // Reset all words (clear learned status, etc.) - example, can be expanded
-  const resetWords = () => {
+  const resetWords = () => { // This will be returned as resetProgress
     setState(prevState => ({
       ...prevState,
       words: prevState.words.map(word => ({
@@ -96,19 +109,16 @@ export const useWords = () => {
         lastReviewed: null,
         nextReview: null,
       })),
-      currentIndex: prevState.words.length > 0 ? 0 : 0, // Reset to first word or 0 if no words
+      currentIndex: prevState.words.length > 0 ? 0 : 0,
     }));
   };
 
-  // Delete a word by its ID
   const deleteWord = (id: string) => {
     setState(prevState => {
       const updatedWords = prevState.words.filter(word => word.id !== id);
       let newCurrentIndex = prevState.currentIndex;
-      if (prevState.currentIndex >= updatedWords.length && updatedWords.length > 0) {
-        newCurrentIndex = updatedWords.length - 1;
-      } else if (updatedWords.length === 0) {
-        newCurrentIndex = 0;
+      if (newCurrentIndex >= updatedWords.length) {
+        newCurrentIndex = Math.max(0, updatedWords.length - 1);
       }
       return {
         ...prevState,
@@ -118,7 +128,6 @@ export const useWords = () => {
     });
   };
   
-  // Update an existing word
   const updateWord = (updatedWord: Word) => {
     setState(prevState => ({
       ...prevState,
@@ -126,14 +135,30 @@ export const useWords = () => {
     }));
   };
 
+  // Calculated values
+  const currentWord = state.words.length > 0 && state.currentIndex < state.words.length 
+    ? state.words[state.currentIndex] 
+    : undefined;
+
+  const totalWords = state.words.length;
+  const learnedCount = state.words.filter(word => word.isLearned).length;
+  const stats = {
+    total: totalWords,
+    learned: learnedCount,
+    remaining: totalWords - learnedCount,
+  };
 
   return { 
-    ...state, 
+    words: state.words,
+    currentIndex: state.currentIndex,
+    currentWord,
+    stats,
     addWords, 
     markAsLearned, 
+    markAsNotLearned,
     toggleTranslation, 
     nextWord, 
-    resetWords,
+    resetProgress: resetWords,
     deleteWord,
     updateWord,
   };
