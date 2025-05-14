@@ -13,6 +13,12 @@ const FlashCard: React.FC<FlashCardProps> = ({ word, onMarkLearned, onNext }) =>
   const handleFlip = () => {
     setFlipped(!flipped);
   };
+
+  const handleKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
+    if (event.key === 'Enter' || event.key === ' ') {
+      handleFlip();
+    }
+  };
   
   const handleMarkLearned = () => {
     onMarkLearned(word.id);
@@ -46,6 +52,9 @@ const FlashCard: React.FC<FlashCardProps> = ({ word, onMarkLearned, onNext }) =>
           <div 
             className="card-front bg-white rounded-xl p-6 flex flex-col justify-between items-center shadow-lg"
             onClick={handleFlip}
+            onKeyDown={handleKeyDown}
+            role="button"
+            tabIndex={0}
           >
             <div className={`px-2 py-1 rounded-full text-xs ${getCategoryColor(word.category)}`}>
               {word.category === 'verb' ? 'глагол' : 
@@ -55,6 +64,7 @@ const FlashCard: React.FC<FlashCardProps> = ({ word, onMarkLearned, onNext }) =>
             
             <div className="text-center">
               <h2 className="text-4xl font-bold mb-2 text-gray-800" dir="rtl">{word.hebrew}</h2>
+              <p className="text-lg text-gray-600 mb-2" dir="rtl">[{word.transcription}]</p>
               <p className="text-sm text-gray-500">Нажмите, чтобы увидеть перевод</p>
             </div>
             
@@ -85,6 +95,9 @@ const FlashCard: React.FC<FlashCardProps> = ({ word, onMarkLearned, onNext }) =>
           <div 
             className="card-back bg-white rounded-xl p-6 flex flex-col justify-between items-center shadow-lg"
             onClick={handleFlip}
+            onKeyDown={handleKeyDown}
+            role="button"
+            tabIndex={0}
           >
             <div className={`px-2 py-1 rounded-full text-xs ${getCategoryColor(word.category)}`}>
               {word.category === 'verb' ? 'глагол' : 
