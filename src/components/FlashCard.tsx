@@ -103,7 +103,6 @@ const FlashCard: React.FC<FlashCardProps> = ({ word, onMarkLearned, onNext }) =>
           >
             <div className="text-center">
               <h3 className="text-4xl font-medium mb-1 text-gray-700">{word.russian}</h3>
-              <p className="text-xl text-gray-500">[{word.transcription}]</p>
               {word.conjugations && (
                 <div className="text-left mx-auto max-w-[400px] px-2 my-2">
                   <CompactConjugation conjugations={word.conjugations} />
