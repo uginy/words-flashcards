@@ -15,16 +15,16 @@ const CompactConjugation: React.FC<CompactConjugationProps> = ({ conjugations })
 
   // Наиболее важные формы для каждого времени
   const mainForms = {
-    past: ['я (м)', 'ты (м)', 'он', 'мы'],
-    present: ['я (м)', 'ты (м)', 'он', 'мы'],
-    future: ['я (м)', 'ты (м)', 'он', 'мы'],
-    imperative: ['ты (м)']
+    past: ['אני', 'אתה', 'הוא', 'אנחנו'],
+    present: ['אני', 'אתה', 'הוא', 'אנחנו'], 
+    future: ['אני', 'אתה', 'הוא', 'אנחנו'],
+    imperative: ['אתה']
   };
 
   return (
     <div className="space-y-3 text-sm">
       {(Object.entries(conjugations) as [keyof typeof sections, Record<string, string>][])
-        .filter(([tense, forms]) => forms && Object.keys(forms).length > 0)
+        .filter(([, forms]) => forms && Object.keys(forms).length > 0)
         .map(([tense, forms]) => (
           <div key={tense}>
             <div className="font-medium mb-1">{sections[tense]}:</div>
