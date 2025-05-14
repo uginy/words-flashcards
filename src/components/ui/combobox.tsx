@@ -55,11 +55,11 @@ export function Combobox({
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-full p-0">
-        <Command>
+      <PopoverContent className="w-full p-0" style={{ maxHeight: '300px' }}>
+        <Command className="max-h-[300px]">
           <CommandInput placeholder={searchPlaceholder} />
           <CommandEmpty>{noResultsText}</CommandEmpty>
-          <CommandGroup>
+          <CommandGroup className="overflow-y-auto max-h-[228px]">
             {options.map((option) => (
               <CommandItem
                 key={option.value}
