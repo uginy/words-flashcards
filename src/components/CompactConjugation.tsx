@@ -30,7 +30,7 @@ const CompactConjugation: React.FC<CompactConjugationProps> = ({ conjugations })
             <div className="font-medium mb-1">{sections[tense]}:</div>
             <div className="grid grid-cols-2 gap-x-8 gap-y-0.5">
               {Object.entries(forms)
-                .filter(([person]) => mainForms[tense].includes(person))
+                // .filter(([person]) => mainForms[tense].includes(person))
                 .map(([person, form]) => (
                   <div key={person} className="flex justify-between items-center text-sm">
                     <span className="text-gray-600">{person}:</span>
