@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Combobox } from './ui/combobox';
 // import { useWords } from '../hooks/useWords'; // Removed as part of import/export refactor
 // import { toast } from 'react-hot-toast'; // Removed as part of import/export refactor
 // import type { Word } from '../types'; // Removed as part of import/export refactor
@@ -49,10 +50,11 @@ const Settings: React.FC = () => {
     if (showFreeOnly) {
       models = models.filter(
         (model) =>
-          parseFloat(model.pricing.prompt) === 0 &&
-          parseFloat(model.pricing.completion) === 0
+          Number.parseFloat(model.pricing.prompt) === 0 &&
+          Number.parseFloat(model.pricing.completion) === 0
       );
     }
+    
     setFilteredModels(models.sort((a, b) => a.name.localeCompare(b.name)));
   }, [availableModels, showFreeOnly]);
 
@@ -137,28 +139,28 @@ const Settings: React.FC = () => {
           <label htmlFor="modelSelect" className="block text-sm font-medium text-gray-700 mb-1">
             Select LLM Model
           </label>
-          <div className="flex items-center space-x-3 mb-2">
-            <select
-              id="modelSelect"
-              className="w-full px-3 py-2 text-gray-700 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100"
-              value={selectedModel}
-              onChange={(e) => setSelectedModel(e.target.value)}
-              disabled={isLoadingModels || availableModels.length === 0}
-            >
-              <option value="">{isLoadingModels ? 'Loading models...' : 'Select a model'}</option>
-              {filteredModels.map((model) => (
-                <option key={model.id} value={model.id}>
-                  {model.name} (Prompt: ${model.pricing.prompt}, Completion: ${model.pricing.completion})
-                </option>
-              ))}
-            </select>
+          <div className="flex items-center space-x-3">
+            <div className="flex-1">
+              <Combobox
+                options={filteredModels.map((model) => ({
+                  value: model.id,
+                  label: `${model.name} (Prompt: $${model.pricing.prompt}, Completion: $${model.pricing.completion})`
+                }))}
+                value={selectedModel}
+                onValueChange={setSelectedModel}
+                placeholder={isLoadingModels ? 'Loading models...' : 'Select a model'}
+                searchPlaceholder="Поиск модели..."
+                noResultsText="Модели не найдены"
+                disabled={isLoadingModels || availableModels.length === 0}
+              />
+            </div>
             <button
-                type="button"
-                onClick={fetchModels}
-                disabled={!apiKey || isLoadingModels}
-                className="px-3 py-2 text-sm bg-blue-500 text-white rounded-md hover:bg-blue-600 disabled:bg-blue-300"
+              type="button"
+              onClick={fetchModels}
+              disabled={!apiKey || isLoadingModels}
+              className="px-3 py-2 text-sm bg-blue-500 text-white rounded-md hover:bg-blue-600 disabled:bg-blue-300 shrink-0"
             >
-                {isLoadingModels ? 'Refreshing...' : 'Refresh'}
+              {isLoadingModels ? 'Refreshing...' : 'Refresh'}
             </button>
           </div>
            <div className="flex items-center">
