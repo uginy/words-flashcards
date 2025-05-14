@@ -147,7 +147,7 @@ const Settings: React.FC = () => {
                 disabled={!apiKey || isLoadingModels}
                 className="px-3 py-2 text-sm bg-blue-500 text-white rounded-md hover:bg-blue-600 disabled:bg-blue-300"
             >
-                {isLoadingModels ? 'Refreshing...' : 'Refresh List'}
+                {isLoadingModels ? 'Refreshing...' : 'Refresh'}
             </button>
           </div>
            <div className="flex items-center">
