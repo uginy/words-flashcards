@@ -58,7 +58,7 @@ The JSON object for each word should look like this:
 Ensure the transcription is accurate and the Russian translation is common.
 If conjugation or an example sentence is not easily determined, provide an empty string or omit the field.
 If you cannot process a specific word, include an "error" field in its JSON object with a brief explanation, but still try to process other words.
-Provide ONLY the JSON object with the "words" array in your response, with no other text before or after it. The array should contain one object for each word in the input list [${wordsListString}].`;
+Provide ONLY the JSON object with the "words" array in your response, with no other text before or after it. The array should contain one object for each word in the input list you were given at the beginning of this prompt.`;
 
   try {
     const completion = await openai.chat.completions.create({
@@ -140,7 +140,7 @@ Provide ONLY the JSON object with the "words" array in your response, with no ot
         conjugation: currentItem.conjugation ? String(currentItem.conjugation) : undefined,
         example: currentItem.example ? String(currentItem.example) : undefined,
         showTranslation: false,
-        isLearned: false,
+        learned: false, // Changed from isLearned to learned
         learningStage: 0,
         lastReviewed: null,
         nextReview: null,
@@ -240,7 +240,7 @@ Provide ONLY the JSON object in your response, with no other text before or afte
       conjugation: wordObject.conjugation ? String(wordObject.conjugation) : undefined,
       example: wordObject.example ? String(wordObject.example) : undefined,
       showTranslation: false,
-      isLearned: false,
+      learned: false, // Changed from isLearned to learned
       learningStage: 0,
       lastReviewed: null,
       nextReview: null,
