@@ -52,6 +52,14 @@ export const useWords = () => {
       }
 
       setState(prev => {
+        // If there are no words in the state, all new words are unique
+        if (prev.words.length === 0) {
+          return {
+            ...prev,
+            words: validNewWords
+          };
+        }
+        
         const uniqueNewWords = validNewWords.filter(
           newWord => !prev.words.some(existingWord =>
             existingWord.hebrew === newWord.hebrew &&
@@ -186,12 +194,8 @@ export const useWords = () => {
   };
 
   const clearAllWords = () => {
-    setState({
-      words: [],
-      currentIndex: 0,
-    });
-    // Clear words from localStorage
-    saveToLocalStorage({ words: [], currentIndex: 0 });
+    // Reset to initial state - this will trigger our useEffect which saves to localStorage
+    setState(initialState);
     toast({
       title: "Успех!",
       description: "Все слова удалены.",

@@ -63,7 +63,7 @@ const FlashCard: React.FC<FlashCardProps> = ({ word, onMarkLearned, onNext }) =>
               <div className={`inline-block px-2 py-1 rounded-full text-sm ${getCategoryColor(word.category)} mb-2`}>
                 {word.category}
               </div>
-              <h2 className="text-4xl font-bold mb-2 text-gray-800" dir="rtl">{word.hebrew}</h2>
+              <h2 className="text-5xl font-bold mb-2 text-gray-800">{word.hebrew}</h2>
               <p className="text-xl text-gray-600 mb-3">[{word.transcription}]</p>
               <p className="text-sm text-gray-500 mt-2">Нажмите, чтобы увидеть перевод</p>
             </div>
@@ -102,7 +102,7 @@ const FlashCard: React.FC<FlashCardProps> = ({ word, onMarkLearned, onNext }) =>
             tabIndex={0}
           >
             <div className="text-center">
-              <h3 className="text-4xl font-medium mb-1 text-gray-700">{word.russian}</h3>
+              <h3 className="text-5xl font-medium mb-1 text-gray-700">{word.russian}</h3>
               {word.conjugations && (
                 <div className="text-left mx-auto max-w-[400px] px-2 my-2">
                   <CompactConjugation conjugations={word.conjugations} />
