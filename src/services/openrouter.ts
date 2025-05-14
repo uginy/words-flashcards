@@ -111,8 +111,10 @@ The JSON object for each word/phrase should look like this:
 }
 
 Focus on providing accurate hebrew, transcription, russian, and category fields.
-For verbs (פועל), always include complete conjugation tables using Hebrew pronouns (אני, אתה, את, הוא, היא, אנחנו, אתם, אתן, הם, הן).
-All conjugations must be in Hebrew only, do not transliterate them.
+IMPORTANT: Only include conjugation tables if the word is a verb (category="פועל"). Skip conjugations for all other word types.
+When the word is a verb (פועל):
+- Include complete conjugation tables using Hebrew pronouns (אני, אתה, את, הוא, היא, אנחנו, אתם, אתן, הם, הן)
+- All conjugations must be in Hebrew only, do not transliterate them
 For multi-word inputs, ensure the translation preserves the full meaning of the phrase.
 If you cannot process a specific word/phrase, include an "error" field in its JSON object with a brief explanation, but still try to process other entries.
 Provide ONLY the JSON object with the "words" array in your response, with no other text before or after it. The array should contain one object for each word in the input list you were given at the beginning of this prompt.`;
