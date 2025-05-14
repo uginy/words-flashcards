@@ -10,7 +10,12 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select'; // shadcn/ui Select
+} from '@/components/ui/select';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -311,9 +316,19 @@ const WordTable: React.FC<WordTableProps> = ({
                     <td className="px-4 py-3 whitespace-nowrap">
                       <div className="text-base font-medium text-gray-900" dir="rtl">{word.hebrew}</div>
                       {word.conjugations && (
-                        <div className="text-xs mt-1">
-                          <ConjugationDisplay conjugations={word.conjugations} />
-                        </div>
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <button
+                              type="button"
+                              className="text-xs text-blue-600 hover:text-blue-800 mt-1"
+                            >
+                              Показать спряжение
+                            </button>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-auto max-w-[600px]" align="start">
+                            <ConjugationDisplay conjugations={word.conjugations} />
+                          </PopoverContent>
+                        </Popover>
                       )}
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap">

@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { Word } from '../types';
+import { Popover, PopoverContent, PopoverTrigger } from './ui/popover';
+import ConjugationDisplay from './ConjugationDisplay';
 
 interface FlashCardProps {
   word: Word;
@@ -9,7 +11,7 @@ interface FlashCardProps {
 
 const FlashCard: React.FC<FlashCardProps> = ({ word, onMarkLearned, onNext }) => {
   const [flipped, setFlipped] = useState(false);
-  
+
   const handleFlip = () => {
     setFlipped(!flipped);
   };
@@ -19,18 +21,18 @@ const FlashCard: React.FC<FlashCardProps> = ({ word, onMarkLearned, onNext }) =>
       handleFlip();
     }
   };
-  
+
   const handleMarkLearned = () => {
     onMarkLearned(word.id);
     setFlipped(false);
     onNext();
   };
-  
+
   const handleSkip = () => {
     setFlipped(false);
     onNext();
   };
-  
+
   const getCategoryColor = (category: string) => {
     switch (category) {
       case 'verb':
@@ -43,13 +45,13 @@ const FlashCard: React.FC<FlashCardProps> = ({ word, onMarkLearned, onNext }) =>
         return 'bg-gray-100 text-gray-800';
     }
   };
-  
+
   return (
-    <div className="w-full max-w-md mx-auto">
+    <div className="w-full max-w-xl mx-auto">
       <div className="card-container h-64">
         <div className={`card h-full ${flipped ? 'flipped' : ''}`}>
           {/* Front side - Hebrew */}
-          <div 
+          <div
             className="card-front bg-white rounded-xl p-6 flex flex-col justify-between items-center shadow-lg"
             onClick={handleFlip}
             onKeyDown={handleKeyDown}
@@ -59,15 +61,15 @@ const FlashCard: React.FC<FlashCardProps> = ({ word, onMarkLearned, onNext }) =>
             <div className={`px-2 py-1 rounded-full text-md ${getCategoryColor(word.category)}`}>
               {word.category}
             </div>
-            
+
             <div className="text-center">
               <h2 className="text-5xl font-bold mb-2 text-gray-800">{word.hebrew}</h2>
               <p className="text-3xl text-gray-600 mb-2">[{word.transcription}]</p>
               <p className="text-sm text-gray-500">Нажмите, чтобы увидеть перевод</p>
             </div>
-            
+
             <div className="w-full flex justify-between items-center">
-          
+
               <button
                 className="px-3 py-1 rounded-md bg-green-500 text-white text-sm hover:bg-green-600 transition-colors"
                 onClick={(e) => {
@@ -78,7 +80,7 @@ const FlashCard: React.FC<FlashCardProps> = ({ word, onMarkLearned, onNext }) =>
                 Знаю
               </button>
 
-              <button 
+              <button
                 className="px-3 py-1 rounded-md bg-gray-200 text-gray-700 text-sm hover:bg-gray-300 transition-colors"
                 onClick={(e) => {
                   e.stopPropagation();
@@ -90,9 +92,9 @@ const FlashCard: React.FC<FlashCardProps> = ({ word, onMarkLearned, onNext }) =>
 
             </div>
           </div>
-          
+
           {/* Back side - Russian */}
-          <div 
+          <div
             className="card-back bg-white rounded-xl p-6 flex flex-col justify-between items-center shadow-lg"
             onClick={handleFlip}
             onKeyDown={handleKeyDown}
@@ -102,20 +104,17 @@ const FlashCard: React.FC<FlashCardProps> = ({ word, onMarkLearned, onNext }) =>
             <div className={`px-2 py-1 rounded-full text-md ${getCategoryColor(word.category)}`}>
               {word.category}
             </div>
-            
+
             <div className="text-center">
               <h3 className="text-xl font-medium mb-1 text-gray-700">{word.russian}</h3>
               <p className="text-sm text-gray-500">[{word.transcription}]</p>
               {word.conjugations && (
-                <div className="mt-2 text-xs text-gray-600">
-                  <p>Спряжение:</p>
-                  <p dir="rtl" className="font-medium mt-1">{JSON.stringify(word.conjugations) ?? ''}</p>
-                </div>
+                <ConjugationDisplay conjugations={word.conjugations} />
               )}
             </div>
-            
+
             <div className="w-full flex justify-between items-center">
-              <button 
+              <button
                 className="px-3 py-1 rounded-md bg-gray-200 text-gray-700 text-sm hover:bg-gray-300 transition-colors"
                 onClick={(e) => {
                   e.stopPropagation();
@@ -124,7 +123,7 @@ const FlashCard: React.FC<FlashCardProps> = ({ word, onMarkLearned, onNext }) =>
               >
                 Следующее
               </button>
-              
+
               <button
                 className="px-3 py-1 rounded-md bg-green-500 text-white text-sm hover:bg-green-600 transition-colors"
                 onClick={(e) => {

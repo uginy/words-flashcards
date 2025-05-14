@@ -11,7 +11,7 @@ const Statistics: React.FC<StatisticsProps> = ({ total, learned, remaining }) =>
   const progressPercent = total > 0 ? Math.round((learned / total) * 100) : 0;
   
   return (
-    <div className="w-full max-w-md mx-auto">
+    <div className="w-full max-w-xl mx-auto">
       <div className="bg-white rounded-lg shadow-md p-4">
         <h3 className="text-lg font-medium text-gray-800 mb-3">Статистика</h3>
         
