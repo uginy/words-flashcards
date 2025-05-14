@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { Word, WordsState } from '../types';
+import { toast } from 'react-hot-toast';
+import type { Word, WordCategory, WordsState } from '../types';
 import { saveToLocalStorage, loadFromLocalStorage } from '../utils/storage';
 
 const initialState: WordsState = {
@@ -10,6 +11,7 @@ const initialState: WordsState = {
 export const useWords = () => {
   const [state, setState] = useState<WordsState>(initialState);
   
+
   // Load from localStorage on initial render
   useEffect(() => {
     const savedState = loadFromLocalStorage();
@@ -31,32 +33,72 @@ export const useWords = () => {
   }, [state]);
   
   // Add new words. Accepts an array of Word objects.
-  const addWords = (newWords: Word[]) => {
-    console.log('addWords called with:', typeof newWords, Array.isArray(newWords), newWords);
-    
-    // Ensure newWords is an array
-    if (!Array.isArray(newWords)) {
-      console.error('addWords received invalid input:', JSON.stringify(newWords));
-      return;
-    }
-    
-    if (newWords.length === 0) return;
-    
-    setState(prevState => {
-      const uniqueNewWords = newWords.filter(
-        newWord => !prevState.words.some(existingWord => existingWord.hebrew === newWord.hebrew)
-      );
-      
-      if (uniqueNewWords.length === 0) {
-        console.log("All provided words are duplicates or empty and were not added.");
-        return prevState;
+  const addWords = async (text: string) => {
+    try {
+      const newWords: Word[] = text.split('\n').map((line) => {
+        const [hebrew, russian = '', transcription = '', category = 'other'] = line.trim().split('|');
+        return {
+          id: crypto.randomUUID(),
+          hebrew: hebrew.trim(),
+          russian: russian.trim(),
+          transcription: transcription.trim(),
+          category: category.trim() as WordCategory,
+          learned: false,
+          dateAdded: Date.now(),
+          showTranslation: false,
+          learningStage: 0,
+          lastReviewed: null,
+          nextReview: null
+        };
+      }).filter(word => word.hebrew && word.russian);
+
+      if (newWords.length === 0) {
+        throw new Error('No valid words found in the input');
       }
 
-      return {
-        ...prevState,
-        words: [...prevState.words, ...uniqueNewWords],
-      };
-    });
+      setState(prev => {
+        const uniqueNewWords = newWords.filter(
+          newWord => !prev.words.some(existingWord => 
+            existingWord.hebrew === newWord.hebrew && 
+            existingWord.russian === newWord.russian
+          )
+        );
+
+        if (uniqueNewWords.length === 0) {
+          toast.error('These words already exist in your collection', {
+            id: 'duplicateWordsError',
+            duration: 3000,
+            position: 'top-right',
+          });
+          return prev;
+        }
+
+        const count = uniqueNewWords.length;
+        const wordForm = count === 1 ? 'слово' : 
+                        (count >= 2 && count <= 4) ? 'слова' : 'слов';
+        const successMessage = `Добавлено ${count} ${wordForm}`;
+        toast.success(successMessage, {
+          id: 'addWordsSuccess',
+          duration: 3000,
+          position: 'top-right',
+        });
+        
+        return { 
+          ...prev, 
+          words: [...prev.words, ...uniqueNewWords] 
+        };
+      });
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to add words';
+      toast.error(errorMessage, {
+        id: 'addWordsError',
+        duration: 3000,
+        style: {
+          background: '#DC2626',
+          color: '#fff',
+        },
+      });
+    }
   };
   
   const markAsLearned = (id: string) => {

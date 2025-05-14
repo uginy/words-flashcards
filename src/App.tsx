@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
+import { Toaster } from 'react-hot-toast';
 import Layout from './components/Layout';
 import FlashCard from './components/FlashCard';
 import WordInput from './components/WordInput';
@@ -77,7 +78,9 @@ function App() {
 
   // Add default words if none exist
   useEffect(() => {
-    if (words.length === 0) {
+    const hasAddedDefaultWords = sessionStorage.getItem('hasAddedDefaultWords');
+    if (words.length === 0 && !hasAddedDefaultWords) {
+      sessionStorage.setItem('hasAddedDefaultWords', 'true');
       const defaultWordsStructured = `
 noun - ניסיון - нисайон - опыт
 noun - מוצר - муцар - продукт
@@ -104,8 +107,6 @@ other - היכן - эйхан - где`.trim();
         const parsedWords = parseAndTranslateWords(defaultWordsStructured);
         if (Array.isArray(parsedWords) && parsedWords.length > 0) {
           addWords(parsedWords);
-        } else {
-          console.error('Failed to parse default words, or no words were parsed');
         }
       } catch (error) {
         console.error('Error parsing default words:', error);
@@ -175,9 +176,34 @@ other - היכן - эйхан - где`.trim();
   };
 
   return (
-    <Layout tabs={tabs} activeTab={activeTab} onTabChange={setActiveTab}>
-      {renderContent()}
-    </Layout>
+    <div>
+      <Toaster
+        position="top-right"
+        toastOptions={{
+          className: '',
+          duration: 3000,
+          style: {
+            padding: '16px',
+            borderRadius: '8px',
+          },
+          success: {
+            style: {
+              background: '#059669',
+              color: '#fff',
+            },
+          },
+          error: {
+            style: {
+              background: '#DC2626',
+              color: '#fff',
+            },
+          },
+        }}
+      />
+      <Layout tabs={tabs} activeTab={activeTab} onTabChange={setActiveTab}>
+        {renderContent()}
+      </Layout>
+    </div>
   );
 }
 
