@@ -39,6 +39,7 @@ export const useWords = () => {
       // Input is now an array of Word objects, so no parsing is needed.
       // Filter out any words that might be empty or invalid, though this should ideally be handled before calling addWords.
       const validNewWords = newWordsFromInput.filter(word => word.hebrew && word.russian);
+      console.log('[useWords] Number of validNewWords (received by addWords):', validNewWords.length, validNewWords); // DEBUG
 
       if (validNewWords.length === 0) {
         // It's possible all incoming words were invalid or empty.
@@ -57,6 +58,7 @@ export const useWords = () => {
             existingWord.russian === newWord.russian
           )
         );
+        console.log('[useWords] Number of uniqueNewWords (after filtering existing):', uniqueNewWords.length, uniqueNewWords); // DEBUG
 
         if (uniqueNewWords.length === 0) {
           toast({

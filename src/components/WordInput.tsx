@@ -66,7 +66,12 @@ const WordInput: React.FC<WordInputProps> = ({ onAddWords }) => {
         }
 
         // Assign to the higher-scoped variable
-        hebrewWordsForLlm = inputText.split('\n').map(word => word.trim()).filter(word => word);
+        // console.log('[WordInput] Raw inputText before split:', JSON.stringify(inputText)); // DEBUG RAW INPUT - Removed for brevity
+        hebrewWordsForLlm = inputText
+          .split(/\r\n|\r|\n/) // Split by any common newline sequence
+          .map(line => line.trim())
+          .filter(line => line.length > 0);
+        console.log('[WordInput] Number of lines after split, trim, filter:', hebrewWordsForLlm.length, hebrewWordsForLlm); // DEBUG - Renamed log for clarity
         if (hebrewWordsForLlm.length === 0) {
           setError('No Hebrew words provided for enrichment. Please enter some words.');
           setIsLoading(false);
@@ -76,6 +81,7 @@ const WordInput: React.FC<WordInputProps> = ({ onAddWords }) => {
         try {
           // Use the higher-scoped variable
           const enrichedWordsArray = await enrichWordsWithLLM(hebrewWordsForLlm, apiKey, model);
+          console.log('[WordInput] Number of words received from LLM processing:', enrichedWordsArray.length, enrichedWordsArray); // DEBUG - Renamed log for clarity
           wordsToAdd = enrichedWordsArray;
 
           if (wordsToAdd.length < hebrewWordsForLlm.length) {
@@ -120,6 +126,7 @@ const WordInput: React.FC<WordInputProps> = ({ onAddWords }) => {
   };
 
   const handlePaste = (e: React.ClipboardEvent) => {
+    e.preventDefault(); // Prevent default paste behavior
     const paste = e.clipboardData.getData('text');
     setInputText(paste);
   };
