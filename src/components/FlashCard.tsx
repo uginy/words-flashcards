@@ -76,7 +76,7 @@ const FlashCard: React.FC<FlashCardProps> = ({ word, onMarkLearned, onNext }) =>
                   handleSkip();
                 }}
               >
-                Пропустить
+                Далее
               </button>
               
               <button
@@ -124,7 +124,7 @@ const FlashCard: React.FC<FlashCardProps> = ({ word, onMarkLearned, onNext }) =>
                   handleSkip();
                 }}
               >
-                Пропустить
+                Следующее
               </button>
               
               <button
