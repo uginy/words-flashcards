@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react'; // Added useRef
+import React, { useState, useRef, useEffect } from 'react'; // Added useRef and useEffect
 import toast from 'react-hot-toast'; // For notifications
 import { Word } from '../types';
 import { useWords } from '../hooks/useWords'; // Import useWords
@@ -20,7 +20,7 @@ const WordTable: React.FC<WordTableProps> = ({
   const [filter, setFilter] = useState<'all' | 'learned' | 'not-learned'>('all');
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
   const fileInputRef = useRef<HTMLInputElement>(null); // Ref for the file input
-
+ 
   // Function to handle word export
   const handleExportWords = () => {
     if (!allWords || allWords.length === 0) {
@@ -102,7 +102,7 @@ const WordTable: React.FC<WordTableProps> = ({
     reader.readAsText(file);
   };
   
-  const filteredWords = words.filter(word => {
+  const filteredWords = allWords.filter(word => {
     const matchesLearnedFilter = 
       filter === 'all' || 
       (filter === 'learned' && word.learned) || 
@@ -124,7 +124,7 @@ const WordTable: React.FC<WordTableProps> = ({
   });
   
   // Get unique categories from words
-  const categories = ['all', ...new Set(words.map(w => w.category))];
+  const categories = ['all', ...new Set(allWords.map(w => w.category))];
   
   return (
     <div className="w-full">
