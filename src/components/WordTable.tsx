@@ -1,7 +1,14 @@
-import React, { useState, useRef, useEffect } from 'react'; // Added useRef and useEffect
+import React, { useState, useRef } from 'react'; // Removed unused useEffect
 import toast from 'react-hot-toast'; // For notifications
 import { Word } from '../types';
 import { useWords } from '../hooks/useWords'; // Import useWords
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'; // shadcn/ui Select
 
 interface WordTableProps {
   words: Word[]; // This prop contains filtered words, for export we'll use all words from the hook
@@ -164,37 +171,43 @@ const WordTable: React.FC<WordTableProps> = ({
               <label htmlFor="status-filter" className="block text-sm font-medium text-gray-700 mb-1">
                 Статус:
               </label>
-              <select
-                id="status-filter"
-                className="rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm"
+              <Select
                 value={filter}
-                onChange={(e) => setFilter(e.target.value as any)}
+                onValueChange={(value) => setFilter(value as 'all' | 'learned' | 'not-learned')}
               >
-                <option value="all">Все слова</option>
-                <option value="learned">Изученные</option>
-                <option value="not-learned">Неизученные</option>
-              </select>
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="Статус" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Все слова</SelectItem>
+                  <SelectItem value="learned">Изученные</SelectItem>
+                  <SelectItem value="not-learned">Неизученные</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
             
             <div>
               <label htmlFor="category-filter" className="block text-sm font-medium text-gray-700 mb-1">
                 Категория:
               </label>
-              <select
-                id="category-filter"
-                className="rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm"
+              <Select
                 value={categoryFilter}
-                onChange={(e) => setCategoryFilter(e.target.value)}
+                onValueChange={(value) => setCategoryFilter(value)}
               >
-                <option value="all">Все категории</option>
-                {categories.filter(c => c !== 'all').map(category => (
-                  <option key={category} value={category}>
-                    {category === 'verb' ? 'Глаголы' : 
-                     category === 'noun' ? 'Существительные' : 
-                     category === 'adjective' ? 'Прилагательные' : 'Другое'}
-                  </option>
-                ))}
-              </select>
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="Категория" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Все категории</SelectItem>
+                  {categories.filter(c => c !== 'all').map(category => (
+                    <SelectItem key={category} value={category}>
+                      {category === 'verb' ? 'Глаголы' :
+                       category === 'noun' ? 'Существительные' :
+                       category === 'adjective' ? 'Прилагательные' : category}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           </div>
         </div>
