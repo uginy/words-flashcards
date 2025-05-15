@@ -3,12 +3,14 @@ import { parseAndTranslateWords } from '../utils/translation';
 import { enrichWordsWithLLM } from '../services/openrouter';
 import { Word } from '../types';
 import { toast } from 'react-hot-toast';
+import { useWords } from '../hooks/useWords';
 
 interface WordInputProps {
   onAddWords: (words: Word[]) => void;
 }
 
 const WordInput: React.FC<WordInputProps> = ({ onAddWords }) => {
+  const { words: existingWords } = useWords();
   const [inputText, setInputText] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -65,17 +67,37 @@ const WordInput: React.FC<WordInputProps> = ({ onAddWords }) => {
           return;
         }
 
-        // Assign to the higher-scoped variable
+        // Split and clean input
         hebrewWordsForLlm = inputText
-          .split(/\r\n|\r|\n/) // Split by any common newline sequence
+          .split(/\r\n|\r|\n/)
           .map(line => line.trim())
           .filter(line => line.length > 0);
-        // console.log('[WordInput] Number of lines after split, trim, filter:', hebrewWordsForLlm.length, hebrewWordsForLlm); // DEBUG - Removed
+
         if (hebrewWordsForLlm.length === 0) {
-          setError('No Hebrew words provided for enrichment. Please enter some words.');
+          setError('Нет слов для добавления. Пожалуйста, введите слова.');
           setIsLoading(false);
           return;
         }
+
+        // Filter out duplicates
+        const uniqueWords = hebrewWordsForLlm.filter(newWord => 
+          !existingWords.some(existingWord => existingWord.hebrew === newWord)
+        );
+
+        if (uniqueWords.length === 0) {
+          setError('Все указанные слова уже существуют в вашей коллекции.');
+          setIsLoading(false);
+          return;
+        }
+
+        if (uniqueWords.length < hebrewWordsForLlm.length) {
+          const skippedCount = hebrewWordsForLlm.length - uniqueWords.length;
+          console.log(`Пропущено ${skippedCount} повторяющихся слов`);
+          toast.success(`Пропущено ${skippedCount} повторяющихся слов`);
+        }
+
+        // Use only unique words for processing
+        hebrewWordsForLlm = uniqueWords;
         
         try {
           // Use the higher-scoped variable
