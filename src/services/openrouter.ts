@@ -37,7 +37,7 @@ export async function enrichWordsWithLLM(
 
   const wordsListString = hebrewWords.map(word => `"${word}"`).join(', ');
 
-  const prompt = `For each Hebrew word or phrase in the following list [${wordsListString}], provide the following information.
+  const prompt = `For each Hebrew phrase (whole phrase in qotes) in the following list [${wordsListString}], provide the following information.
 Your response must be a single JSON object. This object must have a key named "words", and its value must be a JSON array.
 Each item in the "words" array should be a JSON object corresponding to one word or phrase from the input list.
 All conjugations must be provided in Hebrew only, with Hebrew pronouns.
