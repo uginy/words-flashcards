@@ -217,23 +217,25 @@ const WordTable: React.FC<WordTableProps> = ({
               </div>
               <AlertDialog>
                 <AlertDialogTrigger asChild>
-                  <button
-                    type="button"
-                    className="px-4 h-9 bg-red-500 text-white rounded-md hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-opacity-50"
-                  >
+                  <button className="px-3 py-1 text-sm bg-red-500 text-white rounded hover:bg-red-600 transition-colors">
                     Очистить все слова
                   </button>
                 </AlertDialogTrigger>
                 <AlertDialogContent>
                   <AlertDialogHeader>
-                    <AlertDialogTitle>Вы уверены?</AlertDialogTitle>
+                    <AlertDialogTitle>Удалить все слова?</AlertDialogTitle>
                     <AlertDialogDescription>
-                      Это действие необратимо удалит все слова из вашего списка. Продолжить?
+                      Это действие нельзя отменить. Все слова будут удалены из вашей коллекции.
                     </AlertDialogDescription>
                   </AlertDialogHeader>
                   <AlertDialogFooter>
                     <AlertDialogCancel>Отмена</AlertDialogCancel>
-                    <AlertDialogAction onClick={performClearAllWords}>Удалить</AlertDialogAction>
+                    <AlertDialogAction 
+                      onClick={performClearAllWords}
+                      className="bg-red-500 hover:bg-red-600"
+                    >
+                      Удалить все
+                    </AlertDialogAction>
                   </AlertDialogFooter>
                 </AlertDialogContent>
               </AlertDialog>
