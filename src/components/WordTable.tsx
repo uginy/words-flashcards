@@ -92,6 +92,7 @@ const WordTable: React.FC<WordTableProps> = ({
   // Updated to use AlertDialog
   const performClearAllWords = () => {
     clearAllWords();
+    localStorage.removeItem('hebrew-flashcards-data');
     toast({ title: "Успех", description: 'Все слова удалены.' });
   };
  
