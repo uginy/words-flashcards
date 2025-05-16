@@ -1,3 +1,6 @@
+// Значения по умолчанию для OpenRouter
+const DEFAULT_OPENROUTER_API_KEY = "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";
+const DEFAULT_OPENROUTER_MODEL = "meta-llama/llama-4-scout:free";
 import React, { useState, useEffect } from 'react';
 import { parseAndTranslateWords } from '../utils/translation';
 import { enrichWordsWithLLM } from '../services/openrouter';
@@ -103,10 +106,10 @@ const WordInput: React.FC = () => {
         }
       } else {
         pathTaken = 'llm';
-        const apiKey = localStorage.getItem('openRouterApiKey');
-        const model = localStorage.getItem('openRouterModel');
-        if (!apiKey || !model) {
-          setError('OpenRouter API key or model not configured in Settings.');
+        const apiKey = localStorage.getItem('openRouterApiKey') || DEFAULT_OPENROUTER_API_KEY;
+        const model = localStorage.getItem('openRouterModel') || DEFAULT_OPENROUTER_MODEL;
+        if (!apiKey || !model || apiKey === "YOUR_DEFAULT_API_KEY_HERE" || model === "YOUR_DEFAULT_MODEL_ID_HERE") {
+          setError('OpenRouter API key or model не настроены. Укажите их в Settings или пропишите значения по умолчанию.');
           setIsLoading(false);
           return;
         }
