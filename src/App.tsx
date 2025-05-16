@@ -164,8 +164,8 @@ function App() {
         return (
           <div className="space-y-6">
             {/* Фильтр по категориям и переключатель режима обучения */}
-            <div className="flex items-center gap-4 mb-2 align-middle justify-center">
-              <div className="w-64">
+            <div className="flex flex-col gap-2 mb-2 sm:flex-row sm:items-center sm:gap-4 sm:justify-center">
+              <div className="w-full sm:w-64">
                 <label className="block text-sm font-medium text-gray-700 mb-1">Категория:</label>
                 <Select value={selectedCategory} onValueChange={setSelectedCategory}>
                   <SelectTrigger>
@@ -180,7 +180,7 @@ function App() {
                   </SelectContent>
                 </Select>
               </div>
-              <div className="w-64">
+              <div className="w-full sm:w-64">
                 <label className="block text-sm font-medium text-gray-700 mb-1">Статус:</label>
                 <Select value={selectedStatus} onValueChange={v => setSelectedStatus(v as 'all' | 'learned' | 'not_learned')}>
                   <SelectTrigger>
@@ -193,7 +193,7 @@ function App() {
                   </SelectContent>
                 </Select>
               </div>
-              <label className="flex items-center cursor-pointer select-none ml-6">
+              <label className="flex items-center cursor-pointer select-none ml-0 sm:ml-6">
                 <input
                   type="checkbox"
                   checked={reverseMode}

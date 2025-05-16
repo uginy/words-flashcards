@@ -115,8 +115,8 @@ const FlashCard: React.FC<FlashCardProps> = ({ word: propWord, reverse, onMarkAs
   const categoryColors = getCategoryColor(word.category);
 
   return (
-    <div className="w-full max-w-xl mx-auto">
-      <div className="card-container relative">
+    <div className="w-full max-w-xl mx-auto px-2 sm:px-0">
+      <div className="card-container relative min-h-[340px] sm:min-h-[400px]">
         
         <div className="absolute top-3 right-4 z-10">
           {word.isLearned ? (
@@ -138,9 +138,8 @@ const FlashCard: React.FC<FlashCardProps> = ({ word: propWord, reverse, onMarkAs
           )}
         </div>
         <div className={`card ${flipped ? 'flipped' : ''}`}> 
-          
           <div
-            className={`card-front rounded-xl p-6 flex flex-col justify-between items-center shadow-lg relative ${categoryColors.bg}`}
+            className={`card-front rounded-xl p-4 sm:p-6 flex flex-col justify-between items-center shadow-lg relative ${categoryColors.bg}`}
             onClick={handleFlip}
             onKeyDown={handleKeyDown}
             role="button"
@@ -184,10 +183,9 @@ const FlashCard: React.FC<FlashCardProps> = ({ word: propWord, reverse, onMarkAs
                 </>
               )}
             </div>
-            <div className="w-full flex justify-between items-center pt-10 ">
-
+            <div className="w-full flex flex-col gap-3 sm:flex-row sm:justify-between sm:items-center pt-8">
               <button
-                className="px-3 py-1 rounded-md bg-green-500 text-white text-lg hover:bg-green-600 transition-colors"
+                className="w-full sm:w-auto px-3 py-2 rounded-md bg-green-500 text-white text-base sm:text-lg hover:bg-green-600 transition-colors"
                 onClick={(e) => {
                   e.stopPropagation();
                   handleMarkLearned();
@@ -195,9 +193,8 @@ const FlashCard: React.FC<FlashCardProps> = ({ word: propWord, reverse, onMarkAs
               >
                 Знаю
               </button>
-
               <button
-                className="px-3 py-1 rounded-md bg-orange-500 text-white text-lg hover:bg-orange-600 transition-colors"
+                className="w-full sm:w-auto px-3 py-2 rounded-md bg-orange-500 text-white text-base sm:text-lg hover:bg-orange-600 transition-colors"
                 onClick={(e) => {
                   e.stopPropagation();
                   handleSkip();
@@ -205,12 +202,11 @@ const FlashCard: React.FC<FlashCardProps> = ({ word: propWord, reverse, onMarkAs
               >
                 Далее
               </button>
-
             </div>
           </div>
           
           <div
-            className={`card-back rounded-xl p-6 flex flex-col justify-between items-center shadow-lg relative ${categoryColors.bg}`}
+            className={`card-back rounded-xl p-4 sm:p-6 flex flex-col justify-between items-center shadow-lg relative ${categoryColors.bg}`}
             onClick={handleFlip}
             onKeyDown={handleKeyDown}
             role="button"
@@ -239,11 +235,9 @@ const FlashCard: React.FC<FlashCardProps> = ({ word: propWord, reverse, onMarkAs
                 </>
               )}
             </div>
-            <div className="w-full flex justify-between items-center pt-10">
-
-
+            <div className="w-full flex flex-col gap-3 sm:flex-row sm:justify-between sm:items-center pt-8">
               <button
-                className="px-3 py-1 rounded-md bg-green-500 text-white text-lg hover:bg-green-600 transition-colors"
+                className="w-full sm:w-auto px-3 py-2 rounded-md bg-green-500 text-white text-base sm:text-lg hover:bg-green-600 transition-colors"
                 onClick={(e) => {
                   e.stopPropagation();
                   handleMarkLearned();
@@ -251,9 +245,8 @@ const FlashCard: React.FC<FlashCardProps> = ({ word: propWord, reverse, onMarkAs
               >
                 Знаю
               </button>
-
               <button
-                className="px-3 py-1 rounded-md bg-orange-500 text-white text-lg hover:bg-orange-600 transition-colors"
+                className="w-full sm:w-auto px-3 py-2 rounded-md bg-orange-500 text-white text-base sm:text-lg hover:bg-orange-600 transition-colors"
                 onClick={(e) => {
                   e.stopPropagation();
                   handleSkip();
@@ -261,7 +254,6 @@ const FlashCard: React.FC<FlashCardProps> = ({ word: propWord, reverse, onMarkAs
               >
                 Далее
               </button>
-
             </div>
           </div>
         </div>
