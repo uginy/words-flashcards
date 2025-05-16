@@ -12,7 +12,7 @@ export interface Word {
     future?: { [key: string]: string };   // будущее время
     imperative?: { [key: string]: string }; // повелительное наклонение
   };
-  example?: string; // Added for usage examples
+  examples?: string[]; // Changed from singular 'example' to plural 'examples' and type to string array
   learned: boolean;
   dateAdded: number;
   showTranslation?: boolean; // Optional: to control visibility on the card

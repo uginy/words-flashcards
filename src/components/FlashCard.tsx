@@ -117,10 +117,32 @@ const FlashCard: React.FC<FlashCardProps> = ({ word, onMarkLearned, onNext, reve
                   <h2 className="text-5xl font-bold mb-2 text-gray-800">{word.hebrew}</h2>
                   <p className="text-xl text-gray-600 mb-3">[{word.transcription}]</p>
                   <p className="text-lg text-gray-700 mt-2">{word.russian}</p>
+                  {/* Display usage examples if they exist */}
+                  {word.examples && word.examples.length > 0 && (
+                    <div className="mt-4 text-left">
+                      <h4 className="text-md font-semibold text-gray-600 mb-1">Примеры:</h4>
+                      <ul className="list-disc list-inside text-sm text-gray-500">
+                        {word.examples.map((example, index) => (
+                          <li key={index}>{example}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
                 </>
               ) : (
                 <>
                   <h3 className="text-4xl font-medium mb-1 text-gray-700">{word.russian}</h3>
+                  {/* Display usage examples if they exist */}
+                  {word.examples && word.examples.length > 0 && (
+                    <div className="mt-4 text-left">
+                      <h4 className="text-md font-semibold text-gray-600 mb-1">Примеры:</h4>
+                      <ul className="list-disc list-inside text-sm text-gray-500">
+                        {word.examples.map((example, index) => (
+                          <li key={index}>{example}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
                   {word.category === "פועל" && word.conjugations && (
                     <div className="text-left mx-auto max-w-[400px] px-2 my-4">
                       <div className="font-medium text-lg mb-2 text-gray-700">Спряжения:</div>
