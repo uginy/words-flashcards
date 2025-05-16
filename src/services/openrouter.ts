@@ -13,7 +13,7 @@ interface LLMBatchResponseItem {
     future?: { [pronoun: string]: string };
     imperative?: { [pronoun: string]: string };
   };
-  examples?: string[]; // Changed from singular 'example' to plural 'examples' and type to string array
+  examples?: { hebrew: string; russian: string }[]; // Now array of objects with hebrew and russian fields
   error?: string; // If the LLM reports an error for a specific word
 }
 
@@ -107,7 +107,11 @@ The JSON object for each word/phrase should look like this:
       "אתן": "..." // you (f.pl)
     }
   },
-  "examples": ["...", "...", "..."] // Array of 3-5 Hebrew example sentences using this word/phrase
+  "examples": [
+    { "hebrew": "...", "russian": "..." },
+    { "hebrew": "...", "russian": "..." },
+    { "hebrew": "...", "russian": "..." }
+  ] // Array of 3-5 objects, each with a Hebrew example and its Russian translation
 }
 
 Focus on providing accurate hebrew, transcription, russian, and category fields.
@@ -197,7 +201,20 @@ Provide ONLY the JSON object with the "words" array in your response, with no ot
         russian: russian,
         category: category as Word['category'],
         conjugations: currentItem.conjugations,
-        examples: currentItem.examples ? currentItem.examples.map(ex => String(ex)) : [], // Adjusted to handle array of examples
+        examples: Array.isArray(currentItem.examples)
+          ? currentItem.examples
+              .filter(
+                (ex: any) =>
+                  ex &&
+                  typeof ex === 'object' &&
+                  typeof ex.hebrew === 'string' &&
+                  typeof ex.russian === 'string'
+              )
+              .map((ex: any) => ({
+                hebrew: ex.hebrew,
+                russian: ex.russian,
+              }))
+          : [],
         showTranslation: false,
         learned: false, // Changed from isLearned to learned
         learningStage: 0,

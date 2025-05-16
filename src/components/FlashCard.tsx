@@ -25,24 +25,30 @@ const FlashCard: React.FC<FlashCardProps> = ({ reverse, onMarkAsLearned, onNextW
 
   // Helper to render examples for both string[] and object[] formats
   // If example is a string, just render it; if object, render text and translation
+  // Renders examples for array of { hebrew: string; russian: string }
   const renderExamples = (examples: any[]) => {
     return (
       <div className="mt-4 text-left">
         <h4 className="text-md font-semibold text-gray-600 mb-1">Примеры:</h4>
         <ul className="list-disc list-inside text-sm text-gray-500">
           {examples.map((example, index) => {
-            if (typeof example === 'string') {
-              return <li key={index}>{example}</li>;
-            } else if (typeof example === 'object' && example !== null) {
-              // Ожидается структура: { text: string, translation?: string }
+            // If example is an object with 'hebrew' and 'russian' fields, render both
+            if (
+              typeof example === 'object' &&
+              example !== null &&
+              typeof example.hebrew === 'string' &&
+              typeof example.russian === 'string'
+            ) {
               return (
                 <li key={index}>
-                  {example.text}
-                  {example.translation && (
-                    <span className="ml-2 text-gray-400">— {example.translation}</span>
-                  )}
+                  <span className="font-medium text-black">{example.hebrew}</span>
+                  <span className="ml-2 text-gray-400">— {example.russian}</span>
                 </li>
               );
+            }
+            // Fallback for string or other object formats
+            if (typeof example === 'string') {
+              return <li key={index}>{example}</li>;
             }
             return null;
           })}
