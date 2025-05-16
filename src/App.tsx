@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Toaster } from '@/components/ui/toaster'; // shadcn/ui Toaster
 import Layout from './components/Layout';
 import FlashCard from './components/FlashCard';
@@ -7,21 +7,46 @@ import WordTable from './components/WordTable';
 import Statistics from './components/Statistics';
 import { useWordsStore, getStats } from './store/wordsStore';
 import Settings from './components/Settings';
+import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogAction,
+  AlertDialogCancel,
+} from '@/components/ui/alert-dialog';
 
 function App() {
   const [activeTab, setActiveTab] = useState('learn');
   const [reverseMode, setReverseMode] = useState(false);
+  const [congratsOpen, setCongratsOpen] = useState(false);
+  const wordInputRef = useRef<HTMLDivElement>(null);
+
   // Получаем данные и методы из Zustand-стора
-  // Subscribe to words and currentIndex from the store
   const {
     words,
     markAsLearned,
     markAsNotLearned,
     deleteWord,
+    resetProgress,
   } = useWordsStore();
 
   const stats = getStats(words);
-  
+
+  // Показывать попап, если все слова выучены (и есть хотя бы одно слово)
+  useEffect(() => {
+    if (stats.total > 0 && stats.remaining === 0) {
+      setCongratsOpen(true);
+    }
+  }, [stats.total, stats.remaining]);
+
+  // Скролл к WordInput после перехода на вкладку "Добавить"
+  useEffect(() => {
+    if (activeTab === 'add' && wordInputRef.current) {
+      wordInputRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  }, [activeTab]);
+
   // Define tabs with icons
   const tabs = [
     {
@@ -145,8 +170,53 @@ function App() {
   return (
     <div>
       <Toaster />
+      <AlertDialog open={congratsOpen} onOpenChange={setCongratsOpen}>
+        <AlertDialogContent>
+          <AlertDialogTitle>Поздравляем!</AlertDialogTitle>
+          <AlertDialogDescription>
+            Вы выучили все слова в списке! Что хотите сделать дальше?
+          </AlertDialogDescription>
+          <div className="flex flex-col gap-2 mt-4">
+            <AlertDialogAction
+              onClick={() => {
+                resetProgress();
+                setCongratsOpen(false);
+              }}
+              className="bg-blue-600 hover:bg-blue-700"
+            >
+              Сбросить прогресс
+            </AlertDialogAction>
+            <AlertDialogAction
+              onClick={() => {
+                setActiveTab('add');
+                setCongratsOpen(false);
+                setTimeout(() => {
+                  if (wordInputRef.current) {
+                    wordInputRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                  }
+                }, 100);
+              }}
+              className="bg-green-600 hover:bg-green-700"
+            >
+              Добавить новые слова
+            </AlertDialogAction>
+            <AlertDialogCancel
+              onClick={() => setCongratsOpen(false)}
+              className="bg-gray-200 hover:bg-gray-300 text-gray-800"
+            >
+              Закрыть
+            </AlertDialogCancel>
+          </div>
+        </AlertDialogContent>
+      </AlertDialog>
       <Layout tabs={tabs} activeTab={activeTab} onTabChange={setActiveTab}>
-        {renderContent()}
+        {activeTab === 'add' ? (
+          <div ref={wordInputRef}>
+            <WordInput />
+          </div>
+        ) : (
+          renderContent()
+        )}
       </Layout>
     </div>
   );
