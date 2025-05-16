@@ -55,32 +55,37 @@ function App() {
 
   // Обработчик для "Знаю"
   const handleMarkAsLearned = (id: string) => {
-      // Если выбран статус "изученные", просто переходим к следующему слову, не меняя статус
-      if (selectedStatus === 'learned') {
-        handleNextWord();
-        return;
-      }
-      markAsLearned(id);
-      // Если после отметки все слова выучены, сбрасываем filteredIndex
-      if (getStats(filteredWords).remaining <= 1) {
-        setFilteredIndex(0);
-      } else {
-        handleNextWord();
-      }
-    };
+    // Если выбран статус "изученные", просто переходим к следующему слову, не меняя статус
+    if (selectedStatus === 'learned') {
+      handleNextWord();
+      return;
+    }
+    markAsLearned(id);
+    // Если после отметки все слова выучены, сбрасываем filteredIndex
+    if (getStats(filteredWords).remaining <= 1) {
+      setFilteredIndex(0);
+    } else {
+      handleNextWord();
+    }
+  };
 
   // Обработчик для "Далее" — только по filteredWords
   const handleNextWord = () => {
+    if (filteredWords.length === 0) return;
+    // Для "изученных" просто листаем по кругу
+    if (selectedStatus === 'learned') {
+      setFilteredIndex((prev) => (prev + 1) % filteredWords.length);
+      return;
+    }
+    // Для остальных — ищем следующий невыученный
     if (getStats(filteredWords).remaining === 0) {
       return;
     }
-    // Ищем следующий невыученный индекс
     let nextIdx = filteredIndex;
     let attempts = 0;
     do {
       nextIdx = (nextIdx + 1) % filteredWords.length;
       attempts++;
-      // Если все слова выучены, выходим
       if (attempts > filteredWords.length) break;
     } while (filteredWords[nextIdx]?.isLearned);
     setFilteredIndex(nextIdx);
@@ -91,11 +96,6 @@ function App() {
     setFilteredIndex(0);
   }, [selectedCategory, selectedStatus, words.length]);
 
-
-  // Показывать попап, если все слова выучены (и есть хотя бы одно слово)
-  useEffect(() => {
-    // (AlertDialog logic removed)
-  }, [stats.total, stats.remaining]);
 
   // Скролл к WordInput после перехода на вкладку "Добавить"
   useEffect(() => {
