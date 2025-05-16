@@ -7,10 +7,19 @@ import WordTable from './components/WordTable';
 import Statistics from './components/Statistics';
 import { useWordsStore, getStats } from './store/wordsStore';
 import Settings from './components/Settings';
+import {
+  Select,
+  SelectTrigger,
+  SelectContent,
+  SelectItem,
+  SelectValue,
+} from './components/ui/select';
 
 function App() {
   const [activeTab, setActiveTab] = useState('learn');
   const [reverseMode, setReverseMode] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState<string>('all');
+  const [filteredIndex, setFilteredIndex] = useState(0);
   const wordInputRef = useRef<HTMLDivElement>(null);
 
   // Получаем данные и методы из Zustand-стора
@@ -23,27 +32,54 @@ function App() {
     nextWord,
   } = useWordsStore();
 
-  const stats = getStats(words);
+  // Получаем список уникальных категорий из слов
+  const categories = Array.from(new Set(words.map(w => w.category))).filter(Boolean);
+  const categoryOptions = [{ value: 'all', label: 'Все категории' }, ...categories.map(c => ({ value: c, label: c }))];
+
+  // Фильтруем слова по выбранной категории (только для режима "Учить")
+  const filteredWords = selectedCategory === 'all'
+    ? words
+    : words.filter(w => w.category === selectedCategory);
+
+  // Статистика только по отфильтрованным словам
+  const stats = getStats(filteredWords);
+
+  // Получаем текущее слово для обучения по filteredIndex
+  const currentWord = filteredWords[filteredIndex];
 
   // Обработчик для "Знаю"
   const handleMarkAsLearned = (id: string) => {
     markAsLearned(id);
-    // Проверяем, все ли слова выучены
-    // (AlertDialog logic removed)
+    // Если после отметки все слова выучены, сбрасываем filteredIndex
+    if (getStats(filteredWords).remaining <= 1) {
+      setFilteredIndex(0);
+    } else {
+      handleNextWord();
+    }
   };
 
-  // Обработчик для "Далее"
-  // Handler for "Next" button: after calling nextWord, get the latest words array from the store
-  // and check if all words are learned. If so, show the popup.
-  // Handler for "Next" button with pre- and post-check for remaining words
+  // Обработчик для "Далее" — только по filteredWords
   const handleNextWord = () => {
-    // Check before calling nextWord
-    if (getStats(useWordsStore.getState().words).remaining === 0) {
+    if (getStats(filteredWords).remaining === 0) {
       return;
     }
-    nextWord();
-    // (AlertDialog logic removed)
+    // Ищем следующий невыученный индекс
+    let nextIdx = filteredIndex;
+    let attempts = 0;
+    do {
+      nextIdx = (nextIdx + 1) % filteredWords.length;
+      attempts++;
+      // Если все слова выучены, выходим
+      if (attempts > filteredWords.length) break;
+    } while (filteredWords[nextIdx]?.isLearned);
+    setFilteredIndex(nextIdx);
   };
+
+  // Сброс filteredIndex при смене категории или слов
+  useEffect(() => {
+    setFilteredIndex(0);
+  }, [selectedCategory, words.length]);
+
 
   // Показывать попап, если все слова выучены (и есть хотя бы одно слово)
   useEffect(() => {
@@ -116,9 +152,24 @@ function App() {
       case 'learn':
         return (
           <div className="space-y-6">
-             {/* Переключатель режима обучения */}
+            {/* Фильтр по категориям и переключатель режима обучения */}
             <div className="flex items-center gap-4 mb-2 align-middle justify-center">
-              <label className="flex items-center cursor-pointer select-none">
+              <div className="w-64">
+                <label className="block text-sm font-medium text-gray-700 mb-1">Категория:</label>
+                <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Выберите категорию" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {categoryOptions.map(opt => (
+                      <SelectItem key={opt.value} value={opt.value}>
+                        {opt.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <label className="flex items-center cursor-pointer select-none ml-6">
                 <input
                   type="checkbox"
                   checked={reverseMode}
@@ -128,7 +179,7 @@ function App() {
                 <span className="ml-2 text-sm text-gray-700 font-medium">Русский → Иврит (реверсивный режим)</span>
               </label>
             </div>
-            <Statistics />
+            <Statistics stats={stats} />
             {stats.total === 0 ? (
               // Case: No words in the list at all
               <div className="bg-white rounded-lg shadow-md p-6 text-center">
@@ -190,11 +241,14 @@ function App() {
                 // Показываем FlashCard только если есть слова для изучения
                 stats.remaining > 0 && (
                   <div className="animate-fadeIn">
-                    <FlashCard
-                      reverse={reverseMode}
-                      onMarkAsLearned={handleMarkAsLearned}
-                      onNextWord={handleNextWord}
-                    />
+                    {currentWord && (
+                      <FlashCard
+                        word={currentWord}
+                        reverse={reverseMode}
+                        onMarkAsLearned={handleMarkAsLearned}
+                        onNext={handleNextWord}
+                      />
+                    )}
                   </div>
                 )
               )

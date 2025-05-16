@@ -4,22 +4,25 @@ import CompactConjugation from './CompactConjugation';
 import { useWordsStore } from '../store/wordsStore';
 import { getCurrentWord } from '../store/wordsStore';
 
+import type { Word } from '../types';
+
 interface FlashCardProps {
+  word?: Word;
   reverse?: boolean;
   onMarkAsLearned?: (id: string) => void;
-  onNextWord?: () => void;
+  onNext?: () => void;
 }
 
 // FlashCard now gets word and actions from Zustand store, only reverse is a prop
-const FlashCard: React.FC<FlashCardProps> = ({ reverse, onMarkAsLearned, onNextWord }) => {
+const FlashCard: React.FC<FlashCardProps> = ({ word: propWord, reverse, onMarkAsLearned, onNext }) => {
   // Подписка на words и currentIndex из стора
   const words = useWordsStore((state) => state.words);
   const currentIndex = useWordsStore((state) => state.currentIndex);
   const markAsLearned = useWordsStore((state) => state.markAsLearned);
   const nextWord = useWordsStore((state) => state.nextWord);
 
-  // Локально вычисляем текущий word
-  const word = getCurrentWord(words, currentIndex);
+  // Локально вычисляем текущий word, если не передан через проп
+  const word = propWord ?? getCurrentWord(words, currentIndex);
 
   const [flipped, setFlipped] = useState(false);
 
@@ -75,8 +78,8 @@ const FlashCard: React.FC<FlashCardProps> = ({ reverse, onMarkAsLearned, onNextW
       markAsLearned(word.id);
     }
     setFlipped(false);
-    if (onNextWord) {
-      onNextWord();
+    if (onNext) {
+      onNext();
     } else {
       nextWord();
     }
@@ -84,7 +87,11 @@ const FlashCard: React.FC<FlashCardProps> = ({ reverse, onMarkAsLearned, onNextW
 
   const handleSkip = () => {
     setFlipped(false);
-    nextWord();
+    if (onNext) {
+      onNext();
+    } else {
+      nextWord();
+    }
   };
 
   const getCategoryColor = (category: string) => {

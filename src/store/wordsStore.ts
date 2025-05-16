@@ -128,7 +128,7 @@ export const useWordsStore = create<WordsStore>((set, get) => {
     markAsLearned: (id) => {
       set(state => {
         const newWords = state.words.map(word =>
-          word.id === id ? { ...word, isLearned: true, learned: true } : word
+          word.id === id ? { ...word, isLearned: true } : word
         );
         return { ...state, words: newWords };
       });
@@ -138,7 +138,7 @@ export const useWordsStore = create<WordsStore>((set, get) => {
       set(state => {
         const newWords = state.words.map(word =>
           word.id === id
-            ? { ...word, isLearned: false, learned: false, learningStage: 0 }
+            ? { ...word, isLearned: false, learningStage: 0 }
             : word
         );
         return { ...state, words: newWords };

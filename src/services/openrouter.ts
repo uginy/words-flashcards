@@ -58,7 +58,7 @@ The JSON object for each word/phrase should look like this:
   "russian": "...", // Russian translation of the full phrase
   "category": "שם עצם", // Only one of: שם עצם, פועל, שם תואר, אחר
   "showTranslation": false,
-  "learned": false,
+  "isLearned": false,
   "learningStage": 0,
   "lastReviewed": null,
   "nextReview": null,
@@ -216,7 +216,7 @@ Provide ONLY the JSON object with the "words" array in your response, with no ot
               }))
           : [],
         showTranslation: false,
-        learned: false, // Changed from isLearned to learned
+        isLearned: false, // Unified to isLearned
         learningStage: 0,
         lastReviewed: null,
         nextReview: null,

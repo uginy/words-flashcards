@@ -133,7 +133,7 @@ const WordTable: React.FC<WordTableProps> = ({ onEditWord }) => {
             typeof word.hebrew === 'string' &&
             typeof word.russian === 'string' &&
             // Add other essential property checks if needed
-            // For example: typeof word.transcription === 'string', typeof word.category === 'string', typeof word.learned === 'boolean'
+                        // For example: typeof word.transcription === 'string', typeof word.category === 'string', typeof word.isLearned === 'boolean'
             Object.prototype.hasOwnProperty.call(word, 'id') && Object.prototype.hasOwnProperty.call(word, 'hebrew') && Object.prototype.hasOwnProperty.call(word, 'russian')
         )) {
           toastAdapter({ title: "Ошибка", description: 'Неверный формат файла. Убедитесь, что это JSON массив объектов Word.', variant: "destructive" });
@@ -166,8 +166,8 @@ const WordTable: React.FC<WordTableProps> = ({ onEditWord }) => {
   const filteredWords = allWords.filter(word => {
     const matchesLearnedFilter = 
       filter === 'all' || 
-      (filter === 'learned' && word.learned) || 
-      (filter === 'not-learned' && !word.learned);
+      (filter === 'learned' && word.isLearned) ||
+      (filter === 'not-learned' && !word.isLearned);
       
     const matchesCategoryFilter = 
       categoryFilter === 'all' || 
@@ -365,9 +365,9 @@ const WordTable: React.FC<WordTableProps> = ({ onEditWord }) => {
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap">
                       <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                        word.learned ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
+                        word.isLearned ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
                       }`}>
-                        {word.learned ? 'Изучено' : 'Не изучено'}
+                        {word.isLearned ? 'Изучено' : 'Не изучено'}
                       </span>
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap text-right text-sm font-medium">
@@ -378,7 +378,7 @@ const WordTable: React.FC<WordTableProps> = ({ onEditWord }) => {
                       >
                         Изменить
                       </button>
-                      {word.learned ? (
+                      {word.isLearned ? (
                         <button
                           type="button"
                           onClick={() => markAsNotLearned(word.id)}
