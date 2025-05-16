@@ -19,6 +19,8 @@ function App() {
   const [activeTab, setActiveTab] = useState('learn');
   const [reverseMode, setReverseMode] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
+  // State for status filter: 'all' | 'learned' | 'not_learned'
+  const [selectedStatus, setSelectedStatus] = useState<'all' | 'learned' | 'not_learned'>('all');
   const [filteredIndex, setFilteredIndex] = useState(0);
   const wordInputRef = useRef<HTMLDivElement>(null);
 
@@ -36,10 +38,14 @@ function App() {
   const categories = Array.from(new Set(words.map(w => w.category))).filter(Boolean);
   const categoryOptions = [{ value: 'all', label: 'Все категории' }, ...categories.map(c => ({ value: c, label: c }))];
 
-  // Фильтруем слова по выбранной категории (только для режима "Учить")
-  const filteredWords = selectedCategory === 'all'
-    ? words
-    : words.filter(w => w.category === selectedCategory);
+  // Фильтруем слова по выбранной категории и статусу (только для режима "Учить")
+  const filteredWords = words.filter(w => {
+    const categoryMatch = selectedCategory === 'all' || w.category === selectedCategory;
+    let statusMatch = true;
+    if (selectedStatus === 'learned') statusMatch = w.isLearned;
+    if (selectedStatus === 'not_learned') statusMatch = !w.isLearned;
+    return categoryMatch && statusMatch;
+  });
 
   // Статистика только по отфильтрованным словам
   const stats = getStats(filteredWords);
@@ -78,7 +84,7 @@ function App() {
   // Сброс filteredIndex при смене категории или слов
   useEffect(() => {
     setFilteredIndex(0);
-  }, [selectedCategory, words.length]);
+  }, [selectedCategory, selectedStatus, words.length]);
 
 
   // Показывать попап, если все слова выучены (и есть хотя бы одно слово)
@@ -169,6 +175,19 @@ function App() {
                   </SelectContent>
                 </Select>
               </div>
+              <div className="w-64">
+                <label className="block text-sm font-medium text-gray-700 mb-1">Статус:</label>
+                <Select value={selectedStatus} onValueChange={v => setSelectedStatus(v as 'all' | 'learned' | 'not_learned')}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Выберите статус" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Все</SelectItem>
+                    <SelectItem value="learned">Изученные</SelectItem>
+                    <SelectItem value="not_learned">Не изученные</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
               <label className="flex items-center cursor-pointer select-none ml-6">
                 <input
                   type="checkbox"
@@ -201,8 +220,8 @@ function App() {
                 </button>
               </div>
             ) : (
-              // Если все слова выучены, показываем поздравление с кнопками
-              stats.remaining === 0 && stats.total > 0 ? (
+              // Поздравительный блок только если выбран статус "all" или "not_learned" и все слова выучены
+              (['all', 'not_learned'].includes(selectedStatus) && stats.remaining === 0 && stats.total > 0) ? (
                 <div className="bg-white rounded-lg shadow-md p-6 text-center animate-fadeIn">
                   <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mx-auto text-green-500 mb-3">
                     <title>Поздравляем!</title>
@@ -238,8 +257,10 @@ function App() {
                   </div>
                 </div>
               ) : (
-                // Показываем FlashCard только если есть слова для изучения
-                stats.remaining > 0 && (
+                // FlashCard для "изученные" показывается всегда если есть хотя бы одно слово,
+                // для других статусов — только если есть слова для изучения
+                ((selectedStatus === 'learned' && stats.total > 0) ||
+                  (selectedStatus !== 'learned' && stats.remaining > 0)) && (
                   <div className="animate-fadeIn">
                     {currentWord && (
                       <FlashCard
