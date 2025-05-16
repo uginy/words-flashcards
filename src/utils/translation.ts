@@ -18,18 +18,18 @@ export const parseAndTranslateWords = (text: string): Word[] => {
     switch (categoryStr.toLowerCase()) {
       case 'verb':
       case 'глагол':
-        category = 'verb';
+        category = 'פועל';
         break;
       case 'noun':
       case 'существительное':
-        category = 'noun';
+        category = 'שם עצם';
         break;
       case 'adjective':
       case 'прилагательное':
-        category = 'adjective';
+        category = 'שם תואר';
         break;
       default:
-        category = 'other';
+        category = 'אחר';
     }
 
     // Basic validation for Hebrew characters in the Hebrew field
@@ -44,8 +44,8 @@ export const parseAndTranslateWords = (text: string): Word[] => {
       russian,
       transcription,
       category,
-      conjugations: conjugations || undefined,
-      example: example || undefined,
+      conjugations: conjugations ? JSON.parse(conjugations) as Word['conjugations'] : undefined,
+      examples: example ? [{ hebrew: hebrew, russian: example }] : undefined,
       isLearned: false, // Corrected from 'learned' to 'isLearned'
       dateAdded: Date.now(),
     });

@@ -1,4 +1,4 @@
-export type WordCategory = 'שם עצם' | 'פועל' | 'שם תואר' | 'אחר';  // существительное | глагол | прилагательное | другое
+export type WordCategory = 'שם עצם' | 'פועל' | 'שם תואר' | 'אחר';
 
 export interface Word {
   id: string;
@@ -7,18 +7,18 @@ export interface Word {
   transcription: string;
   category: WordCategory;
   conjugations?: {
-    past?: { [key: string]: string };     // прошедшее время
-    present?: { [key: string]: string };  // настоящее время
-    future?: { [key: string]: string };   // будущее время
-    imperative?: { [key: string]: string }; // повелительное наклонение
+    past?: { [key: string]: string }; 
+    present?: { [key: string]: string };
+    future?: { [key: string]: string };
+    imperative?: { [key: string]: string };
   };
-  examples?: { hebrew: string; russian: string }[]; // Now array of objects with hebrew and russian fields
-  isLearned: boolean; // Unified property for learned status
+  examples?: { hebrew: string; russian: string }[];
+  isLearned: boolean;
   dateAdded: number;
-  showTranslation?: boolean; // Optional: to control visibility on the card
-  learningStage?: number; // For spaced repetition logic
-  lastReviewed?: number | null; // Timestamp of last review
-  nextReview?: number | null;   // Timestamp for next scheduled review
+  showTranslation?: boolean;
+  learningStage?: number;
+  lastReviewed?: number | null;
+  nextReview?: number | null;
 }
 
 export interface WordsState {
