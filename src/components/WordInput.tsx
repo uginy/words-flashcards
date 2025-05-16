@@ -270,20 +270,6 @@ const WordInput: React.FC<WordInputProps> = ({ onAddWords }) => {
             >
               {isLoading ? 'Обработка...' : 'Добавить'}
             </button>
-            <button
-              type="button"
-              className="py-2 px-4 bg-green-500 text-white rounded-md hover:bg-green-600 transition-colors disabled:opacity-50"
-              onClick={() => {
-                toast({
-                  title: 'Успех!',
-                  description: "Все ",             
-                  variant: 'success',
-                  duration: 2000,
-                });
-              }}
-            >
-              ToastTitle
-            </button>
           </div>
         </form>
       </div>
