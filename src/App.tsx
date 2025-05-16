@@ -5,7 +5,7 @@ import FlashCard from './components/FlashCard';
 import WordInput from './components/WordInput';
 import WordTable from './components/WordTable';
 import Statistics from './components/Statistics';
-import { useWordsStore, getStats, getCurrentWord } from './store/wordsStore';
+import { useWordsStore, getStats } from './store/wordsStore';
 import Settings from './components/Settings';
 
 function App() {
@@ -15,15 +15,11 @@ function App() {
   // Subscribe to words and currentIndex from the store
   const {
     words,
-    currentIndex,
     markAsLearned,
     markAsNotLearned,
-    resetProgress,
     deleteWord,
   } = useWordsStore();
 
-  // Compute currentWord and stats locally
-  const currentWord = getCurrentWord(words, currentIndex);
   const stats = getStats(words);
   
   // Define tabs with icons

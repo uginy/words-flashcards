@@ -1,4 +1,4 @@
-import { Word, WordsState } from '../types';
+import { WordsState } from '../types';
 
 const STORAGE_KEY = 'hebrew-flashcards-data';
 

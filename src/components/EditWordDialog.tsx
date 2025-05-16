@@ -121,6 +121,7 @@ const EditWordDialog: React.FC<EditWordDialogProps> = ({
                       const conjugations = JSON.parse(e.target.value);
                       setEditedWord({ ...editedWord, conjugations });
                     } catch (error) {
+                      console.error(error)
                       // Ignore invalid JSON while typing
                     }
                   }}

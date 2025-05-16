@@ -1,7 +1,4 @@
 import React, { useState } from 'react';
-import { Word } from '../types';
-import { Popover, PopoverContent, PopoverTrigger } from './ui/popover';
-import ConjugationDisplay from './ConjugationDisplay';
 import CompactConjugation from './CompactConjugation';
 
 import { useWordsStore } from '../store/wordsStore';

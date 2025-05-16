@@ -125,7 +125,7 @@ export const useWordsStore = create<WordsStore>((set, get) => {
       }
     },
 
-    markAsLearned: (id, toast) => {
+    markAsLearned: (id) => {
       set(state => {
         const newWords = state.words.map(word =>
           word.id === id ? { ...word, isLearned: true, learned: true } : word
@@ -134,7 +134,7 @@ export const useWordsStore = create<WordsStore>((set, get) => {
       });
     },
 
-    markAsNotLearned: (id, toast) => {
+    markAsNotLearned: (id) => {
       set(state => {
         const newWords = state.words.map(word =>
           word.id === id
@@ -154,7 +154,7 @@ export const useWordsStore = create<WordsStore>((set, get) => {
       }));
     },
 
-    nextWord: toast => {
+    nextWord: () => {
       set(state => {
         // Debug log before change
 
@@ -204,7 +204,7 @@ export const useWordsStore = create<WordsStore>((set, get) => {
       }));
     },
 
-    deleteWord: (id, toast) => {
+    deleteWord: (id) => {
       set(state => {
         const updatedWords = state.words.filter(word => word.id !== id);
         let newCurrentIndex = state.currentIndex;
