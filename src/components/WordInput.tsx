@@ -106,7 +106,7 @@ const WordInput: React.FC<WordInputProps> = ({ onAddWords }) => {
           return;
         }
         // Filter out duplicates
-        const uniqueWords = hebrewWordsForLlm.filter(newWord => 
+        const uniqueWords = hebrewWordsForLlm.filter(newWord =>
           !existingWords.some(existingWord => existingWord.hebrew === newWord)
         );
         if (uniqueWords.length === 0) {
@@ -207,12 +207,12 @@ const WordInput: React.FC<WordInputProps> = ({ onAddWords }) => {
           </button>
         </div>
       )}
-      
+
       <div className="bg-white rounded-lg shadow-md p-4">
         <div className="flex justify-between items-center mb-2">
           <h3 className="text-lg font-medium text-gray-800">Добавить слова</h3>
         </div>
-        
+
         <form onSubmit={handleSubmit}>
           {error && (
             <div className="mb-3 p-3 bg-red-100 text-red-700 border border-red-400 rounded-md">
@@ -235,10 +235,10 @@ const WordInput: React.FC<WordInputProps> = ({ onAddWords }) => {
               placeholder="שלום&#10;תודה רבה&#10;ספר טוב&#10;ללמוד"
             />
           </div>
-          
+
           <div className="flex items-center space-x-2 rtl:space-x-reverse text-sm mb-3">
-            <button 
-              type="button" 
+            <button
+              type="button"
               className="text-blue-500 hover:text-blue-700"
               onClick={() => {
                 setInputText(sampleText);
@@ -248,8 +248,8 @@ const WordInput: React.FC<WordInputProps> = ({ onAddWords }) => {
               Использовать пример
             </button>
             <span className="text-gray-400">|</span>
-            <button 
-              type="button" 
+            <button
+              type="button"
               className="text-blue-500 hover:text-blue-700"
               onClick={() => {
                 setInputText('');
@@ -261,14 +261,28 @@ const WordInput: React.FC<WordInputProps> = ({ onAddWords }) => {
 
 
           </div>
-          
+
           <div className="flex justify-end">
-            <button 
-              type="submit" 
+            <button
+              type="submit"
               className="py-2 px-4 bg-green-500 text-white rounded-md hover:bg-green-600 transition-colors disabled:opacity-50"
               disabled={isLoading || !inputText.trim()}
             >
               {isLoading ? 'Обработка...' : 'Добавить'}
+            </button>
+            <button
+              type="button"
+              className="py-2 px-4 bg-green-500 text-white rounded-md hover:bg-green-600 transition-colors disabled:opacity-50"
+              onClick={() => {
+                toast({
+                  title: 'Успех!',
+                  description: "Все ",             
+                  variant: 'success',
+                  duration: 2000,
+                });
+              }}
+            >
+              ToastTitle
             </button>
           </div>
         </form>
