@@ -160,10 +160,26 @@ const FlashCard: React.FC<FlashCardProps> = ({ word: propWord, reverse, onMarkAs
                 </>
               ) : (
                 <>
-                  <h2 className={`text-5xl font-bold mb-2 ${categoryColors.text}`}>{word.hebrew}</h2>
+                  <h2 className={`text-5xl font-bold mb-2 ${categoryColors.text} flex items-center justify-between`}>
+                    {word.hebrew}
+                    <button
+                      type="button"
+                      aria-label="Произнести"
+                      className="ml-6 inline-flex items-center hover:text-blue-600 focus:outline-none"
+                      onClick={e => {
+                        e.stopPropagation();
+                        if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+                          const utter = new window.SpeechSynthesisUtterance(word.hebrew);
+                          utter.lang = 'he-IL';
+                          window.speechSynthesis.speak(utter);
+                        }
+                      }}
+                    >
+                      <svg width="68" height="68" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><path d="M11 5L6 9H2v6h4l5 4V5z"/><path d="M23 9v6"/></svg>
+                    </button>
+                  </h2>
                   <p className={`text-xl ${categoryColors.text} mb-3`}>[{word.transcription}]</p>
                   <p className="text-sm text-gray-500 mt-2">Нажмите, чтобы увидеть перевод</p>
-                  
                   {word.examples && word.examples.length > 0 && renderExamples(word.examples)}
                 </>
               )}
