@@ -1,3 +1,23 @@
+// Разбить массив на чанки
+function chunkArray<T>(arr: T[], size: number): T[][] {
+  const res: T[][] = [];
+  for (let i = 0; i < arr.length; i += size) {
+    res.push(arr.slice(i, i + size));
+  }
+  return res;
+}
+
+// Валидация структуры ответа LLM
+function validateLLMWordsResponse(data: any): Word[] {
+  if (!data || typeof data !== 'object' || !Array.isArray(data.words)) return [];
+  return data.words.filter((w: any) =>
+    typeof w === 'object' &&
+    typeof w.hebrew === 'string' &&
+    typeof w.russian === 'string' &&
+    typeof w.transcription === 'string' &&
+    typeof w.category === 'string'
+  );
+}
 import React, { useState, useEffect } from 'react';
 import { parseAndTranslateWords } from '../utils/translation';
 import { enrichWordsWithLLM } from '../services/openrouter';
@@ -36,12 +56,11 @@ const WordInput: React.FC<WordInputProps> = ({ onAddWords }) => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!inputText.trim()) return;
-
     setIsLoading(true);
     setError(null);
     let wordsToAdd: Word[] = [];
+    let failedWords: string[] = [];
     let pathTaken: 'structured' | 'llm' | 'none' = 'none';
-    let hebrewWordsForLlm: string[] = []; // Declare here for wider scope
 
     try {
       if (inputText.includes(' - ')) {
@@ -60,84 +79,86 @@ const WordInput: React.FC<WordInputProps> = ({ onAddWords }) => {
         pathTaken = 'llm';
         const apiKey = localStorage.getItem('openRouterApiKey');
         const model = localStorage.getItem('openRouterModel');
-
         if (!apiKey || !model) {
           setError('OpenRouter API key or model not configured in Settings.');
           setIsLoading(false);
           return;
         }
-
         // Split and clean input
-        hebrewWordsForLlm = inputText
+        let hebrewWordsForLlm = inputText
           .split(/\r\n|\r|\n/)
           .map(line => line.trim())
           .filter(line => line.length > 0);
-
         if (hebrewWordsForLlm.length === 0) {
           setError('Нет слов для добавления. Пожалуйста, введите слова.');
           setIsLoading(false);
           return;
         }
-
         // Filter out duplicates
         const uniqueWords = hebrewWordsForLlm.filter(newWord => 
           !existingWords.some(existingWord => existingWord.hebrew === newWord)
         );
-
         if (uniqueWords.length === 0) {
           setError('Все указанные слова уже существуют в вашей коллекции.');
           setIsLoading(false);
           return;
         }
-
         if (uniqueWords.length < hebrewWordsForLlm.length) {
           const skippedCount = hebrewWordsForLlm.length - uniqueWords.length;
-          console.log(`Пропущено ${skippedCount} повторяющихся слов`);
           toast.success(`Пропущено ${skippedCount} повторяющихся слов`);
         }
-
         // Use only unique words for processing
         hebrewWordsForLlm = uniqueWords;
-        
-        try {
-          // Use the higher-scoped variable
-          const enrichedWordsArray = await enrichWordsWithLLM(hebrewWordsForLlm, apiKey, model);
-          // console.log('[WordInput] Number of words received from LLM processing:', enrichedWordsArray.length, enrichedWordsArray); // DEBUG - Removed
-          wordsToAdd = enrichedWordsArray;
 
-          if (wordsToAdd.length < hebrewWordsForLlm.length) {
-            const successfullyProcessedCount = wordsToAdd.length;
-            const failedCount = hebrewWordsForLlm.length - successfullyProcessedCount;
-            setError(
-              `Processed ${hebrewWordsForLlm.length} words. ` +
-              `${successfullyProcessedCount} added successfully. ` +
-              `${failedCount} word(s) could not be enriched (e.g., missing info or LLM error). Check console for details.`
-            );
-          } else if (wordsToAdd.length === 0 && hebrewWordsForLlm.length > 0) {
-             setError('LLM processing completed, but no information could be generated for any of the words. Please check the words or try a different LLM model.');
+        // --- Новый блок: пакетная обработка чанками ---
+        const chunkSize = 5;
+        const chunks = chunkArray(hebrewWordsForLlm, chunkSize);
+        let allValidWords: Word[] = [];
+        let allFailed: string[] = [];
+        for (const chunk of chunks) {
+          try {
+            const result = await enrichWordsWithLLM(chunk, apiKey, model);
+            // Обработка: если result строка — парсим, иначе используем как есть
+            let parsed: any = result;
+            if (typeof result === 'string') {
+              try {
+                parsed = JSON.parse(result);
+              } catch {
+                parsed = {};
+              }
+            }
+            const valid = validateLLMWordsResponse(parsed);
+            // Сопоставим, какие слова не удалось обработать
+            const chunkFailed = chunk.filter(w => !valid.some(v => v.hebrew === w));
+            allValidWords = allValidWords.concat(valid);
+            allFailed = allFailed.concat(chunkFailed);
+          } catch (err) {
+            // Если весь чанк не обработался — все слова из чанка считаем неудачными
+            allFailed = allFailed.concat(chunk);
           }
-
-        } catch (batchError) {
-          console.error('Error enriching words in batch:', batchError);
-          setError(`Batch LLM enrichment failed: ${batchError instanceof Error ? batchError.message : 'Unknown error'}`);
         }
+        wordsToAdd = allValidWords;
+        failedWords = allFailed;
       }
 
       if (wordsToAdd.length > 0) {
         onAddWords(wordsToAdd);
         setInputText('');
-      } else { // wordsToAdd is empty
-        if (!error) { // And no specific error was set during the process
+        toast.success(`Успешно добавлено ${wordsToAdd.length} слов`);
+      }
+      if (failedWords.length > 0) {
+        setError(`Не удалось обработать: ${failedWords.join(', ')}`);
+      } else if (wordsToAdd.length === 0) {
+        if (!error) {
           if (pathTaken === 'llm') {
-            setError('LLM processing completed, but no information could be generated for any of the words. Please check the words or try a different LLM model.');
+            setError('LLM processing completed, but no information could be generated for any of the words. Пожалуйста, проверьте слова или попробуйте другую модель.');
           } else if (pathTaken === 'structured') {
-            setError('Input was processed, but no words could be extracted. Please check your input format, e.g., Категория - Иврит - Транскрипция - Русский - [Спряжение] - [Пример]');
+            setError('Input was processed, but no words could be extracted. Проверьте формат ввода.');
           } else {
-            setError('No words were processed. Please check your input.');
+            setError('No words were processed. Пожалуйста, проверьте ввод.');
           }
         }
       }
-
     } catch (err) {
       console.error('Error processing words:', err);
       setError(err instanceof Error ? err.message : 'An unexpected error occurred.');
