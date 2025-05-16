@@ -8,9 +8,11 @@ interface FlashCardProps {
   word: Word;
   onMarkLearned: (id: string) => void;
   onNext: () => void;
+  reverse?: boolean;
+  forceFlipped?: boolean;
 }
 
-const FlashCard: React.FC<FlashCardProps> = ({ word, onMarkLearned, onNext }) => {
+const FlashCard: React.FC<FlashCardProps> = ({ word, onMarkLearned, onNext, reverse, forceFlipped }) => {
   const [flipped, setFlipped] = useState(false);
 
   const handleFlip = () => {
@@ -51,7 +53,7 @@ const FlashCard: React.FC<FlashCardProps> = ({ word, onMarkLearned, onNext }) =>
     <div className="w-full max-w-xl mx-auto">
       <div className="card-container relative">
         <div className={`card ${flipped ? 'flipped' : ''}`}>
-          {/* Front side - Hebrew */}
+          {/* Front side */}
           <div
             className="card-front bg-white rounded-xl p-6 flex flex-col justify-between items-center shadow-lg"
             onClick={handleFlip}
@@ -63,15 +65,24 @@ const FlashCard: React.FC<FlashCardProps> = ({ word, onMarkLearned, onNext }) =>
               <div className={`inline-block px-2 py-1 rounded-full text-sm ${getCategoryColor(word.category)} mb-2`}>
                 {word.category}
               </div>
-              <h2 className="text-5xl font-bold mb-2 text-gray-800">{word.hebrew}</h2>
-              <p className="text-xl text-gray-600 mb-3">[{word.transcription}]</p>
-              <p className="text-sm text-gray-500 mt-2">Нажмите, чтобы увидеть перевод</p>
+              {reverse ? (
+                <>
+                  <h2 className="text-4xl font-bold mb-2 text-gray-800">{word.russian}</h2>
+                  <p className="text-xl text-gray-600 mb-3">[Переведите на иврит]</p>
+                  <p className="text-sm text-gray-500 mt-2">Нажмите, чтобы увидеть ответ</p>
+                </>
+              ) : (
+                <>
+                  <h2 className="text-5xl font-bold mb-2 text-gray-800">{word.hebrew}</h2>
+                  <p className="text-xl text-gray-600 mb-3">[{word.transcription}]</p>
+                  <p className="text-sm text-gray-500 mt-2">Нажмите, чтобы увидеть перевод</p>
+                </>
+              )}
             </div>
-
-            <div className="w-full flex justify-between items-center">
+            <div className="w-full flex justify-between items-center pt-10">
 
               <button
-                className="px-3 py-1 rounded-md bg-green-500 text-white text-sm hover:bg-green-600 transition-colors"
+                className="px-3 py-1 rounded-md bg-green-500 text-white text-lg hover:bg-green-600 transition-colors"
                 onClick={(e) => {
                   e.stopPropagation();
                   handleMarkLearned();
@@ -81,7 +92,7 @@ const FlashCard: React.FC<FlashCardProps> = ({ word, onMarkLearned, onNext }) =>
               </button>
 
               <button
-                className="px-3 py-1 rounded-md bg-gray-200 text-gray-700 text-sm hover:bg-gray-300 transition-colors"
+                className="px-3 py-1 rounded-md bg-gray-200 text-gray-700 text-lg hover:bg-gray-300 transition-colors"
                 onClick={(e) => {
                   e.stopPropagation();
                   handleSkip();
@@ -92,8 +103,7 @@ const FlashCard: React.FC<FlashCardProps> = ({ word, onMarkLearned, onNext }) =>
 
             </div>
           </div>
-
-          {/* Back side - Russian */}
+          {/* Back side */}
           <div
             className="card-back bg-white rounded-xl p-6 flex flex-col justify-between items-center shadow-lg"
             onClick={handleFlip}
@@ -102,20 +112,29 @@ const FlashCard: React.FC<FlashCardProps> = ({ word, onMarkLearned, onNext }) =>
             tabIndex={0}
           >
             <div className="text-center">
-              <h3 className="text-4xl font-medium mb-1 text-gray-700">{word.russian}</h3>
-              {word.category === "פועל" && word.conjugations && (
-                <div className="text-left mx-auto max-w-[400px] px-2 my-4">
-                  <div className="font-medium text-lg mb-2 text-gray-700">Спряжения:</div>
-                  <CompactConjugation conjugations={word.conjugations} />
-                </div>
+              {reverse ? (
+                <>
+                  <h2 className="text-5xl font-bold mb-2 text-gray-800">{word.hebrew}</h2>
+                  <p className="text-xl text-gray-600 mb-3">[{word.transcription}]</p>
+                  <p className="text-lg text-gray-700 mt-2">{word.russian}</p>
+                </>
+              ) : (
+                <>
+                  <h3 className="text-4xl font-medium mb-1 text-gray-700">{word.russian}</h3>
+                  {word.category === "פועל" && word.conjugations && (
+                    <div className="text-left mx-auto max-w-[400px] px-2 my-4">
+                      <div className="font-medium text-lg mb-2 text-gray-700">Спряжения:</div>
+                      <CompactConjugation conjugations={word.conjugations} />
+                    </div>
+                  )}
+                </>
               )}
             </div>
+            <div className="w-full flex justify-between items-center pt-10">
 
-            <div className="w-full flex justify-between items-center">
-              
 
               <button
-                className="px-3 py-1 rounded-md bg-green-500 text-white text-sm hover:bg-green-600 transition-colors"
+                className="px-3 py-1 rounded-md bg-green-500 text-white text-lg hover:bg-green-600 transition-colors"
                 onClick={(e) => {
                   e.stopPropagation();
                   handleMarkLearned();
@@ -125,7 +144,7 @@ const FlashCard: React.FC<FlashCardProps> = ({ word, onMarkLearned, onNext }) =>
               </button>
 
               <button
-                className="px-3 py-1 rounded-md bg-gray-200 text-gray-700 text-sm hover:bg-gray-300 transition-colors"
+                className="px-3 py-1 rounded-md bg-gray-200 text-gray-700 text-lg hover:bg-gray-300 transition-colors"
                 onClick={(e) => {
                   e.stopPropagation();
                   handleSkip();
@@ -133,7 +152,7 @@ const FlashCard: React.FC<FlashCardProps> = ({ word, onMarkLearned, onNext }) =>
               >
                 Следующее
               </button>
-              
+
             </div>
           </div>
         </div>

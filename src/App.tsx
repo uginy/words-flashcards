@@ -82,13 +82,8 @@ function App() {
       case 'learn':
         return (
           <div className="space-y-6">
-            <Statistics
-              total={stats.total}
-              learned={stats.learned}
-              remaining={stats.remaining}
-            />
-            {/* Переключатель режима обучения */}
-            <div className="flex items-center gap-4 mb-2">
+             {/* Переключатель режима обучения */}
+            <div className="flex items-center gap-4 mb-2 align-middle justify-center">
               <label className="flex items-center cursor-pointer select-none">
                 <input
                   type="checkbox"
@@ -99,6 +94,11 @@ function App() {
                 <span className="ml-2 text-sm text-gray-700 font-medium">Русский → Иврит (реверсивный режим)</span>
               </label>
             </div>
+            <Statistics
+              total={stats.total}
+              learned={stats.learned}
+              remaining={stats.remaining}
+            />
             {stats.total === 0 ? (
               // Case: No words in the list at all
               <div className="bg-white rounded-lg shadow-md p-6 text-center">
