@@ -95,23 +95,26 @@ const FlashCard: React.FC<FlashCardProps> = ({ word: propWord, reverse, onMarkAs
   };
 
   // Цветовая карта для категорий
+  // Цветовая карта для категорий (фон и текст)
   const getCategoryColor = (category: string) => {
     // Поддержка на русском, английском и иврите
     const cat = category?.toLowerCase();
     if (["adjective", "прилагательное", "תואר"].includes(cat)) {
-      return "bg-purple-100 text-purple-800";
+      return { bg: "bg-purple-100", text: "text-purple-800" };
     }
     if (["verb", "глагол", "פועל"].includes(cat)) {
-      return "bg-blue-100 text-blue-800";
+      return { bg: "bg-blue-100", text: "text-blue-800", category: "bg-blue-300" };
     }
     if (["noun", "существительное", "שם עצם"].includes(cat)) {
-      return "bg-green-100 text-green-800";
+      return { bg: "bg-green-100", text: "text-green-800", category: "bg-green-300" };
     }
-    return "bg-gray-100 text-gray-800";
+    return { bg: "bg-gray-100", text: "text-gray-800", category: "bg-gray-300" };
   };
 
   // If no word, render nothing
   if (!word) return null;
+
+  const categoryColors = getCategoryColor(word.category);
 
   return (
     <div className="w-full max-w-xl mx-auto">
@@ -139,35 +142,35 @@ const FlashCard: React.FC<FlashCardProps> = ({ word: propWord, reverse, onMarkAs
         <div className={`card ${flipped ? 'flipped' : ''}`}> 
           {/* Front side */}
           <div
-            className="card-front bg-white rounded-xl p-6 flex flex-col justify-between items-center shadow-lg relative"
+            className={`card-front rounded-xl p-6 flex flex-col justify-between items-center shadow-lg relative ${categoryColors.bg}`}
             onClick={handleFlip}
             onKeyDown={handleKeyDown}
             role="button"
             tabIndex={0}
           >
             <div className="text-center">
-              <div className={`inline-block px-2 py-1 rounded-full text-sm ${getCategoryColor(word.category)} mb-2`}>
+              <div className={`inline-block px-2 py-1 rounded-full text-sm ${categoryColors.bg} ${categoryColors.text} ${categoryColors.category} mb-2`}>
                 {word.category}
               </div>
               {reverse ? (
                 <>
-                  <h2 className="text-4xl font-bold mb-2 text-gray-800">{word.russian}</h2>
-                  <p className="text-xl text-gray-600 mb-3">[Переведите на иврит]</p>
+                  <h2 className={`text-4xl font-bold mb-2 ${categoryColors.text}`}>{word.russian}</h2>
+                  <p className={`text-xl ${categoryColors.text} mb-3`}>[Переведите на иврит]</p>
                   <p className="text-sm text-gray-500 mt-2">Нажмите, чтобы увидеть ответ</p>
                   {/* Примеры на лицевой стороне */}
                   {word.examples && word.examples.length > 0 && renderExamples(word.examples)}
                 </>
               ) : (
                 <>
-                  <h2 className="text-5xl font-bold mb-2 text-gray-800">{word.hebrew}</h2>
-                  <p className="text-xl text-gray-600 mb-3">[{word.transcription}]</p>
+                  <h2 className={`text-5xl font-bold mb-2 ${categoryColors.text}`}>{word.hebrew}</h2>
+                  <p className={`text-xl ${categoryColors.text} mb-3`}>[{word.transcription}]</p>
                   <p className="text-sm text-gray-500 mt-2">Нажмите, чтобы увидеть перевод</p>
                   {/* Примеры на лицевой стороне */}
                   {word.examples && word.examples.length > 0 && renderExamples(word.examples)}
                 </>
               )}
             </div>
-            <div className="w-full flex justify-between items-center pt-10">
+            <div className="w-full flex justify-between items-center pt-10 ">
 
               <button
                 className="px-3 py-1 rounded-md bg-green-500 text-white text-lg hover:bg-green-600 transition-colors"
@@ -180,7 +183,7 @@ const FlashCard: React.FC<FlashCardProps> = ({ word: propWord, reverse, onMarkAs
               </button>
 
               <button
-                className="px-3 py-1 rounded-md bg-gray-200 text-gray-700 text-lg hover:bg-gray-300 transition-colors"
+                className="px-3 py-1 rounded-md bg-orange-500 text-white text-lg hover:bg-orange-600 transition-colors"
                 onClick={(e) => {
                   e.stopPropagation();
                   handleSkip();
@@ -193,7 +196,7 @@ const FlashCard: React.FC<FlashCardProps> = ({ word: propWord, reverse, onMarkAs
           </div>
           {/* Back side */}
           <div
-            className="card-back bg-white rounded-xl p-6 flex flex-col justify-between items-center shadow-lg relative"
+            className={`card-back rounded-xl p-6 flex flex-col justify-between items-center shadow-lg relative ${categoryColors.bg}`}
             onClick={handleFlip}
             onKeyDown={handleKeyDown}
             role="button"
@@ -202,20 +205,20 @@ const FlashCard: React.FC<FlashCardProps> = ({ word: propWord, reverse, onMarkAs
             <div className="text-center">
               {reverse ? (
                 <>
-                  <h2 className="text-5xl font-bold mb-2 text-gray-800">{word.hebrew}</h2>
-                  <p className="text-xl text-gray-600 mb-3">[{word.transcription}]</p>
-                  <p className="text-lg text-gray-700 mt-2">{word.russian}</p>
+                  <h2 className={`text-5xl font-bold mb-2 ${categoryColors.text}`}>{word.hebrew}</h2>
+                  <p className={`text-xl ${categoryColors.text} mb-3`}>[{word.transcription}]</p>
+                  <p className={`text-lg ${categoryColors.text} mt-2`}>{word.russian}</p>
                   {/* Display usage examples if they exist */}
                   {word.examples && word.examples.length > 0 && renderExamples(word.examples)}
                 </>
               ) : (
                 <>
-                  <h3 className="text-4xl font-medium mb-1 text-gray-700">{word.russian}</h3>
+                  <h3 className={`text-4xl font-medium mb-1 ${categoryColors.text}`}>{word.russian}</h3>
                   {/* Display usage examples if they exist */}
                   {word.examples && word.examples.length > 0 && renderExamples(word.examples)}
                   {word.category === "פועל" && word.conjugations && (
                     <div className="text-left mx-auto max-w-[400px] px-2 my-4">
-                      <div className="font-medium text-lg mb-2 text-gray-700">Спряжения:</div>
+                      <div className={`font-medium text-lg mb-2 ${categoryColors.text}`}>Спряжения:</div>
                       <CompactConjugation conjugations={word.conjugations} />
                     </div>
                   )}
@@ -236,7 +239,7 @@ const FlashCard: React.FC<FlashCardProps> = ({ word: propWord, reverse, onMarkAs
               </button>
 
               <button
-                className="px-3 py-1 rounded-md bg-gray-200 text-gray-700 text-lg hover:bg-gray-300 transition-colors"
+                className="px-3 py-1 rounded-md bg-orange-500 text-white text-lg hover:bg-orange-600 transition-colors"
                 onClick={(e) => {
                   e.stopPropagation();
                   handleSkip();
