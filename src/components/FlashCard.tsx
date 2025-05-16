@@ -5,6 +5,7 @@ import ConjugationDisplay from './ConjugationDisplay';
 import CompactConjugation from './CompactConjugation';
 
 import { useWordsStore } from '../store/wordsStore';
+import { getCurrentWord } from '../store/wordsStore';
 
 interface FlashCardProps {
   reverse?: boolean;
@@ -12,9 +13,14 @@ interface FlashCardProps {
 
 // FlashCard now gets word and actions from Zustand store, only reverse is a prop
 const FlashCard: React.FC<FlashCardProps> = ({ reverse }) => {
-  const word = useWordsStore((state) => state.currentWord);
+  // Подписка на words и currentIndex из стора
+  const words = useWordsStore((state) => state.words);
+  const currentIndex = useWordsStore((state) => state.currentIndex);
   const markAsLearned = useWordsStore((state) => state.markAsLearned);
   const nextWord = useWordsStore((state) => state.nextWord);
+
+  // Локально вычисляем текущий word
+  const word = getCurrentWord(words, currentIndex);
 
   const [flipped, setFlipped] = useState(false);
 

@@ -33,7 +33,7 @@ interface WordsStore extends WordsState {
   updateWords: (words: Word[] | null) => void;
   replaceAllWords: (newWords: Word[], toast?: ToastFn) => void;
   clearAllWords: (toast?: ToastFn) => void;
-  currentWord?: Word;
+  // currentWord removed; use getCurrentWord(words, currentIndex) instead
 }
 
 export const useWordsStore = create<WordsStore>((set, get) => {
@@ -156,42 +156,35 @@ export const useWordsStore = create<WordsStore>((set, get) => {
 
     nextWord: toast => {
       set(state => {
-        const unlearnedWords = state.words.filter(word => !word.isLearned);
-        if (unlearnedWords.length === 0) {
-          toast?.({
-            title: 'Поздравляем!',
-            description: 'Все слова изучены.',
-          });
-          return { ...state, currentIndex: 0 };
+        // Debug log before change
+
+        if (state.words.length === 0) {
+          return state;
         }
-        const currentGlobalIndex = state.currentIndex;
-        let nextGlobalIndex = -1;
-        for (let i = 1; i <= state.words.length; i++) {
-          const potentialNextIndex = (currentGlobalIndex + i) % state.words.length;
-          if (!state.words[potentialNextIndex].isLearned) {
-            nextGlobalIndex = potentialNextIndex;
-            break;
-          }
+
+        // Если все слова изучены, не переходим
+        const allLearned = state.words.length > 0 && state.words.every(word => word.isLearned);
+        if (allLearned) {
+          return state;
         }
-        if (nextGlobalIndex === -1) {
-          const firstUnlearnedWord = state.words.find(w => !w.isLearned);
-          if (firstUnlearnedWord) {
-            nextGlobalIndex = state.words.findIndex(w => w.id === firstUnlearnedWord.id);
-          } else {
-            return state;
-          }
+
+        let newIndex = state.currentIndex;
+
+        // Циклический переход по кругу
+        if (state.currentIndex + 1 >= state.words.length) {
+          newIndex = 0;
+        } else {
+          newIndex = state.currentIndex + 1;
         }
-        // Ensure nextGlobalIndex is within bounds
-        if (nextGlobalIndex < 0 || nextGlobalIndex >= state.words.length) {
-          nextGlobalIndex = 0;
-        }
-        const wordsWithHiddenTranslation = state.words.map((word, index) =>
-          index === nextGlobalIndex ? { ...word, showTranslation: false } : word
+
+        const wordsWithHiddenTranslation = state.words.map((word, idx) =>
+          idx === newIndex ? { ...word, showTranslation: false } : word
         );
+
         return {
           ...state,
           words: wordsWithHiddenTranslation,
-          currentIndex: nextGlobalIndex,
+          currentIndex: newIndex,
         };
       });
     },
@@ -274,17 +267,17 @@ export const useWordsStore = create<WordsStore>((set, get) => {
 
     // stats getter removed; use getStats(words) instead
 
-    // Returns the current word by index, or the first word if current is undefined, or undefined if no words
-    get currentWord() {
-      const words = get().words;
-      const idx = get().currentIndex;
-      if (words.length === 0) return undefined;
-      if (idx < words.length && words[idx] !== undefined) return words[idx];
-      // If current word is undefined, return the first word
-      return words[0];
-    },
+    // currentWord getter removed; use getCurrentWord(words, currentIndex) instead
   };
 });
+
+// Returns the current word based on words array and currentIndex
+export function getCurrentWord(words: Word[], currentIndex: number): Word | undefined {
+  if (words.length === 0) return undefined;
+  if (currentIndex < words.length && words[currentIndex] !== undefined) return words[currentIndex];
+  // If currentIndex is out of bounds, fallback to first word (should not happen with current logic)
+  return words[0];
+}
 
 // Auto-save to localStorage on every change
 useWordsStore.subscribe(state => {

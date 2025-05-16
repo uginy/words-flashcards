@@ -5,24 +5,26 @@ import FlashCard from './components/FlashCard';
 import WordInput from './components/WordInput';
 import WordTable from './components/WordTable';
 import Statistics from './components/Statistics';
-import { useWordsStore, getStats } from './store/wordsStore';
+import { useWordsStore, getStats, getCurrentWord } from './store/wordsStore';
 import Settings from './components/Settings';
 
 function App() {
   const [activeTab, setActiveTab] = useState('learn');
   const [reverseMode, setReverseMode] = useState(false);
   // Получаем данные и методы из Zustand-стора
+  // Subscribe to words and currentIndex from the store
   const {
     words,
-    currentWord,
+    currentIndex,
     markAsLearned,
     markAsNotLearned,
     resetProgress,
     deleteWord,
   } = useWordsStore();
-  // Always get fresh stats using selector
-  const wordsStoreWords = useWordsStore(state => state.words);
-  const stats = getStats(wordsStoreWords);
+
+  // Compute currentWord and stats locally
+  const currentWord = getCurrentWord(words, currentIndex);
+  const stats = getStats(words);
   
   // Define tabs with icons
   const tabs = [
@@ -116,31 +118,10 @@ function App() {
                   Добавить слова
                 </button>
               </div>
-            ) : currentWord ? (
-              // Case: There are words and a current word to display
+            ) : (
+              // Показываем FlashCard при наличии хотя бы одного слова
               <div className="animate-fadeIn">
                 <FlashCard reverse={reverseMode} />
-              </div>
-            ) : (
-              // Case: There are words, but all are learned
-              <div className="bg-white rounded-lg shadow-md p-6 text-center">
-                <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mx-auto text-blue-500 mb-3">
-                  <title>Все слова изучены</title>
-                  <circle cx="12" cy="12" r="10" />
-                  <path d="M12 16v-4" />
-                  <path d="M12 8h.01" />
-                </svg>
-                <h3 className="text-lg font-medium text-gray-900 mb-2">Все слова изучены!</h3>
-                <p className="text-gray-600 mb-4">
-                  Вы выучили все слова в вашем списке. Вы можете добавить новые слова или сбросить прогресс.
-                </p>
-                <button
-                  type="button"
-                  onClick={resetProgress}
-                  className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                >
-                  Сбросить прогресс
-                </button>
               </div>
             )}
           </div>
