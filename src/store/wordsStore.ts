@@ -1,0 +1,286 @@
+// Zustand store for managing words with full business logic and localStorage sync
+
+import { create } from 'zustand';
+import type { Word, WordsState } from '../types';
+import { saveToLocalStorage, loadFromLocalStorage } from '../utils/storage';
+
+const initialState: WordsState = {
+  words: [],
+  currentIndex: 0,
+};
+
+type ToastFn = (opts: { title: string; description: string; variant?: string }) => void;
+
+interface WordsStore extends WordsState {
+  addWords: (newWords: Word[], toast: ToastFn) => Promise<void>;
+  markAsLearned: (id: string, toast?: ToastFn) => void;
+  markAsNotLearned: (id: string, toast?: ToastFn) => void;
+  toggleTranslation: (id: string) => void;
+  nextWord: (toast?: ToastFn) => void;
+  resetProgress: () => void;
+  deleteWord: (id: string, toast?: ToastFn) => void;
+  updateWord: (updatedWord: Word) => void;
+  updateWords: (words: Word[] | null) => void;
+  replaceAllWords: (newWords: Word[], toast?: ToastFn) => void;
+  clearAllWords: (toast?: ToastFn) => void;
+  stats: {
+    total: number;
+    learned: number;
+    remaining: number;
+  };
+  currentWord?: Word;
+}
+
+export const useWordsStore = create<WordsStore>((set, get) => {
+  // Load from localStorage on init
+  const savedState = loadFromLocalStorage();
+  const state: WordsState = savedState
+    ? {
+        words: savedState.words || [],
+        currentIndex: savedState.currentIndex || 0,
+      }
+    : initialState;
+
+  // Sync with localStorage changes from other tabs/windows
+  if (typeof window !== 'undefined') {
+    window.addEventListener('storage', (event: StorageEvent) => {
+      if (event.key === 'hebrew-flashcards-data') {
+        const saved = loadFromLocalStorage();
+        set(
+          saved
+            ? {
+                words: saved.words || [],
+                currentIndex: saved.currentIndex || 0,
+              }
+            : initialState
+        );
+      }
+    });
+  }
+
+  return {
+    ...state,
+
+    addWords: async (newWords, toast) => {
+      try {
+        const initialValidWords = newWords.filter(word => word.hebrew && word.russian);
+        const validNewWords = initialValidWords.filter(
+          (word, index, self) =>
+            self.findIndex(w => w.hebrew === word.hebrew && w.russian === word.russian) === index
+        );
+        if (validNewWords.length < initialValidWords.length && toast) {
+          const dupCount = initialValidWords.length - validNewWords.length;
+          toast({
+            title: 'Информация',
+            description: `Пропущено ${dupCount} дублирующих слов во вводе`,
+          });
+        }
+        if (validNewWords.length === 0) {
+          toast?.({
+            title: 'Ошибка',
+            description: 'Нет валидных слов для добавления.',
+            variant: 'destructive',
+          });
+          return;
+        }
+        set(state => {
+          if (state.words.length === 0) {
+            return { ...state, words: validNewWords };
+          }
+          const uniqueNewWords = validNewWords.filter(
+            newWord =>
+              !state.words.some(
+                existingWord =>
+                  existingWord.hebrew === newWord.hebrew && existingWord.russian === newWord.russian
+              )
+          );
+          if (uniqueNewWords.length === 0) {
+            toast?.({
+              title: 'Ошибка',
+              description: 'Эти слова уже существуют в вашей коллекции.',
+              variant: 'destructive',
+            });
+            return state;
+          }
+          const count = uniqueNewWords.length;
+          const wordForm =
+            count === 1 ? 'слово' : count >= 2 && count <= 4 ? 'слова' : 'слов';
+          toast?.({
+            title: 'Успех!',
+            description: `Добавлено ${count} ${wordForm}`,
+          });
+          return { ...state, words: [...state.words, ...uniqueNewWords] };
+        });
+      } catch (error: any) {
+        toast?.({
+          title: 'Ошибка',
+          description: error?.message || 'Failed to add words',
+          variant: 'destructive',
+        });
+      }
+    },
+
+    markAsLearned: (id, toast) => {
+      set(state => {
+        const newWords = state.words.map(word =>
+          word.id === id ? { ...word, isLearned: true, learned: true } : word
+        );
+        return { ...state, words: newWords };
+      });
+    },
+
+    markAsNotLearned: (id, toast) => {
+      set(state => {
+        const newWords = state.words.map(word =>
+          word.id === id
+            ? { ...word, isLearned: false, learned: false, learningStage: 0 }
+            : word
+        );
+        return { ...state, words: newWords };
+      });
+    },
+
+    toggleTranslation: id => {
+      set(state => ({
+        ...state,
+        words: state.words.map(word =>
+          word.id === id ? { ...word, showTranslation: !word.showTranslation } : word
+        ),
+      }));
+    },
+
+    nextWord: toast => {
+      set(state => {
+        const unlearnedWords = state.words.filter(word => !word.isLearned);
+        if (unlearnedWords.length === 0) {
+          toast?.({
+            title: 'Поздравляем!',
+            description: 'Все слова изучены.',
+          });
+          return { ...state, currentIndex: 0 };
+        }
+        const currentGlobalIndex = state.currentIndex;
+        let nextGlobalIndex = -1;
+        for (let i = 1; i <= state.words.length; i++) {
+          const potentialNextIndex = (currentGlobalIndex + i) % state.words.length;
+          if (!state.words[potentialNextIndex].isLearned) {
+            nextGlobalIndex = potentialNextIndex;
+            break;
+          }
+        }
+        if (nextGlobalIndex === -1) {
+          const firstUnlearnedWord = state.words.find(w => !w.isLearned);
+          if (firstUnlearnedWord) {
+            nextGlobalIndex = state.words.findIndex(w => w.id === firstUnlearnedWord.id);
+          } else {
+            return state;
+          }
+        }
+        const wordsWithHiddenTranslation = state.words.map((word, index) =>
+          index === nextGlobalIndex ? { ...word, showTranslation: false } : word
+        );
+        return {
+          ...state,
+          words: wordsWithHiddenTranslation,
+          currentIndex: nextGlobalIndex,
+        };
+      });
+    },
+
+    resetProgress: () => {
+      set(state => ({
+        ...state,
+        words: state.words.map(word => ({
+          ...word,
+          isLearned: false,
+          showTranslation: false,
+          learningStage: 0,
+          lastReviewed: null,
+          nextReview: null,
+        })),
+        currentIndex: state.words.length > 0 ? 0 : 0,
+      }));
+    },
+
+    deleteWord: (id, toast) => {
+      set(state => {
+        const updatedWords = state.words.filter(word => word.id !== id);
+        let newCurrentIndex = state.currentIndex;
+        if (newCurrentIndex >= updatedWords.length) {
+          newCurrentIndex = Math.max(0, updatedWords.length - 1);
+        }
+        return {
+          ...state,
+          words: updatedWords,
+          currentIndex: newCurrentIndex,
+        };
+      });
+    },
+
+    updateWord: updatedWord => {
+      set(state => ({
+        ...state,
+        words: state.words.map(word => (word.id === updatedWord.id ? updatedWord : word)),
+      }));
+    },
+
+    updateWords: words => {
+      if (words) {
+        set({
+          words,
+          currentIndex: 0,
+        });
+      } else {
+        set(initialState);
+      }
+    },
+
+    replaceAllWords: (newWords, toast) => {
+      set(() => {
+        const newCurrentIndex = newWords.length > 0 ? 0 : 0;
+        if (newWords.length === 0) {
+          toast?.({
+            title: 'Успех!',
+            description: 'Список слов очищен.',
+          });
+        }
+        return {
+          words: newWords,
+          currentIndex: newCurrentIndex,
+        };
+      });
+    },
+
+    clearAllWords: toast => {
+      set({ ...initialState });
+      toast?.({
+        title: 'Успех!',
+        description: 'Все слова удалены из коллекции',
+      });
+    },
+
+    get stats() {
+      const words = get().words;
+      const total = words.length;
+      const learned = words.filter(word => word.isLearned).length;
+      return {
+        total,
+        learned,
+        remaining: total - learned,
+      };
+    },
+
+    get currentWord() {
+      const words = get().words;
+      const idx = get().currentIndex;
+      return words.length > 0 && idx < words.length ? words[idx] : undefined;
+    },
+  };
+});
+
+// Auto-save to localStorage on every change
+useWordsStore.subscribe(state => {
+  if (state.words.length > 0 || state.currentIndex !== 0) {
+    saveToLocalStorage({ words: state.words, currentIndex: state.currentIndex });
+  }
+});

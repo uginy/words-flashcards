@@ -3,7 +3,7 @@ import { parseAndTranslateWords } from '../utils/translation';
 import { enrichWordsWithLLM } from '../services/openrouter';
 import { Word } from '../types';
 import { useToast } from '../hooks/use-toast';
-import { useWords } from '../hooks/useWords';
+import { useWordsStore } from '../store/wordsStore';
 
 // Разбить массив на чанки
 function chunkArray<T>(arr: T[], size: number): T[][] {
@@ -38,8 +38,22 @@ function validateLLMWordsResponse(data: unknown): Word[] {
 }
 
 const WordInput: React.FC = () => {
-  const { words: existingWords, addWords } = useWords();
+  const existingWords = useWordsStore(state => state.words);
+  const addWords = useWordsStore(state => state.addWords);
   const { toast } = useToast();
+
+  // Adapter for toast to map 'destructive' to 'error' and filter allowed variants
+  const toastAdapter = (opts: { title: string; description: string; variant?: string }) => {
+    const allowedVariants = [
+      'default', 'success', 'error', 'info', 'warning', 'neutral',
+      'primary', 'secondary', 'accent', 'successAlt', 'errorAlt',
+      'infoAlt', 'warningAlt', 'neutralAlt', 'primaryAlt', 'secondaryAlt', 'accentAlt'
+    ] as const;
+    let mappedVariant: typeof allowedVariants[number] | undefined = undefined;
+    if (opts.variant === 'destructive') mappedVariant = 'error';
+    else if (opts.variant && allowedVariants.includes(opts.variant as any)) mappedVariant = opts.variant as typeof allowedVariants[number];
+    toast({ ...opts, variant: mappedVariant });
+  };
   const [inputText, setInputText] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -147,7 +161,7 @@ const WordInput: React.FC = () => {
       }
 
       if (wordsToAdd.length > 0) {
-        await addWords(wordsToAdd);
+        await addWords(wordsToAdd, toastAdapter);
         setInputText('');
         if (failedWords.length === 0) {
           toast({

@@ -1,7 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { useToast } from '@/hooks/use-toast'; // shadcn/ui toast
 import { Word } from '../types';
-import { useWords } from '../hooks/useWords'; // Import useWords
+import { useWordsStore } from '../store/wordsStore';
 import EditWordDialog from './EditWordDialog';
 import ConjugationDisplay from './ConjugationDisplay';
 import {
@@ -37,12 +37,30 @@ interface WordTableProps {
 }
 
 const WordTable: React.FC<WordTableProps> = ({ onEditWord }) => {
-  const { words: allWords, replaceAllWords, clearAllWords, markAsLearned, markAsNotLearned, deleteWord } = useWords();
+  const allWords = useWordsStore(state => state.words);
+  const replaceAllWords = useWordsStore(state => state.replaceAllWords);
+  const clearAllWords = useWordsStore(state => state.clearAllWords);
+  const markAsLearned = useWordsStore(state => state.markAsLearned);
+  const markAsNotLearned = useWordsStore(state => state.markAsNotLearned);
+  const deleteWord = useWordsStore(state => state.deleteWord);
   const [filter, setFilter] = useState<'all' | 'learned' | 'not-learned'>('all');
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
   const [editingWord, setEditingWord] = useState<Word | null>(null);
+
+  // Adapter for toast to map 'destructive' to 'error' and filter allowed variants
+  const toastAdapter = (opts: { title: string; description: string; variant?: string }) => {
+    const allowedVariants = [
+      'default', 'success', 'error', 'info', 'warning', 'neutral',
+      'primary', 'secondary', 'accent', 'successAlt', 'errorAlt',
+      'infoAlt', 'warningAlt', 'neutralAlt', 'primaryAlt', 'secondaryAlt', 'accentAlt'
+    ] as const;
+    let mappedVariant: typeof allowedVariants[number] | undefined = undefined;
+    if (opts.variant === 'destructive') mappedVariant = 'error';
+    else if (opts.variant && allowedVariants.includes(opts.variant as any)) mappedVariant = opts.variant as typeof allowedVariants[number];
+    toast({ ...opts, variant: mappedVariant });
+  };
 
   // Function to handle saving edited word
   const handleSaveEdit = (editedWord: Word) => {
@@ -104,7 +122,7 @@ const WordTable: React.FC<WordTableProps> = ({ onEditWord }) => {
       try {
         const content = e.target?.result;
         if (typeof content !== 'string') {
-          toast({ title: "Ошибка", description: 'Не удалось прочитать файл.', variant: "destructive" });
+          toastAdapter({ title: "Ошибка", description: 'Не удалось прочитать файл.', variant: "destructive" });
           return;
         }
         const parsedWords = JSON.parse(content);
@@ -118,7 +136,7 @@ const WordTable: React.FC<WordTableProps> = ({ onEditWord }) => {
             // For example: typeof word.transcription === 'string', typeof word.category === 'string', typeof word.learned === 'boolean'
             Object.prototype.hasOwnProperty.call(word, 'id') && Object.prototype.hasOwnProperty.call(word, 'hebrew') && Object.prototype.hasOwnProperty.call(word, 'russian')
         )) {
-          toast({ title: "Ошибка", description: 'Неверный формат файла. Убедитесь, что это JSON массив объектов Word.', variant: "destructive" });
+          toastAdapter({ title: "Ошибка", description: 'Неверный формат файла. Убедитесь, что это JSON массив объектов Word.', variant: "destructive" });
           return;
         }
         
@@ -126,7 +144,7 @@ const WordTable: React.FC<WordTableProps> = ({ onEditWord }) => {
         toast({ title: "Успех", description: 'Слова успешно импортированы!' });
       } catch (error) {
         console.error("Ошибка при импорте слов:", error);
-        toast({ title: "Ошибка", description: 'Ошибка при импорте слов. Проверьте консоль для деталей.', variant: "destructive" });
+        toastAdapter({ title: "Ошибка", description: 'Ошибка при импорте слов. Проверьте консоль для деталей.', variant: "destructive" });
       } finally {
         // Reset file input to allow importing the same file again
         if (event.target) {
@@ -136,7 +154,7 @@ const WordTable: React.FC<WordTableProps> = ({ onEditWord }) => {
     };
 
     reader.onerror = () => {
-      toast({ title: "Ошибка", description: 'Ошибка при чтении файла.', variant: "destructive" });
+      toastAdapter({ title: "Ошибка", description: 'Ошибка при чтении файла.', variant: "destructive" });
       if (event.target) {
         event.target.value = '';
       }

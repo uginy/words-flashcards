@@ -12,7 +12,7 @@ interface FlashCardProps {
   forceFlipped?: boolean;
 }
 
-const FlashCard: React.FC<FlashCardProps> = ({ word, onMarkLearned, onNext, reverse, forceFlipped }) => {
+const FlashCard: React.FC<FlashCardProps> = ({ word, onMarkLearned, onNext, reverse }) => {
   const [flipped, setFlipped] = useState(false);
 
   const handleFlip = () => {

@@ -5,23 +5,23 @@ import FlashCard from './components/FlashCard';
 import WordInput from './components/WordInput';
 import WordTable from './components/WordTable';
 import Statistics from './components/Statistics';
-import { useWords } from './hooks/useWords';
+import { useWordsStore } from './store/wordsStore';
 import Settings from './components/Settings';
 
 function App() {
   const [activeTab, setActiveTab] = useState('learn');
-  const [reverseMode, setReverseMode] = useState(false); // Режим Русский → Иврит
-  const { 
-    words, 
-    currentWord, 
-    addWords, 
-    markAsLearned, 
-    markAsNotLearned, 
-    nextWord, 
-    resetProgress, 
+  const [reverseMode, setReverseMode] = useState(false);
+  // Получаем данные и методы из Zustand-стора
+  const {
+    words,
+    currentWord,
+    markAsLearned,
+    markAsNotLearned,
+    nextWord,
+    resetProgress,
     deleteWord,
-    stats
-  } = useWords();
+    stats,
+  } = useWordsStore();
 
   // Define tabs with icons
   const tabs = [

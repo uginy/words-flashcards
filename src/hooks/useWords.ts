@@ -11,7 +11,19 @@ const initialState: WordsState = {
 export const useWords = () => {
   const [state, setState] = useState<WordsState>(initialState);
   const { toast } = useToast();
+  console.log(state);
   
+  // Public callback to manually refresh state from localStorage
+  const updateWords = (words: Word[] | null) => {
+    if (words) {
+      setState({
+        words,
+        currentIndex: 0,
+      });
+    } else {
+      setState(initialState);
+    }
+  };
 
   // Load from localStorage on initial render
   useEffect(() => {
@@ -33,6 +45,27 @@ export const useWords = () => {
     }
   }, [state]);
   
+  // Sync state with localStorage changes from other tabs/windows
+  useEffect(() => {
+    const handleStorage = (event: StorageEvent) => {
+      if (event.key === 'hebrew-flashcards-data') {
+        const savedState = loadFromLocalStorage();
+        if (savedState) {
+          setState({
+            words: savedState.words || [],
+            currentIndex: savedState.currentIndex || 0,
+          });
+        } else {
+          setState(initialState);
+        }
+      }
+    };
+    window.addEventListener('storage', handleStorage);
+    return () => {
+      window.removeEventListener('storage', handleStorage);
+    };
+  }, []);
+
   // Add new words. Accepts an array of Word objects.
   const addWords = async (newWordsFromInput: Word[]) => {
     try {
@@ -256,8 +289,8 @@ export const useWords = () => {
   };
 
   const clearAllWords = () => {
-    setState(initialState);
-    saveToLocalStorage(initialState);
+    setState({ ...initialState});
+    saveToLocalStorage({...initialState});
     toast({
       title: "Успех!",
       description: "Все слова удалены из коллекции",
@@ -290,7 +323,8 @@ export const useWords = () => {
     resetProgress: resetWords,
     deleteWord,
     updateWord,
+    updateWords,
     replaceAllWords,
-    clearAllWords,
+    clearAllWords
   };
 };

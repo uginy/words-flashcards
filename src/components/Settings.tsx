@@ -1,8 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { Combobox } from './ui/combobox';
-// import { useWords } from '../hooks/useWords'; // Removed as part of import/export refactor
-// import { toast } from 'react-hot-toast'; // Removed as part of import/export refactor
-// import type { Word } from '../types'; // Removed as part of import/export refactor
 
 const OPENROUTER_API_KEY_STORAGE_KEY = 'openRouterApiKey';
 const OPENROUTER_SELECTED_MODEL_STORAGE_KEY = 'openRouterModel';
@@ -26,7 +23,6 @@ const Settings: React.FC = () => {
   const [isLoadingModels, setIsLoadingModels] = useState<boolean>(false);
   const [showFreeOnly, setShowFreeOnly] = useState<boolean>(true);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
-  // const { words } = useWords(); // Removed as part of import/export refactor
 
   useEffect(() => {
     const storedApiKey = localStorage.getItem(OPENROUTER_API_KEY_STORAGE_KEY);
