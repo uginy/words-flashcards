@@ -46,16 +46,18 @@ export function Combobox({
           variant="outline"
           role="combobox"
           aria-expanded={open}
-          className="w-full justify-between"
+          className="w-full justify-between overflow-hidden"
           disabled={disabled}
         >
-          {value
-            ? options.find((option) => option.value === value)?.label
-            : placeholder}
+          <span className="truncate">
+            {value
+              ? options.find((option) => option.value === value)?.label
+              : placeholder}
+          </span>
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-full p-0" style={{ maxHeight: '300px' }}>
+      <PopoverContent className="w-[--radix-popover-trigger-width] p-0" style={{ maxHeight: '300px' }}>
         <Command className="max-h-[300px]">
           <CommandInput placeholder={searchPlaceholder} />
           <CommandEmpty>{noResultsText}</CommandEmpty>
@@ -75,7 +77,7 @@ export function Combobox({
                     value === option.value ? "opacity-100" : "opacity-0"
                   )}
                 />
-                {option.label}
+                <span className="whitespace-normal break-words">{option.label}</span>
               </CommandItem>
             ))}
           </CommandGroup>

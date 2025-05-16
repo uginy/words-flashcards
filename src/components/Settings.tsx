@@ -97,7 +97,7 @@ const Settings: React.FC = () => {
 
   return (
     <div className="w-full max-w-2xl mx-auto p-4 sm:p-6 bg-white rounded-lg shadow-md">
-      <h2 className="text-2xl font-semibold text-gray-800 mb-6">Настройки</h2>
+      <h2 className="text-2xl font-semibold text-gray-800 mb-4">Настройки</h2>
 
       {message && (
         <div
@@ -139,7 +139,7 @@ const Settings: React.FC = () => {
           <label htmlFor="modelSelect" className="block text-sm font-medium text-gray-700 mb-1">
             Select LLM Model
           </label>
-          <div className="flex items-center space-x-3">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
             <div className="flex-1">
               <Combobox
                 options={filteredModels.map((model) => ({
@@ -158,12 +158,12 @@ const Settings: React.FC = () => {
               type="button"
               onClick={fetchModels}
               disabled={!apiKey || isLoadingModels}
-              className="px-3 py-2 text-sm bg-blue-500 text-white rounded-md hover:bg-blue-600 disabled:bg-blue-300 shrink-0"
+              className="px-3 py-2 text-sm bg-blue-500 text-white rounded-md hover:bg-blue-600 disabled:bg-blue-300 shrink-0 w-full sm:w-auto"
             >
               {isLoadingModels ? 'Refreshing...' : 'Refresh'}
             </button>
           </div>
-           <div className="flex items-center">
+           <div className="flex items-center mt-2">
             <input
                 id="freeOnly"
                 type="checkbox"
@@ -182,11 +182,11 @@ const Settings: React.FC = () => {
           )}
         </div>
 
-        <div className="flex justify-end">
+        <div className="flex justify-end mt-6">
           <button
             type="button"
             onClick={handleSaveSettings}
-            className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+            className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 w-full sm:w-auto"
           >
             Save Settings
           </button>

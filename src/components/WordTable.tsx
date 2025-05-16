@@ -197,20 +197,20 @@ const WordTable: React.FC<WordTableProps> = ({ onEditWord }) => {
 
       <div className="bg-white rounded-lg shadow-md overflow-hidden">
         <div className="p-4 border-b">
-          <div className="flex justify-between items-center mb-3">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-3 gap-2">
             <h3 className="text-lg font-medium text-gray-800">Список слов</h3>
-            <div className="flex gap-2 items-center">
+            <div className="flex flex-wrap gap-2 items-center w-full sm:w-auto">
               <button
                 type="button"
                 onClick={handleExportWords}
-                className="px-4 h-9 bg-blue-500 text-white rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
+                className="px-4 h-9 bg-blue-500 text-white rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 w-full sm:w-auto"
               >
                 Экспорт слов
               </button>
-              <div>
+              <div className="w-full sm:w-auto">
                 <label
                   htmlFor="import-file"
-                  className="cursor-pointer px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-50"
+                  className="cursor-pointer px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-50 flex justify-center items-center w-full sm:w-auto h-9"
                 >
                   Импорт слов
                 </label>
@@ -225,7 +225,7 @@ const WordTable: React.FC<WordTableProps> = ({ onEditWord }) => {
               </div>
               <AlertDialog>
                 <AlertDialogTrigger asChild>
-                  <button className="px-3 py-1 text-sm bg-red-500 text-white rounded hover:bg-red-600 transition-colors">
+                  <button className="px-3 h-9 text-sm bg-red-500 text-white rounded hover:bg-red-600 transition-colors w-full sm:w-auto">
                     Очистить все слова
                   </button>
                 </AlertDialogTrigger>
@@ -259,7 +259,7 @@ const WordTable: React.FC<WordTableProps> = ({ onEditWord }) => {
                 value={filter}
                 onValueChange={(value) => setFilter(value as 'all' | 'learned' | 'not-learned')}
               >
-                <SelectTrigger className="w-[180px]">
+                <SelectTrigger className="w-full sm:w-[180px]">
                   <SelectValue placeholder="Статус" />
                 </SelectTrigger>
                 <SelectContent>
@@ -278,7 +278,7 @@ const WordTable: React.FC<WordTableProps> = ({ onEditWord }) => {
                 value={categoryFilter}
                 onValueChange={(value) => setCategoryFilter(value)}
               >
-                <SelectTrigger className="w-[180px]">
+                <SelectTrigger className="w-full sm:w-[180px]">
                   <SelectValue placeholder="Категория" />
                 </SelectTrigger>
                 <SelectContent>
