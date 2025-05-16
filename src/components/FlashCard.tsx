@@ -94,17 +94,20 @@ const FlashCard: React.FC<FlashCardProps> = ({ word: propWord, reverse, onMarkAs
     }
   };
 
+  // Цветовая карта для категорий
   const getCategoryColor = (category: string) => {
-    switch (category) {
-      case 'verb':
-        return 'bg-blue-100 text-blue-800';
-      case 'noun':
-        return 'bg-green-100 text-green-800';
-      case 'adjective':
-        return 'bg-purple-100 text-purple-800';
-      default:
-        return 'bg-gray-100 text-gray-800';
+    // Поддержка на русском, английском и иврите
+    const cat = category?.toLowerCase();
+    if (["adjective", "прилагательное", "תואר"].includes(cat)) {
+      return "bg-purple-100 text-purple-800";
     }
+    if (["verb", "глагол", "פועל"].includes(cat)) {
+      return "bg-blue-100 text-blue-800";
+    }
+    if (["noun", "существительное", "שם עצם"].includes(cat)) {
+      return "bg-green-100 text-green-800";
+    }
+    return "bg-gray-100 text-gray-800";
   };
 
   // If no word, render nothing
