@@ -23,6 +23,34 @@ const FlashCard: React.FC<FlashCardProps> = ({ reverse, onMarkAsLearned, onNextW
 
   const [flipped, setFlipped] = useState(false);
 
+  // Helper to render examples for both string[] and object[] formats
+  // If example is a string, just render it; if object, render text and translation
+  const renderExamples = (examples: any[]) => {
+    return (
+      <div className="mt-4 text-left">
+        <h4 className="text-md font-semibold text-gray-600 mb-1">Примеры:</h4>
+        <ul className="list-disc list-inside text-sm text-gray-500">
+          {examples.map((example, index) => {
+            if (typeof example === 'string') {
+              return <li key={index}>{example}</li>;
+            } else if (typeof example === 'object' && example !== null) {
+              // Ожидается структура: { text: string, translation?: string }
+              return (
+                <li key={index}>
+                  {example.text}
+                  {example.translation && (
+                    <span className="ml-2 text-gray-400">— {example.translation}</span>
+                  )}
+                </li>
+              );
+            }
+            return null;
+          })}
+        </ul>
+      </div>
+    );
+  };
+
   const handleFlip = () => {
     setFlipped(!flipped);
   };
@@ -90,12 +118,16 @@ const FlashCard: React.FC<FlashCardProps> = ({ reverse, onMarkAsLearned, onNextW
                   <h2 className="text-4xl font-bold mb-2 text-gray-800">{word.russian}</h2>
                   <p className="text-xl text-gray-600 mb-3">[Переведите на иврит]</p>
                   <p className="text-sm text-gray-500 mt-2">Нажмите, чтобы увидеть ответ</p>
+                  {/* Примеры на лицевой стороне */}
+                  {word.examples && word.examples.length > 0 && renderExamples(word.examples)}
                 </>
               ) : (
                 <>
                   <h2 className="text-5xl font-bold mb-2 text-gray-800">{word.hebrew}</h2>
                   <p className="text-xl text-gray-600 mb-3">[{word.transcription}]</p>
                   <p className="text-sm text-gray-500 mt-2">Нажмите, чтобы увидеть перевод</p>
+                  {/* Примеры на лицевой стороне */}
+                  {word.examples && word.examples.length > 0 && renderExamples(word.examples)}
                 </>
               )}
             </div>
@@ -138,31 +170,13 @@ const FlashCard: React.FC<FlashCardProps> = ({ reverse, onMarkAsLearned, onNextW
                   <p className="text-xl text-gray-600 mb-3">[{word.transcription}]</p>
                   <p className="text-lg text-gray-700 mt-2">{word.russian}</p>
                   {/* Display usage examples if they exist */}
-                  {word.examples && word.examples.length > 0 && (
-                    <div className="mt-4 text-left">
-                      <h4 className="text-md font-semibold text-gray-600 mb-1">Примеры:</h4>
-                      <ul className="list-disc list-inside text-sm text-gray-500">
-                        {word.examples.map((example, index) => (
-                          <li key={index}>{example}</li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
+                  {word.examples && word.examples.length > 0 && renderExamples(word.examples)}
                 </>
               ) : (
                 <>
                   <h3 className="text-4xl font-medium mb-1 text-gray-700">{word.russian}</h3>
                   {/* Display usage examples if they exist */}
-                  {word.examples && word.examples.length > 0 && (
-                    <div className="mt-4 text-left">
-                      <h4 className="text-md font-semibold text-gray-600 mb-1">Примеры:</h4>
-                      <ul className="list-disc list-inside text-sm text-gray-500">
-                        {word.examples.map((example, index) => (
-                          <li key={index}>{example}</li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
+                  {word.examples && word.examples.length > 0 && renderExamples(word.examples)}
                   {word.category === "פועל" && word.conjugations && (
                     <div className="text-left mx-auto max-w-[400px] px-2 my-4">
                       <div className="font-medium text-lg mb-2 text-gray-700">Спряжения:</div>
