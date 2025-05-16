@@ -1,13 +1,17 @@
 import React from 'react';
 
-import { useWordsStore } from '../store/wordsStore';
+import { useWordsStore, getStats } from '../store/wordsStore';
 
 // Statistics component now gets stats directly from Zustand store
 const Statistics: React.FC = () => {
-  const stats = useWordsStore((state) => state.stats);
+  const words = useWordsStore((state) => state.words);
+  const stats = getStats(words);
   const total = stats.total;
   const learned = stats.learned;
   const remaining = stats.remaining;
+
+  console.log('total', total);
+  
   // Calculate progress percentage
   const progressPercent = total > 0 ? Math.round((learned / total) * 100) : 0;
 

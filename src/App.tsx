@@ -5,7 +5,7 @@ import FlashCard from './components/FlashCard';
 import WordInput from './components/WordInput';
 import WordTable from './components/WordTable';
 import Statistics from './components/Statistics';
-import { useWordsStore } from './store/wordsStore';
+import { useWordsStore, getStats } from './store/wordsStore';
 import Settings from './components/Settings';
 
 function App() {
@@ -20,8 +20,10 @@ function App() {
     nextWord,
     resetProgress,
     deleteWord,
-    stats,
   } = useWordsStore();
+  // Always get fresh stats using selector
+  const wordsStoreWords = useWordsStore(state => state.words);
+  const stats = getStats(wordsStoreWords);
 
   console.log(stats,words);
   

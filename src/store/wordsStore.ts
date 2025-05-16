@@ -9,6 +9,16 @@ const initialState: WordsState = {
   currentIndex: 0,
 };
 
+// Returns statistics for a given array of words
+export function getStats(words: Word[]) {
+  const total = words.length;
+  const learned = words.filter(word => word.isLearned).length;
+  return {
+    total,
+    learned,
+    remaining: total - learned,
+  };
+}
 type ToastFn = (opts: { title: string; description: string; variant?: string }) => void;
 
 interface WordsStore extends WordsState {
@@ -23,11 +33,6 @@ interface WordsStore extends WordsState {
   updateWords: (words: Word[] | null) => void;
   replaceAllWords: (newWords: Word[], toast?: ToastFn) => void;
   clearAllWords: (toast?: ToastFn) => void;
-  get stats(): {
-    total: number;
-    learned: number;
-    remaining: number;
-  };
   currentWord?: Word;
 }
 
@@ -263,21 +268,16 @@ export const useWordsStore = create<WordsStore>((set, get) => {
       });
     },
 
-    get stats() {
-      const words = get().words;
-      const total = words.length;
-      const learned = words.filter(word => word.isLearned).length;
-      return {
-        total,
-        learned,
-        remaining: total - learned,
-      };
-    },
+    // stats getter removed; use getStats(words) instead
 
+    // Returns the current word by index, or the first word if current is undefined, or undefined if no words
     get currentWord() {
       const words = get().words;
       const idx = get().currentIndex;
-      return words.length > 0 && idx < words.length ? words[idx] : undefined;
+      if (words.length === 0) return undefined;
+      if (idx < words.length && words[idx] !== undefined) return words[idx];
+      // If current word is undefined, return the first word
+      return words[0];
     },
   };
 });
