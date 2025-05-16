@@ -55,14 +55,19 @@ function App() {
 
   // Обработчик для "Знаю"
   const handleMarkAsLearned = (id: string) => {
-    markAsLearned(id);
-    // Если после отметки все слова выучены, сбрасываем filteredIndex
-    if (getStats(filteredWords).remaining <= 1) {
-      setFilteredIndex(0);
-    } else {
-      handleNextWord();
-    }
-  };
+      // Если выбран статус "изученные", просто переходим к следующему слову, не меняя статус
+      if (selectedStatus === 'learned') {
+        handleNextWord();
+        return;
+      }
+      markAsLearned(id);
+      // Если после отметки все слова выучены, сбрасываем filteredIndex
+      if (getStats(filteredWords).remaining <= 1) {
+        setFilteredIndex(0);
+      } else {
+        handleNextWord();
+      }
+    };
 
   // Обработчик для "Далее" — только по filteredWords
   const handleNextWord = () => {
