@@ -7,19 +7,10 @@ import WordTable from './components/WordTable';
 import Statistics from './components/Statistics';
 import { useWordsStore, getStats } from './store/wordsStore';
 import Settings from './components/Settings';
-import {
-  AlertDialog,
-  AlertDialogContent,
-  AlertDialogTitle,
-  AlertDialogDescription,
-  AlertDialogAction,
-  AlertDialogCancel,
-} from '@/components/ui/alert-dialog';
 
 function App() {
   const [activeTab, setActiveTab] = useState('learn');
   const [reverseMode, setReverseMode] = useState(false);
-  const [congratsOpen, setCongratsOpen] = useState(false);
   const wordInputRef = useRef<HTMLDivElement>(null);
 
   // Получаем данные и методы из Zustand-стора
@@ -29,15 +20,34 @@ function App() {
     markAsNotLearned,
     deleteWord,
     resetProgress,
+    nextWord,
   } = useWordsStore();
 
   const stats = getStats(words);
 
+  // Обработчик для "Знаю"
+  const handleMarkAsLearned = (id: string) => {
+    markAsLearned(id);
+    // Проверяем, все ли слова выучены
+    // (AlertDialog logic removed)
+  };
+
+  // Обработчик для "Далее"
+  // Handler for "Next" button: after calling nextWord, get the latest words array from the store
+  // and check if all words are learned. If so, show the popup.
+  // Handler for "Next" button with pre- and post-check for remaining words
+  const handleNextWord = () => {
+    // Check before calling nextWord
+    if (getStats(useWordsStore.getState().words).remaining === 0) {
+      return;
+    }
+    nextWord();
+    // (AlertDialog logic removed)
+  };
+
   // Показывать попап, если все слова выучены (и есть хотя бы одно слово)
   useEffect(() => {
-    if (stats.total > 0 && stats.remaining === 0) {
-      setCongratsOpen(true);
-    }
+    // (AlertDialog logic removed)
   }, [stats.total, stats.remaining]);
 
   // Скролл к WordInput после перехода на вкладку "Добавить"
@@ -140,10 +150,54 @@ function App() {
                 </button>
               </div>
             ) : (
-              // Показываем FlashCard при наличии хотя бы одного слова
-              <div className="animate-fadeIn">
-                <FlashCard reverse={reverseMode} />
-              </div>
+              // Если все слова выучены, показываем поздравление с кнопками
+              stats.remaining === 0 && stats.total > 0 ? (
+                <div className="bg-white rounded-lg shadow-md p-6 text-center animate-fadeIn">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mx-auto text-green-500 mb-3">
+                    <title>Поздравляем!</title>
+                    <circle cx="12" cy="12" r="10" />
+                    <path d="M9 12l2 2 4-4" />
+                  </svg>
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">Поздравляем!</h3>
+                  <p className="text-gray-600 mb-4">
+                    Вы выучили все слова в списке! Что хотите сделать дальше?
+                  </p>
+                  <div className="flex flex-col gap-2 mt-4 items-center">
+                    <button
+                      type="button"
+                      onClick={() => resetProgress()}
+                      className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                    >
+                      Сбросить прогресс
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setActiveTab('add');
+                        setTimeout(() => {
+                          if (wordInputRef.current) {
+                            wordInputRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                          }
+                        }, 100);
+                      }}
+                      className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+                    >
+                      Добавить новые слова
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                // Показываем FlashCard только если есть слова для изучения
+                stats.remaining > 0 && (
+                  <div className="animate-fadeIn">
+                    <FlashCard
+                      reverse={reverseMode}
+                      onMarkAsLearned={handleMarkAsLearned}
+                      onNextWord={handleNextWord}
+                    />
+                  </div>
+                )
+              )
             )}
           </div>
         );
@@ -170,45 +224,6 @@ function App() {
   return (
     <div>
       <Toaster />
-      <AlertDialog open={congratsOpen} onOpenChange={setCongratsOpen}>
-        <AlertDialogContent>
-          <AlertDialogTitle>Поздравляем!</AlertDialogTitle>
-          <AlertDialogDescription>
-            Вы выучили все слова в списке! Что хотите сделать дальше?
-          </AlertDialogDescription>
-          <div className="flex flex-col gap-2 mt-4">
-            <AlertDialogAction
-              onClick={() => {
-                resetProgress();
-                setCongratsOpen(false);
-              }}
-              className="bg-blue-600 hover:bg-blue-700"
-            >
-              Сбросить прогресс
-            </AlertDialogAction>
-            <AlertDialogAction
-              onClick={() => {
-                setActiveTab('add');
-                setCongratsOpen(false);
-                setTimeout(() => {
-                  if (wordInputRef.current) {
-                    wordInputRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                  }
-                }, 100);
-              }}
-              className="bg-green-600 hover:bg-green-700"
-            >
-              Добавить новые слова
-            </AlertDialogAction>
-            <AlertDialogCancel
-              onClick={() => setCongratsOpen(false)}
-              className="bg-gray-200 hover:bg-gray-300 text-gray-800"
-            >
-              Закрыть
-            </AlertDialogCancel>
-          </div>
-        </AlertDialogContent>
-      </AlertDialog>
       <Layout tabs={tabs} activeTab={activeTab} onTabChange={setActiveTab}>
         {activeTab === 'add' ? (
           <div ref={wordInputRef}>

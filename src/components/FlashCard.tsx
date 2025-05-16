@@ -6,10 +6,12 @@ import { getCurrentWord } from '../store/wordsStore';
 
 interface FlashCardProps {
   reverse?: boolean;
+  onMarkAsLearned?: (id: string) => void;
+  onNextWord?: () => void;
 }
 
 // FlashCard now gets word and actions from Zustand store, only reverse is a prop
-const FlashCard: React.FC<FlashCardProps> = ({ reverse }) => {
+const FlashCard: React.FC<FlashCardProps> = ({ reverse, onMarkAsLearned, onNextWord }) => {
   // Подписка на words и currentIndex из стора
   const words = useWordsStore((state) => state.words);
   const currentIndex = useWordsStore((state) => state.currentIndex);
@@ -33,9 +35,17 @@ const FlashCard: React.FC<FlashCardProps> = ({ reverse }) => {
 
   const handleMarkLearned = () => {
     if (!word) return;
-    markAsLearned(word.id);
+    if (onMarkAsLearned) {
+      onMarkAsLearned(word.id);
+    } else {
+      markAsLearned(word.id);
+    }
     setFlipped(false);
-    nextWord();
+    if (onNextWord) {
+      onNextWord();
+    } else {
+      nextWord();
+    }
   };
 
   const handleSkip = () => {
@@ -182,7 +192,7 @@ const FlashCard: React.FC<FlashCardProps> = ({ reverse }) => {
                   handleSkip();
                 }}
               >
-                Следующее
+                Далее
               </button>
 
             </div>
