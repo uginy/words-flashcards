@@ -130,13 +130,55 @@ export const useWords = () => {
 
   const nextWord = () => {
     setState(prevState => {
-      if (prevState.words.length === 0) return prevState;
-      const wordsWithHiddenTranslation = prevState.words.map((word, index) => 
-        index === prevState.currentIndex ? { ...word, showTranslation: false } : word
-      );
+      const unlearnedWords = prevState.words.filter(word => !word.isLearned);
+
+      if (unlearnedWords.length === 0) {
+        toast({
+          title: "Поздравляем!",
+          description: "Все слова изучены.",
+        });
+        // Остаемся на текущем слове или можно сбросить currentIndex на 0
+        // или на первое слово, если хотим начать сначала.
+        // Для простоты пока оставим как есть, или можно вернуть prevState
+        // или установить currentIndex на 0, если это предпочтительнее.
+        return { ...prevState, currentIndex: 0 }; // Возвращаемся к началу списка
+      }
+
+      // Находим текущий индекс в общем списке
+      const currentGlobalIndex = prevState.currentIndex;
+      let nextGlobalIndex = -1;
+
+      // Ищем следующее неизученное слово после текущего
+      for (let i = 1; i <= prevState.words.length; i++) {
+        const potentialNextIndex = (currentGlobalIndex + i) % prevState.words.length;
+        if (!prevState.words[potentialNextIndex].isLearned) {
+          nextGlobalIndex = potentialNextIndex;
+          break;
+        }
+      }
       
-      const newIndex = (prevState.currentIndex + 1) % wordsWithHiddenTranslation.length;
-      return { ...prevState, words: wordsWithHiddenTranslation, currentIndex: newIndex };
+      // Если по какой-то причине не нашли (не должно случиться, если есть unlearnedWords)
+      // то просто берем первое неизученное слово
+      if (nextGlobalIndex === -1) {
+         const firstUnlearnedWord = prevState.words.find(w => !w.isLearned);
+         if (firstUnlearnedWord) {
+            nextGlobalIndex = prevState.words.findIndex(w => w.id === firstUnlearnedWord.id);
+         } else {
+            // Этого не должно произойти, если unlearnedWords.length > 0
+            return prevState; 
+         }
+      }
+      
+      // Скрываем перевод для нового текущего слова
+      const wordsWithHiddenTranslation = prevState.words.map((word, index) => 
+        index === nextGlobalIndex ? { ...word, showTranslation: false } : word
+      );
+
+      return { 
+        ...prevState, 
+        words: wordsWithHiddenTranslation, 
+        currentIndex: nextGlobalIndex 
+      };
     });
   };
 
