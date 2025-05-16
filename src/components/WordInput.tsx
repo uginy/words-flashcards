@@ -4,7 +4,6 @@ import { enrichWordsWithLLM } from '../services/openrouter';
 import { Word } from '../types';
 import { useToast } from '../hooks/use-toast';
 import { useWords } from '../hooks/useWords';
-import { toast as toastNotification } from '../hooks/use-toast';
 
 // Разбить массив на чанки
 function chunkArray<T>(arr: T[], size: number): T[][] {
@@ -16,24 +15,26 @@ function chunkArray<T>(arr: T[], size: number): T[][] {
 }
 
 // Валидация структуры ответа LLM
-function validateLLMWordsResponse(data: any): Word[] {
+function validateLLMWordsResponse(data: unknown): Word[] {
   if (Array.isArray(data)) {
-    return data.filter((w: any) =>
+    return data.filter((w: unknown) =>
+      w !== null &&
       typeof w === 'object' &&
-      typeof w.hebrew === 'string' &&
-      typeof w.russian === 'string' &&
-      typeof w.transcription === 'string' &&
-      typeof w.category === 'string'
-    );
+      typeof (w as any).hebrew === 'string' &&
+      typeof (w as any).russian === 'string' &&
+      typeof (w as any).transcription === 'string' &&
+      typeof (w as any).category === 'string'
+    ) as Word[];
   }
-  if (!data || typeof data !== 'object' || !Array.isArray(data.words)) return [];
-  return data.words.filter((w: any) =>
+  if (!data || typeof data !== 'object' || !Array.isArray((data as any).words)) return [];
+  return (data as any).words.filter((w: unknown) =>
+    w !== null &&
     typeof w === 'object' &&
-    typeof w.hebrew === 'string' &&
-    typeof w.russian === 'string' &&
-    typeof w.transcription === 'string' &&
-    typeof w.category === 'string'
-  );
+    typeof (w as any).hebrew === 'string' &&
+    typeof (w as any).russian === 'string' &&
+    typeof (w as any).transcription === 'string' &&
+    typeof (w as any).category === 'string'
+  ) as Word[];
 }
 
 const WordInput: React.FC = () => {
@@ -60,7 +61,6 @@ const WordInput: React.FC = () => {
       toast({
         title: "Успех!",
         description: 'Импортированные слова загружены в форму. Нажмите "Добавить" для завершения импорта.',
-        variant: 'success'
       });
     }
   };
@@ -120,7 +120,6 @@ const WordInput: React.FC = () => {
           toast({
             title: 'Информация',
             description: `Пропущено ${skippedCount} повторяющихся слов`,
-            variant: 'success'
           });
         }
         // Use only unique words for processing
@@ -154,14 +153,12 @@ const WordInput: React.FC = () => {
           toast({
             title: 'Успех!',
             description: `Все ${wordsToAdd.length} слов успешно добавлены!`,
-            variant: 'success',
             duration: 5000,
           });
         } else {
           toast({
             title: 'Частичный успех',
             description: `Добавлено ${wordsToAdd.length} слов, не удалось обработать: ${failedWords.join(', ')}`,
-            variant: 'success',
             duration: 6000,
           });
         }
@@ -263,8 +260,6 @@ const WordInput: React.FC = () => {
             >
               Очистить
             </button>
-
-
           </div>
 
           <div className="flex justify-end">
