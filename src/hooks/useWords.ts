@@ -38,7 +38,20 @@ export const useWords = () => {
     try {
       // Input is now an array of Word objects, so no parsing is needed.
       // Filter out any words that might be empty or invalid, though this should ideally be handled before calling addWords.
-      const validNewWords = newWordsFromInput.filter(word => word.hebrew && word.russian);
+      // Filter out any words missing critical fields
+      const initialValidWords = newWordsFromInput.filter(word => word.hebrew && word.russian);
+      // Remove any duplicates in the batch by hebrew+russian
+      const validNewWords = initialValidWords.filter((word, index, self) =>
+        self.findIndex(w => w.hebrew === word.hebrew && w.russian === word.russian) === index
+      );
+      // Notify if batch contained duplicates
+      if (validNewWords.length < initialValidWords.length) {
+        const dupCount = initialValidWords.length - validNewWords.length;
+        toast({
+          title: "Информация",
+          description: `Пропущено ${dupCount} дублирующих слов во вводе`,
+        });
+      }
       // console.log('[useWords] Number of validNewWords (received by addWords):', validNewWords.length, validNewWords); // DEBUG - Removed
 
       if (validNewWords.length === 0) {
