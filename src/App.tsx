@@ -10,6 +10,7 @@ import Settings from './components/Settings';
 
 function App() {
   const [activeTab, setActiveTab] = useState('learn');
+  const [reverseMode, setReverseMode] = useState(false); // Режим Русский → Иврит
   const { 
     words, 
     currentWord, 
@@ -86,7 +87,18 @@ function App() {
               learned={stats.learned}
               remaining={stats.remaining}
             />
-            
+            {/* Переключатель режима обучения */}
+            <div className="flex items-center gap-4 mb-2">
+              <label className="flex items-center cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  checked={reverseMode}
+                  onChange={() => setReverseMode((v) => !v)}
+                  className="form-checkbox h-5 w-5 text-blue-600"
+                />
+                <span className="ml-2 text-sm text-gray-700 font-medium">Русский → Иврит (реверсивный режим)</span>
+              </label>
+            </div>
             {stats.total === 0 ? (
               // Case: No words in the list at all
               <div className="bg-white rounded-lg shadow-md p-6 text-center">
@@ -114,6 +126,7 @@ function App() {
                   word={currentWord}
                   onMarkLearned={markAsLearned}
                   onNext={nextWord}
+                  reverse={reverseMode}
                 />
               </div>
             ) : (
