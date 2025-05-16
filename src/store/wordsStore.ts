@@ -90,7 +90,7 @@ export const useWordsStore = create<WordsStore>((set, get) => {
         }
         set(state => {
           if (state.words.length === 0) {
-            return { ...state, words: validNewWords };
+            return { ...state, words: validNewWords, currentIndex: 0 };
           }
           const uniqueNewWords = validNewWords.filter(
             newWord =>
@@ -180,6 +180,10 @@ export const useWordsStore = create<WordsStore>((set, get) => {
           } else {
             return state;
           }
+        }
+        // Ensure nextGlobalIndex is within bounds
+        if (nextGlobalIndex < 0 || nextGlobalIndex >= state.words.length) {
+          nextGlobalIndex = 0;
         }
         const wordsWithHiddenTranslation = state.words.map((word, index) =>
           index === nextGlobalIndex ? { ...word, showTranslation: false } : word
