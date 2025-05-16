@@ -113,10 +113,30 @@ const FlashCard: React.FC<FlashCardProps> = ({ word: propWord, reverse, onMarkAs
   return (
     <div className="w-full max-w-xl mx-auto">
       <div className="card-container relative">
-        <div className={`card ${flipped ? 'flipped' : ''}`}>
+        {/* Статус слова: иконка в правом верхнем углу */}
+        <div className="absolute top-3 right-4 z-10">
+          {word.isLearned ? (
+            <span title="Изучено" className="inline-flex items-center text-green-600">
+              {/* Галочка */}
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="bg-green-100 rounded-full p-1">
+                <circle cx="12" cy="12" r="11" stroke="currentColor" fill="#dcfce7" />
+                <path d="M7 13l3 3 6-6" stroke="currentColor" />
+              </svg>
+            </span>
+          ) : (
+            <span title="Не изучено" className="inline-flex items-center text-gray-400">
+              {/* Песочные часы */}
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className="bg-gray-100 rounded-full p-1">
+                <circle cx="12" cy="12" r="11" stroke="currentColor" fill="#f3f4f6" />
+                <path d="M8 7h8m-8 10h8m-7-2c0-2 3-2 3-4s-3-2-3-4m6 8c0-2-3-2-3-4s3-2 3-4" />
+              </svg>
+            </span>
+          )}
+        </div>
+        <div className={`card ${flipped ? 'flipped' : ''}`}> 
           {/* Front side */}
           <div
-            className="card-front bg-white rounded-xl p-6 flex flex-col justify-between items-center shadow-lg"
+            className="card-front bg-white rounded-xl p-6 flex flex-col justify-between items-center shadow-lg relative"
             onClick={handleFlip}
             onKeyDown={handleKeyDown}
             role="button"
@@ -170,7 +190,7 @@ const FlashCard: React.FC<FlashCardProps> = ({ word: propWord, reverse, onMarkAs
           </div>
           {/* Back side */}
           <div
-            className="card-back bg-white rounded-xl p-6 flex flex-col justify-between items-center shadow-lg"
+            className="card-back bg-white rounded-xl p-6 flex flex-col justify-between items-center shadow-lg relative"
             onClick={handleFlip}
             onKeyDown={handleKeyDown}
             role="button"
