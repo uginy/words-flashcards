@@ -155,7 +155,7 @@ function App() {
         );
         
       case 'add':
-        return <WordInput onAddWords={addWords} />;
+        return <WordInput />;
         
       case 'list':
         return (
