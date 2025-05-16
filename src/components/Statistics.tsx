@@ -9,8 +9,6 @@ const Statistics: React.FC = () => {
   const total = stats.total;
   const learned = stats.learned;
   const remaining = stats.remaining;
-
-  console.log('total', total);
   
   // Calculate progress percentage
   const progressPercent = total > 0 ? Math.round((learned / total) * 100) : 0;
