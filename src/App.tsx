@@ -17,15 +17,12 @@ function App() {
     currentWord,
     markAsLearned,
     markAsNotLearned,
-    nextWord,
     resetProgress,
     deleteWord,
   } = useWordsStore();
   // Always get fresh stats using selector
   const wordsStoreWords = useWordsStore(state => state.words);
   const stats = getStats(wordsStoreWords);
-
-  console.log(stats,words);
   
   // Define tabs with icons
   const tabs = [
