@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Combobox } from './ui/combobox';
+import { DEFAULT_OPENROUTER_API_KEY, DEFAULT_OPENROUTER_MODEL } from '../config/openrouter';
 
 const OPENROUTER_API_KEY_STORAGE_KEY = 'openRouterApiKey';
 const OPENROUTER_SELECTED_MODEL_STORAGE_KEY = 'openRouterModel';
@@ -26,12 +27,16 @@ const Settings: React.FC = () => {
 
   useEffect(() => {
     const storedApiKey = localStorage.getItem(OPENROUTER_API_KEY_STORAGE_KEY);
-    if (storedApiKey) {
+    if (storedApiKey && storedApiKey.trim() !== '') {
       setApiKey(storedApiKey);
+    } else {
+      setApiKey(DEFAULT_OPENROUTER_API_KEY);
     }
     const storedModel = localStorage.getItem(OPENROUTER_SELECTED_MODEL_STORAGE_KEY);
-    if (storedModel) {
+    if (storedModel && storedModel.trim() !== '') {
       setSelectedModel(storedModel);
+    } else {
+      setSelectedModel(DEFAULT_OPENROUTER_MODEL);
     }
   }, []);
 
@@ -76,16 +81,15 @@ const Settings: React.FC = () => {
   };
 
   const handleSaveSettings = () => {
-    if (!apiKey) {
-      setMessage({ type: 'error', text: 'API Key cannot be empty.' });
-      return;
-    }
-    localStorage.setItem(OPENROUTER_API_KEY_STORAGE_KEY, apiKey);
-    localStorage.setItem(OPENROUTER_SELECTED_MODEL_STORAGE_KEY, selectedModel);
+    const keyToSave = apiKey && apiKey.trim() !== '' ? apiKey : DEFAULT_OPENROUTER_API_KEY;
+    const modelToSave = selectedModel && selectedModel.trim() !== '' ? selectedModel : DEFAULT_OPENROUTER_MODEL;
+    localStorage.setItem(OPENROUTER_API_KEY_STORAGE_KEY, keyToSave);
+    localStorage.setItem(OPENROUTER_SELECTED_MODEL_STORAGE_KEY, modelToSave);
+    setApiKey(keyToSave);
+    setSelectedModel(modelToSave);
     setMessage({ type: 'success', text: 'Settings saved successfully!' });
-    // Re-fetch models if API key was just added and models weren't fetched
-    if (availableModels.length === 0 && apiKey) {
-        fetchModels();
+    if (availableModels.length === 0 && keyToSave) {
+      fetchModels();
     }
   };
 
@@ -122,9 +126,9 @@ const Settings: React.FC = () => {
             value={apiKey}
             onChange={(e) => {
                 setApiKey(e.target.value);
-                if (message) setMessage(null); // Clear message on input change
+                if (message) setMessage(null);
             }}
-            placeholder="sk-or-v1-..."
+            placeholder={DEFAULT_OPENROUTER_API_KEY}
           />
           <p className="text-xs text-gray-500 mt-1">
             Your API key is stored locally in your browser&apos;s localStorage.
@@ -144,7 +148,7 @@ const Settings: React.FC = () => {
                 }))}
                 value={selectedModel}
                 onValueChange={setSelectedModel}
-                placeholder={isLoadingModels ? 'Loading models...' : 'Select a model'}
+                placeholder={DEFAULT_OPENROUTER_MODEL}
                 searchPlaceholder="Поиск модели..."
                 noResultsText="Модели не найдены"
                 disabled={isLoadingModels || availableModels.length === 0}

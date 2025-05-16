@@ -1,6 +1,4 @@
-// Значения по умолчанию для OpenRouter
-const DEFAULT_OPENROUTER_API_KEY = "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";
-const DEFAULT_OPENROUTER_MODEL = "meta-llama/llama-4-scout:free";
+import { DEFAULT_OPENROUTER_API_KEY, DEFAULT_OPENROUTER_MODEL } from '../config/openrouter';
 import React, { useState, useEffect } from 'react';
 import { parseAndTranslateWords } from '../utils/translation';
 import { enrichWordsWithLLM } from '../services/openrouter';
@@ -169,6 +167,7 @@ const WordInput: React.FC = () => {
         if (failedWords.length === 0) {
           toast({
             title: 'Успех!',
+            variant: 'success',
             description: `Все ${wordsToAdd.length} слов успешно добавлены!`,
             duration: 5000,
           });
