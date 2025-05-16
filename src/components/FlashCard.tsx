@@ -112,15 +112,7 @@ const FlashCard: React.FC<FlashCardProps> = ({ word, onMarkLearned, onNext }) =>
             </div>
 
             <div className="w-full flex justify-between items-center">
-              <button
-                className="px-3 py-1 rounded-md bg-gray-200 text-gray-700 text-sm hover:bg-gray-300 transition-colors"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleSkip();
-                }}
-              >
-                Следующее
-              </button>
+              
 
               <button
                 className="px-3 py-1 rounded-md bg-green-500 text-white text-sm hover:bg-green-600 transition-colors"
@@ -131,6 +123,17 @@ const FlashCard: React.FC<FlashCardProps> = ({ word, onMarkLearned, onNext }) =>
               >
                 Знаю
               </button>
+
+              <button
+                className="px-3 py-1 rounded-md bg-gray-200 text-gray-700 text-sm hover:bg-gray-300 transition-colors"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleSkip();
+                }}
+              >
+                Следующее
+              </button>
+              
             </div>
           </div>
         </div>
