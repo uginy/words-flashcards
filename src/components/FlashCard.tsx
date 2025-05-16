@@ -8,7 +8,6 @@ import { useWordsStore } from '../store/wordsStore';
 
 interface FlashCardProps {
   reverse?: boolean;
-  forceFlipped?: boolean;
 }
 
 // FlashCard now gets word and actions from Zustand store, only reverse is a prop
