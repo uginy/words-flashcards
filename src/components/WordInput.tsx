@@ -1,3 +1,10 @@
+import React, { useState, useEffect } from 'react';
+import { parseAndTranslateWords } from '../utils/translation';
+import { enrichWordsWithLLM } from '../services/openrouter';
+import { Word } from '../types';
+import { useToast } from '../hooks/use-toast';
+import { useWords } from '../hooks/useWords';
+
 // Разбить массив на чанки
 function chunkArray<T>(arr: T[], size: number): T[][] {
   const res: T[][] = [];
@@ -9,6 +16,15 @@ function chunkArray<T>(arr: T[], size: number): T[][] {
 
 // Валидация структуры ответа LLM
 function validateLLMWordsResponse(data: any): Word[] {
+  if (Array.isArray(data)) {
+    return data.filter((w: any) =>
+      typeof w === 'object' &&
+      typeof w.hebrew === 'string' &&
+      typeof w.russian === 'string' &&
+      typeof w.transcription === 'string' &&
+      typeof w.category === 'string'
+    );
+  }
   if (!data || typeof data !== 'object' || !Array.isArray(data.words)) return [];
   return data.words.filter((w: any) =>
     typeof w === 'object' &&
@@ -18,12 +34,6 @@ function validateLLMWordsResponse(data: any): Word[] {
     typeof w.category === 'string'
   );
 }
-import React, { useState, useEffect } from 'react';
-import { parseAndTranslateWords } from '../utils/translation';
-import { enrichWordsWithLLM } from '../services/openrouter';
-import { Word } from '../types';
-import { toast } from 'react-hot-toast';
-import { useWords } from '../hooks/useWords';
 
 interface WordInputProps {
   onAddWords: (words: Word[]) => void;
@@ -31,6 +41,7 @@ interface WordInputProps {
 
 const WordInput: React.FC<WordInputProps> = ({ onAddWords }) => {
   const { words: existingWords } = useWords();
+  const { toast } = useToast();
   const [inputText, setInputText] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -118,22 +129,12 @@ const WordInput: React.FC<WordInputProps> = ({ onAddWords }) => {
         for (const chunk of chunks) {
           try {
             const result = await enrichWordsWithLLM(chunk, apiKey, model);
-            // Обработка: если result строка — парсим, иначе используем как есть
-            let parsed: any = result;
-            if (typeof result === 'string') {
-              try {
-                parsed = JSON.parse(result);
-              } catch {
-                parsed = {};
-              }
-            }
-            const valid = validateLLMWordsResponse(parsed);
-            // Сопоставим, какие слова не удалось обработать
+            // enrichWordsWithLLM теперь всегда возвращает массив слов или выбрасывает ошибку
+            const valid = validateLLMWordsResponse(result);
             const chunkFailed = chunk.filter(w => !valid.some(v => v.hebrew === w));
             allValidWords = allValidWords.concat(valid);
             allFailed = allFailed.concat(chunkFailed);
           } catch (err) {
-            // Если весь чанк не обработался — все слова из чанка считаем неудачными
             allFailed = allFailed.concat(chunk);
           }
         }
@@ -144,7 +145,21 @@ const WordInput: React.FC<WordInputProps> = ({ onAddWords }) => {
       if (wordsToAdd.length > 0) {
         onAddWords(wordsToAdd);
         setInputText('');
-        toast.success(`Успешно добавлено ${wordsToAdd.length} слов`);
+        if (failedWords.length === 0) {
+          toast({
+            title: 'Успех!',
+            description: `Все ${wordsToAdd.length} слов успешно добавлены!`,
+            variant: 'success',
+            duration: 5000,
+          });
+        } else {
+          toast({
+            title: 'Частичный успех',
+            description: `Добавлено ${wordsToAdd.length} слов, не удалось обработать: ${failedWords.join(', ')}`,
+            variant: 'success',
+            duration: 6000,
+          });
+        }
       }
       if (failedWords.length > 0) {
         setError(`Не удалось обработать: ${failedWords.join(', ')}`);
@@ -243,6 +258,8 @@ const WordInput: React.FC<WordInputProps> = ({ onAddWords }) => {
             >
               Очистить
             </button>
+
+
           </div>
           
           <div className="flex justify-end">

@@ -27,6 +27,38 @@ const toastVariants = cva(
   {
     variants: {
       variant: {
+        success:
+          "border bg-success text-success-foreground shadow-success/50 data-[state=open]:shadow-success/50",
+        error:
+          "border bg-destructive text-destructive-foreground shadow-destructive/50 data-[state=open]:shadow-destructive/50",
+        info:
+          "border bg-info text-info-foreground shadow-info/50 data-[state=open]:shadow-info/50",
+        warning:
+          "border bg-warning text-warning-foreground shadow-warning/50 data-[state=open]:shadow-warning/50",
+        neutral:
+          "border bg-neutral text-neutral-foreground shadow-neutral/50 data-[state=open]:shadow-neutral/50",
+        primary:
+          "border bg-primary text-primary-foreground shadow-primary/50 data-[state=open]:shadow-primary/50",
+        secondary:
+          "border bg-secondary text-secondary-foreground shadow-secondary/50 data-[state=open]:shadow-secondary/50",
+        accent:
+          "border bg-accent text-accent-foreground shadow-accent/50 data-[state=open]:shadow-accent/50",
+        successAlt:
+          "border bg-success-alt text-success-alt-foreground shadow-success-alt/50 data-[state=open]:shadow-success-alt/50",
+        errorAlt:
+          "border bg-destructive-alt text-destructive-alt-foreground shadow-destructive-alt/50 data-[state=open]:shadow-destructive-alt/50",
+        infoAlt:
+          "border bg-info-alt text-info-alt-foreground shadow-info-alt/50 data-[state=open]:shadow-info-alt/50",
+        warningAlt:
+          "border bg-warning-alt text-warning-alt-foreground shadow-warning-alt/50 data-[state=open]:shadow-warning-alt/50",
+        neutralAlt:
+          "border bg-neutral-alt text-neutral-alt-foreground shadow-neutral-alt/50 data-[state=open]:shadow-neutral-alt/50",
+        primaryAlt:
+          "border bg-primary-alt text-primary-alt-foreground shadow-primary-alt/50 data-[state=open]:shadow-primary-alt/50",
+        secondaryAlt:
+          "border bg-secondary-alt text-secondary-alt-foreground shadow-secondary-alt/50 data-[state=open]:shadow-secondary-alt/50",
+        accentAlt:
+          "border bg-accent-alt text-accent-alt-foreground shadow-accent-alt/50 data-[state=open]:shadow-accent-alt/50",
         default: "border bg-background text-foreground",
         destructive:
           "destructive group border-destructive bg-destructive text-destructive-foreground",
