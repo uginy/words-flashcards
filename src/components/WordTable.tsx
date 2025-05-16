@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { useToast } from '@/hooks/use-toast'; // shadcn/ui toast
+import { useToast } from '@/hooks/use-toast';
 import { Word } from '../types';
 import { useWordsStore } from '../store/wordsStore';
 import EditWordDialog from './EditWordDialog';
@@ -26,14 +26,14 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogTrigger,
-} from '@/components/ui/alert-dialog'; // ShadCN UI AlertDialog
+} from '@/components/ui/alert-dialog';
 
 interface WordTableProps {
-  words: Word[]; // This prop contains filtered words, for export we'll use all words from the hook
+  words: Word[];
   onMarkLearned: (id: string) => void;
   onMarkNotLearned: (id: string) => void;
   onDeleteWord: (id: string) => void;
-  onEditWord?: (word: Word) => void; // New prop for editing
+  onEditWord?: (word: Word) => void;
 }
 
 const WordTable: React.FC<WordTableProps> = ({ onEditWord }) => {
@@ -82,7 +82,7 @@ const WordTable: React.FC<WordTableProps> = ({ onEditWord }) => {
     }
 
     // Convert words array to JSON string
-    const jsonString = JSON.stringify(allWords, null, 2); // null, 2 for pretty printing
+    const jsonString = JSON.stringify(allWords, null, 2); 
     // Create a Blob from the JSON string
     const blob = new Blob([jsonString], { type: 'application/json' });
     // Create an object URL for the Blob
@@ -101,8 +101,6 @@ const WordTable: React.FC<WordTableProps> = ({ onEditWord }) => {
     URL.revokeObjectURL(url);
   };
 
-  // Function to handle clearing all words
-  // Updated to use AlertDialog
   const performClearAllWords = () => {
     clearAllWords();
     localStorage.removeItem('hebrew-flashcards-data');
@@ -132,8 +130,7 @@ const WordTable: React.FC<WordTableProps> = ({ onEditWord }) => {
             typeof word.id === 'string' &&
             typeof word.hebrew === 'string' &&
             typeof word.russian === 'string' &&
-            // Add other essential property checks if needed
-                        // For example: typeof word.transcription === 'string', typeof word.category === 'string', typeof word.isLearned === 'boolean'
+            
             Object.prototype.hasOwnProperty.call(word, 'id') && Object.prototype.hasOwnProperty.call(word, 'hebrew') && Object.prototype.hasOwnProperty.call(word, 'russian')
         )) {
           toastAdapter({ title: "Ошибка", description: 'Неверный формат файла. Убедитесь, что это JSON массив объектов Word.', variant: "destructive" });
@@ -146,7 +143,6 @@ const WordTable: React.FC<WordTableProps> = ({ onEditWord }) => {
         console.error("Ошибка при импорте слов:", error);
         toastAdapter({ title: "Ошибка", description: 'Ошибка при импорте слов. Проверьте консоль для деталей.', variant: "destructive" });
       } finally {
-        // Reset file input to allow importing the same file again
         if (event.target) {
           event.target.value = '';
         }
@@ -190,7 +186,6 @@ const WordTable: React.FC<WordTableProps> = ({ onEditWord }) => {
 
   return (
     <div className="w-full">
-      {/* Existing dialog code */}
       {editingWord && (
         <EditWordDialog
           word={editingWord}
@@ -204,10 +199,10 @@ const WordTable: React.FC<WordTableProps> = ({ onEditWord }) => {
         <div className="p-4 border-b">
           <div className="flex justify-between items-center mb-3">
             <h3 className="text-lg font-medium text-gray-800">Список слов</h3>
-            <div className="flex gap-2 items-center"> {/* Added items-center */}
+            <div className="flex gap-2 items-center">
               <button
-                type="button" // Added explicit type
-                onClick={handleExportWords} // Connect the export function
+                type="button"
+                onClick={handleExportWords}
                 className="px-4 h-9 bg-blue-500 text-white rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
               >
                 Экспорт слов
@@ -225,7 +220,7 @@ const WordTable: React.FC<WordTableProps> = ({ onEditWord }) => {
                   accept=".json"
                   className="hidden"
                   onChange={handleImportWords}
-                  ref={fileInputRef} // Assign ref
+                  ref={fileInputRef}
                 />
               </div>
               <AlertDialog>

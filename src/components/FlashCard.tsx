@@ -13,29 +13,27 @@ interface FlashCardProps {
   onNext?: () => void;
 }
 
-// FlashCard now gets word and actions from Zustand store, only reverse is a prop
+ 
 const FlashCard: React.FC<FlashCardProps> = ({ word: propWord, reverse, onMarkAsLearned, onNext }) => {
-  // Подписка на words и currentIndex из стора
+  
   const words = useWordsStore((state) => state.words);
   const currentIndex = useWordsStore((state) => state.currentIndex);
   const markAsLearned = useWordsStore((state) => state.markAsLearned);
   const nextWord = useWordsStore((state) => state.nextWord);
 
-  // Локально вычисляем текущий word, если не передан через проп
+  
   const word = propWord ?? getCurrentWord(words, currentIndex);
 
   const [flipped, setFlipped] = useState(false);
 
-  // Helper to render examples for both string[] and object[] formats
-  // If example is a string, just render it; if object, render text and translation
-  // Renders examples for array of { hebrew: string; russian: string }
+  
   const renderExamples = (examples: any[]) => {
     return (
       <div className="mt-4 text-left">
         <h4 className="text-md font-semibold text-gray-600 mb-1">Примеры:</h4>
         <ul className="list-disc list-inside text-sm text-gray-500">
           {examples.map((example, index) => {
-            // If example is an object with 'hebrew' and 'russian' fields, render both
+            
             if (
               typeof example === 'object' &&
               example !== null &&
@@ -49,7 +47,7 @@ const FlashCard: React.FC<FlashCardProps> = ({ word: propWord, reverse, onMarkAs
                 </li>
               );
             }
-            // Fallback for string or other object formats
+            
             if (typeof example === 'string') {
               return <li key={index}>{example}</li>;
             }
@@ -95,9 +93,9 @@ const FlashCard: React.FC<FlashCardProps> = ({ word: propWord, reverse, onMarkAs
   };
 
   // Цветовая карта для категорий
-  // Цветовая карта для категорий (фон и текст)
+  
   const getCategoryColor = (category: string) => {
-    // Поддержка на русском, английском и иврите
+    
     const cat = category?.toLowerCase();
     if (["adjective", "прилагательное", "תואר"].includes(cat)) {
       return { bg: "bg-purple-100", text: "text-purple-800" };
@@ -111,7 +109,7 @@ const FlashCard: React.FC<FlashCardProps> = ({ word: propWord, reverse, onMarkAs
     return { bg: "bg-gray-100", text: "text-gray-800", category: "bg-gray-300" };
   };
 
-  // If no word, render nothing
+  
   if (!word) return null;
 
   const categoryColors = getCategoryColor(word.category);
@@ -119,11 +117,11 @@ const FlashCard: React.FC<FlashCardProps> = ({ word: propWord, reverse, onMarkAs
   return (
     <div className="w-full max-w-xl mx-auto">
       <div className="card-container relative">
-        {/* Статус слова: иконка в правом верхнем углу */}
+        
         <div className="absolute top-3 right-4 z-10">
           {word.isLearned ? (
             <span title="Изучено" className="inline-flex items-center text-green-600">
-              {/* Галочка */}
+              
               <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="bg-green-100 rounded-full p-1">
                 <circle cx="12" cy="12" r="11" stroke="currentColor" fill="#dcfce7" />
                 <path d="M7 13l3 3 6-6" stroke="currentColor" />
@@ -131,7 +129,7 @@ const FlashCard: React.FC<FlashCardProps> = ({ word: propWord, reverse, onMarkAs
             </span>
           ) : (
             <span title="Не изучено" className="inline-flex items-center text-gray-400">
-              {/* Песочные часы */}
+              
               <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className="bg-gray-100 rounded-full p-1">
                 <circle cx="12" cy="12" r="11" stroke="currentColor" fill="#f3f4f6" />
                 <path d="M8 7h8m-8 10h8m-7-2c0-2 3-2 3-4s-3-2-3-4m6 8c0-2-3-2-3-4s3-2 3-4" />
@@ -140,7 +138,7 @@ const FlashCard: React.FC<FlashCardProps> = ({ word: propWord, reverse, onMarkAs
           )}
         </div>
         <div className={`card ${flipped ? 'flipped' : ''}`}> 
-          {/* Front side */}
+          
           <div
             className={`card-front rounded-xl p-6 flex flex-col justify-between items-center shadow-lg relative ${categoryColors.bg}`}
             onClick={handleFlip}
@@ -157,7 +155,7 @@ const FlashCard: React.FC<FlashCardProps> = ({ word: propWord, reverse, onMarkAs
                   <h2 className={`text-4xl font-bold mb-2 ${categoryColors.text}`}>{word.russian}</h2>
                   <p className={`text-xl ${categoryColors.text} mb-3`}>[Переведите на иврит]</p>
                   <p className="text-sm text-gray-500 mt-2">Нажмите, чтобы увидеть ответ</p>
-                  {/* Примеры на лицевой стороне */}
+                  
                   {word.examples && word.examples.length > 0 && renderExamples(word.examples)}
                 </>
               ) : (
@@ -165,7 +163,7 @@ const FlashCard: React.FC<FlashCardProps> = ({ word: propWord, reverse, onMarkAs
                   <h2 className={`text-5xl font-bold mb-2 ${categoryColors.text}`}>{word.hebrew}</h2>
                   <p className={`text-xl ${categoryColors.text} mb-3`}>[{word.transcription}]</p>
                   <p className="text-sm text-gray-500 mt-2">Нажмите, чтобы увидеть перевод</p>
-                  {/* Примеры на лицевой стороне */}
+                  
                   {word.examples && word.examples.length > 0 && renderExamples(word.examples)}
                 </>
               )}
@@ -194,7 +192,7 @@ const FlashCard: React.FC<FlashCardProps> = ({ word: propWord, reverse, onMarkAs
 
             </div>
           </div>
-          {/* Back side */}
+          
           <div
             className={`card-back rounded-xl p-6 flex flex-col justify-between items-center shadow-lg relative ${categoryColors.bg}`}
             onClick={handleFlip}
@@ -208,13 +206,13 @@ const FlashCard: React.FC<FlashCardProps> = ({ word: propWord, reverse, onMarkAs
                   <h2 className={`text-5xl font-bold mb-2 ${categoryColors.text}`}>{word.hebrew}</h2>
                   <p className={`text-xl ${categoryColors.text} mb-3`}>[{word.transcription}]</p>
                   <p className={`text-lg ${categoryColors.text} mt-2`}>{word.russian}</p>
-                  {/* Display usage examples if they exist */}
+                  
                   {word.examples && word.examples.length > 0 && renderExamples(word.examples)}
                 </>
               ) : (
                 <>
                   <h3 className={`text-4xl font-medium mb-1 ${categoryColors.text}`}>{word.russian}</h3>
-                  {/* Display usage examples if they exist */}
+                  
                   {word.examples && word.examples.length > 0 && renderExamples(word.examples)}
                   {word.category === "פועל" && word.conjugations && (
                     <div className="text-left mx-auto max-w-[400px] px-2 my-4">

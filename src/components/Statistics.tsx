@@ -1,11 +1,5 @@
-import React from 'react';
-
 import { useWordsStore, getStats } from '../store/wordsStore';
-
-/**
-* Statistics component.
-* Если передан проп stats — использовать его, иначе брать из стора.
-*/
+ 
 import type { FC } from 'react';
 
 interface StatisticsProps {

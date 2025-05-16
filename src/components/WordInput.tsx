@@ -5,7 +5,7 @@ import { Word } from '../types';
 import { useToast } from '../hooks/use-toast';
 import { useWordsStore } from '../store/wordsStore';
 
-// Разбить массив на чанки
+ 
 function chunkArray<T>(arr: T[], size: number): T[][] {
   const res: T[][] = [];
   for (let i = 0; i < arr.length; i += size) {
@@ -14,7 +14,7 @@ function chunkArray<T>(arr: T[], size: number): T[][] {
   return res;
 }
 
-// Валидация структуры ответа LLM
+ 
 function validateLLMWordsResponse(data: unknown): Word[] {
   if (Array.isArray(data)) {
     return data.filter((w: unknown) =>

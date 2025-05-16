@@ -13,13 +13,7 @@ const CompactConjugation: React.FC<CompactConjugationProps> = ({ conjugations })
     imperative: 'Повелительное'
   };
 
-  // Наиболее важные формы для каждого времени
-  // const mainForms = {
-  //   past: ['אני', 'אתה', 'הוא', 'אנחנו'],
-  //   present: ['אני', 'אתה', 'הוא', 'אנחנו'], 
-  //   future: ['אני', 'אתה', 'הוא', 'אנחנו'],
-  //   imperative: ['אתה']
-  // };
+  
 
   return (
     <div className="space-y-3 text-sm">
