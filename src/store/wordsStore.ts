@@ -23,7 +23,7 @@ interface WordsStore extends WordsState {
   updateWords: (words: Word[] | null) => void;
   replaceAllWords: (newWords: Word[], toast?: ToastFn) => void;
   clearAllWords: (toast?: ToastFn) => void;
-  stats: {
+  get stats(): {
     total: number;
     learned: number;
     remaining: number;
@@ -251,6 +251,10 @@ export const useWordsStore = create<WordsStore>((set, get) => {
       });
     },
 
+    /**
+     * Clears all words and resets all related state,
+     * including currentWord, currentIndex, and progress.
+     */
     clearAllWords: toast => {
       set({ ...initialState });
       toast?.({

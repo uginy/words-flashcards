@@ -1,15 +1,16 @@
 import React from 'react';
 
-interface StatisticsProps {
-  total: number;
-  learned: number;
-  remaining: number;
-}
+import { useWordsStore } from '../store/wordsStore';
 
-const Statistics: React.FC<StatisticsProps> = ({ total, learned, remaining }) => {
+// Statistics component now gets stats directly from Zustand store
+const Statistics: React.FC = () => {
+  const stats = useWordsStore((state) => state.stats);
+  const total = stats.total;
+  const learned = stats.learned;
+  const remaining = stats.remaining;
   // Calculate progress percentage
   const progressPercent = total > 0 ? Math.round((learned / total) * 100) : 0;
-  
+
   return (
     <div className="w-full max-w-xl mx-auto">
       <div className="bg-white rounded-lg shadow-md p-4">
@@ -38,8 +39,8 @@ const Statistics: React.FC<StatisticsProps> = ({ total, learned, remaining }) =>
         </div>
         
         <div className="w-full bg-gray-200 rounded-full h-2.5">
-          <div 
-            className="bg-blue-600 h-2.5 rounded-full transition-all duration-500 ease-in-out" 
+          <div
+            className="bg-blue-600 h-2.5 rounded-full transition-all duration-500 ease-in-out"
             style={{ width: `${progressPercent}%` }}
           ></div>
         </div>

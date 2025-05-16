@@ -4,15 +4,19 @@ import { Popover, PopoverContent, PopoverTrigger } from './ui/popover';
 import ConjugationDisplay from './ConjugationDisplay';
 import CompactConjugation from './CompactConjugation';
 
+import { useWordsStore } from '../store/wordsStore';
+
 interface FlashCardProps {
-  word: Word;
-  onMarkLearned: (id: string) => void;
-  onNext: () => void;
   reverse?: boolean;
   forceFlipped?: boolean;
 }
 
-const FlashCard: React.FC<FlashCardProps> = ({ word, onMarkLearned, onNext, reverse }) => {
+// FlashCard now gets word and actions from Zustand store, only reverse is a prop
+const FlashCard: React.FC<FlashCardProps> = ({ reverse }) => {
+  const word = useWordsStore((state) => state.currentWord);
+  const markAsLearned = useWordsStore((state) => state.markAsLearned);
+  const nextWord = useWordsStore((state) => state.nextWord);
+
   const [flipped, setFlipped] = useState(false);
 
   const handleFlip = () => {
@@ -26,14 +30,15 @@ const FlashCard: React.FC<FlashCardProps> = ({ word, onMarkLearned, onNext, reve
   };
 
   const handleMarkLearned = () => {
-    onMarkLearned(word.id);
+    if (!word) return;
+    markAsLearned(word.id);
     setFlipped(false);
-    onNext();
+    nextWord();
   };
 
   const handleSkip = () => {
     setFlipped(false);
-    onNext();
+    nextWord();
   };
 
   const getCategoryColor = (category: string) => {
@@ -48,6 +53,9 @@ const FlashCard: React.FC<FlashCardProps> = ({ word, onMarkLearned, onNext, reve
         return 'bg-gray-100 text-gray-800';
     }
   };
+
+  // If no word, render nothing
+  if (!word) return null;
 
   return (
     <div className="w-full max-w-xl mx-auto">

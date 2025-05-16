@@ -23,6 +23,8 @@ function App() {
     stats,
   } = useWordsStore();
 
+  console.log(stats,words);
+  
   // Define tabs with icons
   const tabs = [
     {
@@ -94,11 +96,7 @@ function App() {
                 <span className="ml-2 text-sm text-gray-700 font-medium">Русский → Иврит (реверсивный режим)</span>
               </label>
             </div>
-            <Statistics
-              total={stats.total}
-              learned={stats.learned}
-              remaining={stats.remaining}
-            />
+            <Statistics />
             {stats.total === 0 ? (
               // Case: No words in the list at all
               <div className="bg-white rounded-lg shadow-md p-6 text-center">
@@ -122,12 +120,7 @@ function App() {
             ) : currentWord ? (
               // Case: There are words and a current word to display
               <div className="animate-fadeIn">
-                <FlashCard
-                  word={currentWord}
-                  onMarkLearned={markAsLearned}
-                  onNext={nextWord}
-                  reverse={reverseMode}
-                />
+                <FlashCard reverse={reverseMode} />
               </div>
             ) : (
               // Case: There are words, but all are learned
