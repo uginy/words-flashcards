@@ -36,13 +36,8 @@ interface WordTableProps {
   onEditWord?: (word: Word) => void; // New prop for editing
 }
 
-const WordTable: React.FC<WordTableProps> = ({ 
-  onMarkLearned, 
-  onMarkNotLearned, 
-  onDeleteWord,
-  onEditWord
-}) => {
-  const { words: allWords, replaceAllWords, clearAllWords } = useWords();
+const WordTable: React.FC<WordTableProps> = ({ onEditWord }) => {
+  const { words: allWords, replaceAllWords, clearAllWords, markAsLearned, markAsNotLearned, deleteWord } = useWords();
   const [filter, setFilter] = useState<'all' | 'learned' | 'not-learned'>('all');
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -368,7 +363,7 @@ const WordTable: React.FC<WordTableProps> = ({
                       {word.learned ? (
                         <button
                           type="button"
-                          onClick={() => onMarkNotLearned(word.id)}
+                          onClick={() => markAsNotLearned(word.id)}
                           className="text-blue-600 hover:text-blue-900 mr-3"
                         >
                           Повторить
@@ -376,19 +371,39 @@ const WordTable: React.FC<WordTableProps> = ({
                       ) : (
                         <button
                           type="button"
-                          onClick={() => onMarkLearned(word.id)}
+                          onClick={() => markAsLearned(word.id)}
                           className="text-green-600 hover:text-green-900 mr-3"
                         >
                           Отметить изученным
                         </button>
                       )}
-                      <button
-                        type="button"
-                        onClick={() => onDeleteWord(word.id)}
-                        className="text-red-600 hover:text-red-900"
-                      >
-                        Удалить
-                      </button>
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <button
+                            type="button"
+                            className="text-red-600 hover:text-red-900"
+                          >
+                            Удалить
+                          </button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Удалить это слово?</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              Это действие нельзя отменить. Слово будет удалено из вашей коллекции.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Отмена</AlertDialogCancel>
+                            <AlertDialogAction 
+                              onClick={() => deleteWord(word.id)}
+                              className="bg-red-500 hover:bg-red-600"
+                            >
+                              Удалить
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
                     </td>
                   </tr>
                 ))

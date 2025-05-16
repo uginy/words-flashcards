@@ -115,21 +115,25 @@ export const useWords = () => {
   };
   
   const markAsLearned = (id: string) => {
-    setState(prevState => ({
-      ...prevState,
-      words: prevState.words.map(word => 
-        word.id === id ? { ...word, isLearned: true } : word
-      ),
-    }));
+    setState(prevState => {
+      const newWords = prevState.words.map(word => 
+        word.id === id ? { ...word, isLearned: true, learned: true } : word
+      );
+      const newState = { ...prevState, words: newWords };
+      saveToLocalStorage(newState);
+      return newState;
+    });
   };
 
   const markAsNotLearned = (id: string) => {
-    setState(prevState => ({
-      ...prevState,
-      words: prevState.words.map(word => 
-        word.id === id ? { ...word, isLearned: false, learningStage: 0 } : word 
-      ),
-    }));
+    setState(prevState => {
+      const newWords = prevState.words.map(word => 
+        word.id === id ? { ...word, isLearned: false, learned: false, learningStage: 0 } : word
+      );
+      const newState = { ...prevState, words: newWords };
+      saveToLocalStorage(newState);
+      return newState;
+    });
   };
 
   const toggleTranslation = (id: string) => {
@@ -217,11 +221,14 @@ export const useWords = () => {
       if (newCurrentIndex >= updatedWords.length) {
         newCurrentIndex = Math.max(0, updatedWords.length - 1);
       }
-      return {
+      // Сохраняем новое состояние в localStorage сразу
+      const newState = {
         ...prevState,
         words: updatedWords,
         currentIndex: newCurrentIndex,
       };
+      saveToLocalStorage(newState);
+      return newState;
     });
   };
   
