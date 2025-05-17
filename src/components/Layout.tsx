@@ -33,6 +33,9 @@ const Layout: React.FC<LayoutProps> = ({
               </svg>
               <h1 className="text-xl font-semibold text-gray-900">FlashCards: Иврит-Русский</h1>
             </div>
+            <div className="text-xs text-gray-500">
+              v{import.meta.env.VITE_APP_VERSION} {/* Use environment variable */}
+            </div>
           </div>
         </div>
       </header>
