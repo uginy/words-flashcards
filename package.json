@@ -8,7 +8,7 @@
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "publish": "sh ./scripts/publish.sh"
+    "pub": "sh ./scripts/publish.sh"
   },
   "dependencies": {
     "@radix-ui/react-alert-dialog": "^1.1.13",
