@@ -7,7 +7,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { Pen, RotateCcw, Check, Trash } from "lucide-react";
+import { Pen, RotateCcw, Check, Trash, ArrowUpDown } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -34,7 +34,16 @@ export const getColumns = (
 ): ColumnDef<Word>[] => [
   {
     accessorKey: "hebrew",
-    header: "Иврит",
+    header: ({ column }) => (
+      <Button
+        variant="ghost"
+        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        className="-ml-4"
+      >
+        Иврит
+        <ArrowUpDown className="ml-2 h-4 w-4" />
+      </Button>
+    ),
     cell: ({ row }) => {
       const word = row.original;
       return (
@@ -79,15 +88,42 @@ export const getColumns = (
   },
   {
     accessorKey: "russian",
-    header: "Перевод",
+    header: ({ column }) => (
+      <Button
+        variant="ghost"
+        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        className="-ml-4"
+      >
+        Перевод
+        <ArrowUpDown className="ml-2 h-4 w-4" />
+      </Button>
+    ),
   },
   {
     accessorKey: "transcription",
-    header: "Транскрипция",
+    header: ({ column }) => (
+      <Button
+        variant="ghost"
+        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        className="-ml-4"
+      >
+        Транскрипция
+        <ArrowUpDown className="ml-2 h-4 w-4" />
+      </Button>
+    ),
   },
   {
     accessorKey: "category",
-    header: "Категория",
+    header: ({ column }) => (
+      <Button
+        variant="ghost"
+        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        className="-ml-4"
+      >
+        Категория
+        <ArrowUpDown className="ml-2 h-4 w-4" />
+      </Button>
+    ),
     cell: ({ row }) => {
       const category = row.getValue("category") as string;
       return (
@@ -104,7 +140,16 @@ export const getColumns = (
   },
   {
     accessorKey: "isLearned",
-    header: "Статус",
+    header: ({ column }) => (
+      <Button
+        variant="ghost"
+        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        className="-ml-4"
+      >
+        Статус
+        <ArrowUpDown className="ml-2 h-4 w-4" />
+      </Button>
+    ),
     cell: ({ row }) => {
       const isLearned = row.getValue("isLearned") as boolean;
       return (
@@ -118,7 +163,16 @@ export const getColumns = (
   },
   {
     accessorKey: "learningStage",
-    header: "Уровень",
+    header: ({ column }) => (
+      <Button
+        variant="ghost"
+        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        className="-ml-4"
+      >
+        Уровень
+        <ArrowUpDown className="ml-2 h-4 w-4" />
+      </Button>
+    ),
     cell: ({ row }) => {
       const stage = row.getValue("learningStage") as number;
       return (
@@ -137,7 +191,17 @@ export const getColumns = (
   },
   {
     accessorKey: "dateAdded",
-    header: "Дата добавления",
+    header: ({ column }) => (
+      <Button
+        variant="ghost"
+        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        className="-ml-4"
+      >
+        Дата добавления
+        <ArrowUpDown className="ml-2 h-4 w-4" />
+      </Button>
+    ),
+    sortingFn: "datetime",
     cell: ({ row }) => {
       const date = row.getValue("dateAdded") as number;
       return new Date(date).toLocaleDateString();
