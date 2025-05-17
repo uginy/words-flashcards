@@ -150,10 +150,26 @@ const WordInput: React.FC = () => {
             const result = await enrichWordsWithLLM(chunk, apiKey, model);
             // enrichWordsWithLLM теперь всегда возвращает массив слов или выбрасывает ошибку
             const valid = validateLLMWordsResponse(result);
+            
+            if (valid.length === 0) {
+              console.warn('LLM вернул пустой или невалидный ответ для чанка:', chunk);
+              toast({
+                title: 'Предупреждение',
+                description: `Не удалось обработать некоторые слова корректно: ${chunk.join(', ')}`,
+                variant: 'warning'
+              });
+            }
+            
             const chunkFailed = chunk.filter(w => !valid.some(v => v.hebrew === w));
             allValidWords = allValidWords.concat(valid);
             allFailed = allFailed.concat(chunkFailed);
           } catch (err) {
+            console.error('Ошибка при обработке чанка:', chunk, err);
+            toast({
+              title: 'Предупреждение',
+              description: `Ошибка при обработке: ${err instanceof Error ? err.message : String(err)}`,
+              variant: 'warning'
+            });
             allFailed = allFailed.concat(chunk);
           }
         }

@@ -137,33 +137,100 @@ Provide ONLY the JSON object with the "words" array in your response, with no ot
     }
     const content = completion.choices[0].message.content;
 
+    // Попробуем извлечь JSON из текста ответа
+    let content_clean = content.trim();
+    
+    // Попытка удалить возможные текстовые обертки вокруг JSON
+    if (content_clean.includes('```json')) {
+      content_clean = content_clean.replace(/```json/g, '').replace(/```/g, '');
+    } else if (content_clean.includes('```')) {
+      content_clean = content_clean.replace(/```/g, '');
+    }
+    
+    // Пытаемся найти начало и конец JSON объекта
+    const jsonStartIdx = content_clean.indexOf('{');
+    const jsonEndIdx = content_clean.lastIndexOf('}');
+    
+    if (jsonStartIdx >= 0 && jsonEndIdx > jsonStartIdx) {
+      content_clean = content_clean.substring(jsonStartIdx, jsonEndIdx + 1);
+    }
+    
     let responseObject: any;
     try {
-      responseObject = JSON.parse(content);
+      responseObject = JSON.parse(content_clean);
     } catch (e) {
-      console.error('Failed to parse LLM response content as JSON (batch). Content:', content, 'Error:', e);
+      console.error('Failed to parse LLM response content as JSON (batch). Content:', content_clean, 'Error:', e);
       throw new Error('LLM response content was not valid JSON.');
     }
 
-    if (typeof responseObject !== 'object' || responseObject === null || !responseObject.hasOwnProperty('words')) {
-      console.error('Invalid LLM response structure (batch): "words" key missing or response is not an object. Response:', responseObject);
-      // Fallback: check if the responseObject itself is the array (LLM misunderstood prompt)
+    if (typeof responseObject !== 'object' || responseObject === null) {
+      throw new Error('LLM response is not a valid JSON object.');
+    }
+    
+    // Проверка различных форматов ответа
+    if (!responseObject.hasOwnProperty('words')) {
+      console.warn('Invalid LLM response structure (batch): "words" key missing. Response:', responseObject);
+      
+      // Fallback 1: Проверяем, является ли сам responseObject массивом
       if (Array.isArray(responseObject)) {
          console.warn('LLM returned a direct array instead of an object with a "words" key. Processing as direct array.');
-         responseObject = { words: responseObject }; // Wrap it to fit expected structure
-      } else {
-        throw new Error('LLM response is not an object or does not contain a "words" key, and is not a direct array.');
+         responseObject = { words: responseObject }; // Оборачиваем его в ожидаемую структуру
+      } 
+      // Fallback 2: Проверяем наличие других полей, которые могут содержать наши данные
+      else if (responseObject.message && responseObject.message.content) {
+        try {
+          const nestedContent = JSON.parse(responseObject.message.content);
+          if (nestedContent && (nestedContent.words || Array.isArray(nestedContent))) {
+            responseObject = nestedContent.words ? nestedContent : { words: nestedContent };
+          }
+        } catch (e) {
+          console.error('Failed to parse nested content', e);
+        }
+      } 
+      // Если ни один fallback не сработал
+      else {
+        throw new Error('LLM response does not contain expected data structure.');
       }
     }
 
     let wordsArray = responseObject.words;
+    
+    // Если words - строка, попытаемся распарсить её как JSON
     if (typeof wordsArray === 'string') {
       try {
-        wordsArray = JSON.parse(wordsArray);
+        // Попытка очистить строку от возможных лишних символов
+        const cleanString = wordsArray.trim()
+          .replace(/^```json\s*/i, '')
+          .replace(/```$/i, '')
+          .replace(/^"/, '')
+          .replace(/"$/, '');
+          
+        // Если это строка с экранированным JSON внутри
+        if (cleanString.startsWith('[{') || cleanString.startsWith('{')) {
+          wordsArray = JSON.parse(cleanString);
+        } 
+        // Возможно это просто строка с перечислением слов
+        else if (cleanString.includes(',')) {
+          wordsArray = cleanString.split(',').map(word => ({ 
+            hebrew: word.trim(),
+            transcription: '',
+            russian: '',
+            category: 'אחר'
+          }));
+        }
         console.log('Successfully parsed stringified "words" field from LLM response.');
       } catch (e) {
         console.error('Failed to parse stringified "words" field. Content:', responseObject.words, 'Error:', e);
-        throw new Error('LLM response had a "words" field, but it was a string that could not be parsed into an array.');
+        console.warn('Attempting to continue with available data');
+        
+        // Возвращаем хотя бы минимальную информацию вместо полного отказа
+        // Используем исходные слова, которые передавались в функцию
+        wordsArray = hebrewWords.map(word => ({
+          hebrew: word,
+          transcription: '',
+          russian: '',
+          category: 'אחר'
+        }));
       }
     }
 
@@ -227,9 +294,27 @@ Provide ONLY the JSON object with the "words" array in your response, with no ot
 
   } catch (error) {
     console.error('Error enriching words with LLM (batch) using OpenAI SDK:', error);
+    
+    // Более информативная обработка ошибок
     if (error instanceof OpenAI.APIError) {
-      throw new Error(`OpenAI API Error: ${error.status} ${error.name} ${error.message}`);
+      const status = error.status || 'unknown';
+      const name = error.name || 'Error';
+      const message = error.message || '';
+      
+      // Более понятные ошибки для конечного пользователя
+      if (status === 401 || status === 403) {
+        throw new Error(`Ошибка авторизации API: Проверьте ваш API ключ (${status})`);
+      } else if (status === 429) {
+        throw new Error(`Превышен лимит запросов API. Попробуйте позже или уменьшите количество слов в запросе (${status})`);
+      } else if (status >= 500) {
+        throw new Error(`Сервис временно недоступен. Попробуйте позже (${status})`);
+      } else {
+        throw new Error(`Ошибка API: ${status} ${name} ${message}`);
+      }
     }
-    throw error;
+    
+    // Более дружелюбное сообщение об ошибке
+    const errorMsg = error instanceof Error ? error.message : String(error);
+    throw new Error(`Не удалось обработать слова: ${errorMsg}`);
   }
 }
