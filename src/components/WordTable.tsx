@@ -44,6 +44,7 @@ const WordTable: React.FC<WordTableProps> = ({ onEditWord }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
   const [editingWord, setEditingWord] = useState<Word | null>(null);
+  const [filteredWordCount, setFilteredWordCount] = useState<number>(allWords.length);
 
   const columns = getColumns(setEditingWord, markAsLearned, markAsNotLearned, deleteWord);
 
@@ -145,7 +146,7 @@ const WordTable: React.FC<WordTableProps> = ({ onEditWord }) => {
       <div className="bg-white rounded-lg shadow-md overflow-hidden">
         <div className="p-4 space-y-4">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-            <h3 className="text-lg font-medium text-gray-800">Список слов</h3>
+            <h3 className="text-lg font-medium text-gray-800">Список слов ({filteredWordCount})</h3>
             <div className="flex flex-wrap gap-2">
               <TooltipProvider>
                 <Tooltip>
@@ -211,7 +212,6 @@ const WordTable: React.FC<WordTableProps> = ({ onEditWord }) => {
               { id: "russian", placeholder: "Поиск по переводу..." }
             ]}
             paginated
-            pageSize={10}
             filters={[
               {
                 id: "category",
@@ -243,6 +243,7 @@ const WordTable: React.FC<WordTableProps> = ({ onEditWord }) => {
                 ]
               }
             ]}
+            onFilteredRowCountChange={setFilteredWordCount}
           />
         </div>
       </div>

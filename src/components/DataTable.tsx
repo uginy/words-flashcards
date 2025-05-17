@@ -1,4 +1,5 @@
-import { 
+import { useState, useEffect } from "react";
+import {
   ColumnDef,
   flexRender,
   getCoreRowModel,
@@ -27,7 +28,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useState } from "react";
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
@@ -35,12 +35,12 @@ interface DataTableProps<TData, TValue> {
   searchable?: boolean;
   searchColumns?: { id: string; placeholder: string }[];
   paginated?: boolean;
-  pageSize?: number;
   filters?: {
     id: string;
     label: string;
     options: { label: string; value: string | boolean }[];
   }[];
+  onFilteredRowCountChange?: (count: number) => void;
 }
 
 export function DataTable<TData, TValue>({
@@ -49,14 +49,14 @@ export function DataTable<TData, TValue>({
   searchable = false,
   searchColumns = [],
   paginated = false,
-  pageSize = 10,
   filters,
+  onFilteredRowCountChange,
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = useState<SortingState>([
     {
       id: "dateAdded",
-      desc: true
-    }
+      desc: true,
+    },
   ]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
@@ -73,6 +73,11 @@ export function DataTable<TData, TValue>({
     onColumnVisibilityChange: setColumnVisibility,
     onRowSelectionChange: setRowSelection,
     getPaginationRowModel: getPaginationRowModel(),
+    initialState: {
+      pagination: {
+        pageSize: 10,
+      },
+    },
     state: {
       sorting,
       columnFilters,
@@ -80,6 +85,13 @@ export function DataTable<TData, TValue>({
       rowSelection,
     },
   });
+
+  // useEffect to call onFilteredRowCountChange when filtered rows change
+  useEffect(() => {
+    if (onFilteredRowCountChange) {
+      onFilteredRowCountChange(table.getFilteredRowModel().rows.length);
+    }
+  }, [table.getFilteredRowModel().rows.length, onFilteredRowCountChange, table]);
 
   return (
     <div>
