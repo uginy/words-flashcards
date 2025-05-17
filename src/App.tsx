@@ -55,12 +55,9 @@ function App() {
 
   // Обработчик для "Знаю"
   const handleMarkAsLearned = (id: string) => {
-    // Если выбран статус "изученные", просто переходим к следующему слову, не меняя статус
-    if (selectedStatus === 'learned') {
-      handleNextWord();
-      return;
-    }
+    // Всегда отмечаем слово выученным, даже в режиме уже выученных слов
     markAsLearned(id);
+    
     // Если после отметки все слова выучены, сбрасываем filteredIndex
     if (getStats(filteredWords).remaining <= 1) {
       setFilteredIndex(0);
@@ -69,26 +66,12 @@ function App() {
     }
   };
 
-  // Обработчик для "Далее" — только по filteredWords
+  // Обработчик для "Далее" — навигация для всех слов
   const handleNextWord = () => {
     if (filteredWords.length === 0) return;
-    // Для "изученных" просто листаем по кругу
-    if (selectedStatus === 'learned') {
-      setFilteredIndex((prev) => (prev + 1) % filteredWords.length);
-      return;
-    }
-    // Для остальных — ищем следующий невыученный
-    if (getStats(filteredWords).remaining === 0) {
-      return;
-    }
-    let nextIdx = filteredIndex;
-    let attempts = 0;
-    do {
-      nextIdx = (nextIdx + 1) % filteredWords.length;
-      attempts++;
-      if (attempts > filteredWords.length) break;
-    } while (filteredWords[nextIdx]?.isLearned);
-    setFilteredIndex(nextIdx);
+    
+    // Всегда переходим к следующему слову по кругу
+    setFilteredIndex((prev) => (prev + 1) % filteredWords.length);
   };
 
   // Сброс filteredIndex при смене категории или слов

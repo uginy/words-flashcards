@@ -27,7 +27,7 @@ const FlashCard: React.FC<FlashCardProps> = ({ word: propWord, reverse, onMarkAs
   const [flipped, setFlipped] = useState(false);
 
   
-  const renderExamples = (examples: any[]) => {
+  const renderExamples = (examples: Array<{hebrew?: string, russian?: string} | string>) => {
     return (
       <div className="mt-4 text-left">
         <h4 className="text-md font-semibold text-gray-600 mb-1">Примеры:</h4>
@@ -41,7 +41,7 @@ const FlashCard: React.FC<FlashCardProps> = ({ word: propWord, reverse, onMarkAs
               typeof example.russian === 'string'
             ) {
               return (
-                <li key={index}>
+                <li key={`example-${index}-${example.hebrew}`}>
                   <span className="font-medium text-black">{example.hebrew}</span>
                   <span className="ml-2 text-gray-400">— {example.russian}</span>
                 </li>
@@ -49,7 +49,7 @@ const FlashCard: React.FC<FlashCardProps> = ({ word: propWord, reverse, onMarkAs
             }
             
             if (typeof example === 'string') {
-              return <li key={index}>{example}</li>;
+              return <li key={`example-${index}-${example}`}>{example}</li>;
             }
             return null;
           })}
@@ -120,16 +120,24 @@ const FlashCard: React.FC<FlashCardProps> = ({ word: propWord, reverse, onMarkAs
         
         <div className="absolute top-3 right-4 z-10">
           {word.isLearned ? (
-            <span title="Изучено" className="inline-flex items-center text-green-600">
-              
-              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="bg-green-100 rounded-full p-1">
-                <circle cx="12" cy="12" r="11" stroke="currentColor" fill="#dcfce7" />
-                <path d="M7 13l3 3 6-6" stroke="currentColor" />
-              </svg>
+            <span 
+              title={`Уровень знания: ${word.learningStage || 1} из 5`} 
+              className="inline-flex items-center text-green-600"
+            >
+              <div className="relative">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="bg-green-100 rounded-full p-1">
+                  <circle cx="12" cy="12" r="11" stroke="currentColor" fill="#dcfce7" />
+                  <path d="M7 13l3 3 6-6" stroke="currentColor" />
+                </svg>
+                {word.learningStage && word.learningStage > 0 && (
+                  <div className="absolute -top-1 -right-1 bg-blue-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                    {word.learningStage}
+                  </div>
+                )}
+              </div>
             </span>
           ) : (
             <span title="Не изучено" className="inline-flex items-center text-gray-400">
-              
               <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className="bg-gray-100 rounded-full p-1">
                 <circle cx="12" cy="12" r="11" stroke="currentColor" fill="#f3f4f6" />
                 <path d="M8 7h8m-8 10h8m-7-2c0-2 3-2 3-4s-3-2-3-4m6 8c0-2-3-2-3-4s3-2 3-4" />

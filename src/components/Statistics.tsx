@@ -3,11 +3,7 @@ import { useWordsStore, getStats } from '../store/wordsStore';
 import type { FC } from 'react';
 
 interface StatisticsProps {
- stats?: {
-   total: number;
-   learned: number;
-   remaining: number;
- };
+ stats?: ReturnType<typeof getStats>;
 }
 
 const Statistics: FC<StatisticsProps> = ({ stats }) => {
@@ -16,6 +12,7 @@ const Statistics: FC<StatisticsProps> = ({ stats }) => {
  const total = computedStats.total;
  const learned = computedStats.learned;
  const remaining = computedStats.remaining;
+ const needReview = computedStats.needReview || 0;
 
  // Calculate progress percentage
  const progressPercent = total > 0 ? Math.round((learned / total) * 100) : 0;
@@ -38,6 +35,12 @@ const Statistics: FC<StatisticsProps> = ({ stats }) => {
            <div className="text-xs text-gray-600">Осталось</div>
          </div>
        </div>
+       {needReview > 0 && (
+         <div className="text-center p-2 bg-orange-50 rounded-md mb-4">
+           <div className="text-lg font-semibold text-orange-600">{needReview}</div>
+           <div className="text-xs text-gray-600">Слов требуют повторения</div>
+         </div>
+       )}
        <div className="mb-1 flex justify-between text-xs text-gray-600">
          <span>Прогресс</span>
          <span>{progressPercent}%</span>

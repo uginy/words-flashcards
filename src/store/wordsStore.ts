@@ -13,10 +13,29 @@ const initialState: WordsState = {
 export function getStats(words: Word[]) {
   const total = words.length;
   const learned = words.filter(word => word.isLearned).length;
+  const needReview = words.filter(word => {
+    // Слова, которые помечены как изученные и срок их повторения истек или не указан
+    return word.isLearned && 
+           (word.nextReview === undefined || 
+            word.nextReview === null || 
+            word.nextReview <= Date.now());
+  }).length;
+  
+  // Статистика по уровням знания
+  const learningStages = {
+    stage1: words.filter(word => word.learningStage === 1).length,
+    stage2: words.filter(word => word.learningStage === 2).length,
+    stage3: words.filter(word => word.learningStage === 3).length,
+    stage4: words.filter(word => word.learningStage === 4).length,
+    stage5: words.filter(word => word.learningStage === 5).length,
+  };
+  
   return {
     total,
     learned,
     remaining: total - learned,
+    needReview,
+    learningStages
   };
 }
 type ToastFn = (opts: { title: string; description: string; variant?: string }) => void;
@@ -127,9 +146,34 @@ export const useWordsStore = create<WordsStore>((set, get) => {
 
     markAsLearned: (id) => {
       set(state => {
-        const newWords = state.words.map(word =>
-          word.id === id ? { ...word, isLearned: true } : word
-        );
+        const newWords = state.words.map(word => {
+          if (word.id === id) {
+            const currentStage = word.learningStage || 0;
+            const newStage = Math.min(currentStage + 1, 5); // Максимальный уровень знания - 5
+            const now = Date.now();
+            
+            // Расчет следующего времени повторения на основе уровня знания
+            // Чем выше уровень, тем дольше интервал до следующего повторения
+            let nextReview: number | null = now;
+            switch (newStage) {
+              case 1: nextReview = now + 1 * 24 * 60 * 60 * 1000; break; // 1 день
+              case 2: nextReview = now + 3 * 24 * 60 * 60 * 1000; break; // 3 дня
+              case 3: nextReview = now + 7 * 24 * 60 * 60 * 1000; break; // 7 дней
+              case 4: nextReview = now + 14 * 24 * 60 * 60 * 1000; break; // 14 дней
+              case 5: nextReview = now + 30 * 24 * 60 * 60 * 1000; break; // 30 дней
+              default: nextReview = null;
+            }
+
+            return { 
+              ...word, 
+              isLearned: true,
+              learningStage: newStage,
+              lastReviewed: now,
+              nextReview
+            };
+          }
+          return word;
+        });
         return { ...state, words: newWords };
       });
     },
