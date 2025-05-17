@@ -7,11 +7,11 @@ export interface Word {
   transcription: string;
   category: WordCategory;
   conjugations?: {
-    past?: { [key: string]: string }; 
-    present?: { [key: string]: string };
-    future?: { [key: string]: string };
-    imperative?: { [key: string]: string };
-  };
+    past?: { [pronoun: string]: string } | null;
+    present?: { [pronoun: string]: string } | null;
+    future?: { [pronoun: string]: string } | null;
+    imperative?: { [pronoun: string]: string } | null;
+  } | null;
   examples?: { hebrew: string; russian: string }[];
   isLearned: boolean;
   dateAdded: number;

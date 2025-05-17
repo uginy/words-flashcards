@@ -12,36 +12,94 @@ interface LLMBatchResponseItem {
   transcription: string;
   russian: string;
   conjugations?: {
-    past?: { [pronoun: string]: string };
-    present?: { [pronoun: string]: string };
-    future?: { [pronoun: string]: string };
-    imperative?: { [pronoun: string]: string };
-  };
+    past?: { [pronoun: string]: string } | null;
+    present?: { [pronoun: string]: string } | null;
+    future?: { [pronoun: string]: string } | null;
+    imperative?: { [pronoun: string]: string } | null;
+  } | null;
   examples?: { hebrew: string; russian: string }[];
   error?: string;
 }
 
-const systemPrompt = `You are an expert linguist specializing in Hebrew. Your task is to process a list of Hebrew words or phrases and provide detailed information for each. For each item in the input list, you must generate a JSON object with the following fields: "hebrew" (the original input word/phrase), "transcription", "russian" (translation), "category", "conjugations" (only for verbs), and "examples".
+const systemPrompt = `You are an expert linguist specializing in Hebrew. Your task is to process a list of Hebrew words or phrases and provide detailed information for each. For each item, generate a properly formatted JSON object with required fields as specified below.
 
-IMPORTANT RULES:
-1.  **Original Word**: The "hebrew" field in your output MUST EXACTLY match the word/phrase from the input list.
-2.  **Category**:
-    *   Assign "פועל" (verb) for verbs and verbal phrases.
-    *   Assign "שם עצם" (noun) for nouns and noun phrases.
-    *   Assign "שם תואר" (adjective) for adjectives and adjectival phrases.
-    *   Assign "אחר" (other) if unsure or for other types of phrases.
-3.  **Conjugations**:
-    *   Provide conjugations ONLY if the category is "פועל". For all other categories, the "conjugations" field should be null or omitted.
-    *   All conjugations must be in Hebrew, using Hebrew pronouns (e.g., אני, אתה, את, הוא, היא, אנחנו, אתם, אתן, הם, הן).
-    *   Include past, present, future, and imperative tenses where applicable.
-4.  **Examples**:
-    *   Provide 2-3 usage examples for each word/phrase.
-    *   Each example must have a "hebrew" sentence and its "russian" translation.
-    *   If no examples can be found, this field can be null or an empty array.
-5.  **Phrases**: If the input item contains multiple words (a phrase), translate and categorize it as a complete unit, preserving its meaning.
-6.  **Error Handling**: If you cannot process a specific word/phrase, include an "error" field in its JSON object with a brief explanation (e.g., "Word not found" or "Unable to categorize"). Still, try to provide as much information as possible for other fields.
+IMPORTANT RULES AND FIELD FORMATS:
 
-You MUST call the "save_hebrew_word_details" function with an array of these JSON objects in the "processed_words" parameter. Ensure one object is returned for EACH word/phrase in the original input list.`;
+1. **Original Word**:
+   "hebrew": exact match with input word/phrase, no modifications allowed
+
+2. **Category** (one of these exact values):
+   - "פועל" for verbs
+   - "שם עצם" for nouns
+   - "שם תואר" for adjectives
+   - "אחר" for other types
+
+3. **Required Fields**:
+   - "transcription": romanized form
+   - "russian": translation to Russian
+   - "category": from the list above
+
+4. **Conjugations** (for verbs only):
+   For category "פועל", provide conjugations in EXACTLY this format (in Hebrew only):
+   {
+     "past": {
+       "אני": "...",
+       "אתה": "...",
+       "את": "...",
+       "הוא": "...",
+       "היא": "...",
+       "אנחנו": "...",
+       "אתם": "...",
+       "אתן": "...",
+       "הם": "...",
+       "הן": "..."
+     },
+     "present": {
+       "אני": "...",
+       "אתה": "...",
+       "את": "...",
+       "הוא": "...",
+       "היא": "...",
+       "אנחנו": "...",
+       "אתם": "...",
+       "אתן": "...",
+       "הם": "...",
+       "הן": "..."
+     },
+     "future": {
+       "אני": "...",
+       "אתה": "...",
+       "את": "...",
+       "הוא": "...",
+       "היא": "...",
+       "אנחנו": "...",
+       "אתם": "...",
+       "אתן": "...",
+       "הם": "...",
+       "הן": "..."
+     },
+     "imperative": {
+       "אתה": "...",
+       "את": "...",
+       "אתם": "...",
+       "אתן": "..."
+     }
+   }
+   - ALL four tense fields (past, present, future, imperative) should be present if applicable.
+   - Within each tense, include all relevant pronouns as shown.
+   - Use null for a tense if it's not applicable (e.g. imperative for some verbs or other tenses if they don't exist).
+   - For non-verbs, omit the "conjugations" field entirely or set it to null.
+
+5. **Examples**:
+   - Provide 2-3 usage examples
+   - Each example must have both "hebrew" and "russian" fields
+   - Use null if no examples available
+
+6. **Error Handling**:
+   - Add "error" field if processing fails
+   - Still try to provide as much information as possible
+
+Return one object for EACH word in the input list by calling save_hebrew_word_details with the array of these objects.`;
 
 const toolDefinition = {
   type: "function" as const,
@@ -64,10 +122,25 @@ const toolDefinition = {
               conjugations: {
                 type: ["object", "null"] as ["object", "null"],
                 description: "Hebrew conjugations if the word is a verb (פועל). Null otherwise. Structure should be { 'tenseName': { 'pronoun': 'conjugation' } }, e.g., { 'past': { 'אני': 'עשיתי' } }. All conjugations must be in Hebrew with Hebrew pronouns.",
-                additionalProperties: { // Represents tense keys like "past", "present"
-                  type: "object" as const, // The value for each tense key is an object
-                  additionalProperties: { type: "string" as const } // Represents pronoun keys like "אני"
-                }
+                properties: {
+                  past: {
+                    type: ["object", "null"] as ["object", "null"],
+                    additionalProperties: { type: "string" as const }
+                  },
+                  present: {
+                    type: ["object", "null"] as ["object", "null"],
+                    additionalProperties: { type: "string" as const }
+                  },
+                  future: {
+                    type: ["object", "null"] as ["object", "null"],
+                    additionalProperties: { type: "string" as const }
+                  },
+                  imperative: {
+                    type: ["object", "null"] as ["object", "null"],
+                    additionalProperties: { type: "string" as const }
+                  }
+                },
+                additionalProperties: false // Disallow other tense keys
               },
               examples: {
                 type: ["array", "null"] as ["array", "null"],
@@ -171,7 +244,7 @@ export async function enrichWordsWithLLM(
       throw new Error(`Invalid LLM response: Expected function call to "save_hebrew_word_details".`);
     }
 
-    let parsedArgs;
+    let parsedArgs: { processed_words: LLMBatchResponseItem[] };
     try {
       parsedArgs = JSON.parse(functionCall.arguments);
     } catch (e) {
@@ -258,8 +331,8 @@ function processWordsArray(llmItems: LLMBatchResponseItem[], originalWords: stri
     const transcription = String(currentItem.transcription || '');
     const russian = String(currentItem.russian || '');
     // Ensure category is one of the allowed WordCategory types, default to 'אחר'
-    const categoryInput = String(currentItem.category || 'אחר') as any;
-    const category: WordCategory = ['פועל', 'שם עצם', 'שם תואר', 'אחר'].includes(categoryInput) ? categoryInput : 'אחר';
+    const categoryInput = String(currentItem.category || 'אחר');
+    const category: WordCategory = ['פועל', 'שם עצם', 'שם תואר', 'אחר'].includes(categoryInput) ? categoryInput as WordCategory : 'אחר';
 
 
     if (!hebrew) { // hebrew is the most critical key from LLM to match with original
@@ -278,9 +351,14 @@ function processWordsArray(llmItems: LLMBatchResponseItem[], originalWords: stri
       transcription,
       russian,
       category: category,
-      conjugations: currentItem.conjugations || undefined,
+      conjugations: currentItem.conjugations ? {
+        past: currentItem.conjugations.past || null,
+        present: currentItem.conjugations.present || null,
+        future: currentItem.conjugations.future || null,
+        imperative: currentItem.conjugations.imperative || null,
+      } : undefined,
       examples: Array.isArray(currentItem.examples)
-        ? currentItem.examples.filter((ex: any) => ex && typeof ex.hebrew === 'string' && typeof ex.russian === 'string')
+        ? currentItem.examples.filter((ex: { hebrew: string; russian: string; }) => ex && typeof ex.hebrew === 'string' && typeof ex.russian === 'string')
         : [],
       showTranslation: false,
       isLearned: false,
