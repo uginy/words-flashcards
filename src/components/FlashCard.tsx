@@ -276,7 +276,7 @@ const FlashCard: React.FC<FlashCardProps> = ({ word: propWord, reverse, onMarkAs
                 >
                   Знаю
                 </button>
-                {word.learningStage && word.learningStage > 0 && (
+                {!!word.learningStage && word.learningStage > 0 && (
                   <button
                     type="button"
                     className="w-full sm:w-auto px-3 py-2 rounded-md bg-blue-500 text-white text-sm hover:bg-blue-600 transition-colors"
