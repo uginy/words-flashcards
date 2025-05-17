@@ -212,7 +212,7 @@ export async function enrichWordsWithLLM(
   hebrewWords: string[],
   apiKey: string,
   modelIdentifier: string,
-  toastFn?: ToastFunction // Опциональный параметр для тостов
+  toastFn?: ToastFunction // Опциональный параметр для тוסטов
 ): Promise<Word[]> {
   if (!apiKey || !modelIdentifier) {
     throw new Error('API key or model not configured.');
@@ -221,14 +221,14 @@ export async function enrichWordsWithLLM(
     return [];
   }
 
-  // Вспомогательная функция для показа тостов
+  // Вспомогательная функция для покShowing toast notification
   const showToast = (opts: Parameters<ToastFunction>[0]) => {
     if (toastFn) {
       toastFn(opts);
     }
   };
 
-  // Показываем тוסט о начале обработки
+  // Показываем тост о начале обработки
   showToast({
     title: "Обработка",
     description: `Обрабатываем ${hebrewWords.length} слов...`
@@ -255,36 +255,18 @@ export async function enrichWordsWithLLM(
     });
 
     if (!completion.choices || completion.choices.length === 0 || !completion.choices[0].message) {
-      console.error('Invalid LLM response structure: No content or choices.', completion);
-      showToast({
-        title: "Ошибка",
-        description: "Не удалось получить ответ от сервиса.",
-        variant: "destructive",
-      });
-      throw new Error('Invalid LLM response structure: No content or choices.');
+      throw new Error('Invalid LLM response structure: No content or choices from the model.');
     }
 
     const message = completion.choices[0].message;
 
     if (!message.tool_calls || !message.tool_calls[0] || message.tool_calls[0].type !== 'function') {
-      console.error('Invalid LLM response: Expected a function call.', message);
-      showToast({
-        title: "Ошибка",
-        description: "Некорректный формат ответа от сервиса.",
-        variant: "destructive",
-      });
-      throw new Error('Invalid LLM response: Expected a function call.');
+      throw new Error('Invalid LLM response: Expected a function call. The model may not support tools or failed to use them.');
     }
 
     const functionCall = message.tool_calls[0].function;
     if (functionCall.name !== "save_hebrew_word_details") {
-      console.error(`Invalid LLM response: Expected function call to "save_hebrew_word_details", got "${functionCall.name}".`, message);
-      showToast({
-        title: "Ошибка",
-        description: "Неверный тип ответа от сервиса.",
-        variant: "destructive",
-      });
-      throw new Error(`Invalid LLM response: Expected function call to "save_hebrew_word_details".`);
+      throw new Error(`Invalid LLM response: Expected function call to "save_hebrew_word_details", but got "${functionCall.name}".`);
     }
 
     // console.log("Raw functionCall.arguments from LLM:", functionCall.arguments);
@@ -295,22 +277,11 @@ export async function enrichWordsWithLLM(
       // console.log("Parsed arguments (parsedArgs):", JSON.stringify(parsedArgs, null, 2));
     } catch (e) {
       console.error('Failed to parse function call arguments as JSON:', functionCall.arguments, e);
-      showToast({
-        title: "Ошибка",
-        description: "Не удалось обработать ответ сервиса.",
-        variant: "destructive",
-      });
-      throw new Error('Failed to parse LLM function call arguments.');
+      throw new Error('Failed to parse LLM function call arguments. The response may not be valid JSON.');
     }
 
     if (!parsedArgs || !Array.isArray(parsedArgs.processed_words)) {
-      console.error('Invalid LLM response: "processed_words" array missing or not an array in function arguments.', parsedArgs);
-      showToast({
-        title: "Ошибка",
-        description: "Некорректный формат данных в ответе.",
-        variant: "destructive",
-      });
-      throw new Error('Invalid LLM response: "processed_words" array missing or malformed.');
+      throw new Error('Invalid LLM response: "processed_words" array is missing or not an array in the arguments.');
     }
 
     const processedWords = processWordsArray(parsedArgs.processed_words, hebrewWords);
@@ -329,30 +300,92 @@ export async function enrichWordsWithLLM(
 
     return processedWords;
 
-  } catch (error) {
-    console.error('Error enriching words with LLM:', error);
+  } catch (error: any) {
+    console.error('Error enriching words with LLM:', error); // Log the actual error object
+
+    let toastDescription = "Произошла ошибка при обработке слов. Проверьте консоль для деталей."; // Default
+    let returnEmptyArrayForCriticalError = false;
+
+    if (error instanceof Error) {
+        const errorMessage = error.message;
+
+        // Case 1: Model did not make a function call or doesn't support tools
+        if (errorMessage.startsWith('Invalid LLM response: Expected a function call')) {
+            toastDescription = "Некорректный формат ответа. Модель могла не использовать запрошенную функцию или не поддерживает их. Попробуйте другую модель.";
+            returnEmptyArrayForCriticalError = true;
+        }
+        // Case 2: Provider returned an error (e.g., OpenRouter specific errors like "tools field exceeds max depth limit")
+        else if (errorMessage === "Provider returned error" && (error as any).metadata) {
+            const metadata = (error as any).metadata;
+            const provider = metadata.provider_name || 'Unknown';
+            if (typeof metadata.raw === 'string') {
+                try {
+                    const rawDetails = JSON.parse(metadata.raw);
+                    const detailText = typeof rawDetails.detail === 'string' ? rawDetails.detail : (typeof rawDetails.message === 'string' ? rawDetails.message : null);
+
+                    if (typeof detailText === 'string' && detailText.includes("tools field exceeds max depth limit")) {
+                        toastDescription = `Модель от ${provider} не поддерживает расширенные функции (tools field exceeds max depth limit). Пожалуйста, выберите другую модель.`;
+                        returnEmptyArrayForCriticalError = true;
+                      } else if (typeof detailText === 'string') {
+                        toastDescription = `Ошибка от ${provider}: ${detailText}`;
+                        // For other provider errors, we might still return fallback unless specified otherwise.
+                        // If all provider errors should lead to an empty array, set returnEmptyArrayForCriticalError = true here too.
+                      } else {
+                        toastDescription = `Ошибка от ${provider}: ${errorMessage}. Проверьте консоль для полных данных.`;
+                      }
+                } catch (e) {
+                    console.warn("Failed to parse error.metadata.raw from provider error", e);
+                    toastDescription = `Ошибка от ${provider}: ${errorMessage}. Проверьте консоль для полных данных.`;
+                }
+            } else {
+                 toastDescription = `Ошибка от ${provider}: ${errorMessage}. Проверьте консоль для полных данных.`;
+            }
+        }
+        // Case 3: Other specific errors thrown from the try block
+        else if (errorMessage.startsWith('Invalid LLM response structure: No content or choices') ||
+                   errorMessage.startsWith('Invalid LLM response: Expected function call to "save_hebrew_word_details"') ||
+                   errorMessage.startsWith('Failed to parse LLM function call arguments') ||
+                   errorMessage.startsWith('Invalid LLM response: "processed_words" array is missing')) {
+            toastDescription = errorMessage; // Use the specific error message
+            returnEmptyArrayForCriticalError = true; // Treat these as critical for data integrity
+        }
+        // Case 4: Any other Error instance not specifically handled above
+        else {
+            toastDescription = errorMessage; // Use the error's message
+            // Decide if generic errors should also return empty. For now, let them use fallback.
+        }
+    } else if (typeof error === 'string') {
+        // If error is just a string (less common for thrown errors but possible)
+        toastDescription = error;
+    }
+    // If error is of another type, the default toastDescription remains.
+
     showToast({
       title: "Ошибка",
-      description: "Произошла ошибка при обработке слов. Проверьте консоль для деталей.",
+      description: toastDescription,
       variant: "destructive",
     });
     
-    // Fallback: return minimal word entries with default values
-    return hebrewWords.map(word => ({
-      id: String(Date.now()) + Math.random().toString(36).substring(2, 9),
-      hebrew: word,
-      transcription: '',
-      russian: '',
-      category: 'אחר' as WordCategory,
-      showTranslation: false,
-      isLearned: false,
-      learningStage: 0,
-      lastReviewed: null,
-      nextReview: null,
-      dateAdded: Date.now(),
-      conjugations: undefined,
-      examples: [],
-    }));
+    if (returnEmptyArrayForCriticalError) {
+      return []; // Return empty array for critical errors
+    } else {
+      // Fallback: return minimal word entries with default values for non-critical errors or if fallback is desired
+      return hebrewWords.map(word => ({
+        id: String(Date.now()) + Math.random().toString(36).substring(2, 9),
+        hebrew: word,
+        transcription: '',
+        russian: '',
+        category: 'אחר' as WordCategory,
+        showTranslation: false,
+        isLearned: false,
+        learningStage: 0,
+        lastReviewed: null,
+        nextReview: null,
+        dateAdded: Date.now(),
+        conjugations: undefined,
+        examples: [], 
+      }));
+    }
   }
 }
 
