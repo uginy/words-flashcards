@@ -12,7 +12,7 @@ export interface Word {
     future?: { [pronoun: string]: string } | null;
     imperative?: { [pronoun: string]: string } | null;
   } | null;
-  examples?: { hebrew: string; russian: string }[];
+  examples?: { hebrew: string; russian: string }[] | null; // Allow null for examples
   isLearned: boolean;
   dateAdded: number;
   showTranslation?: boolean;

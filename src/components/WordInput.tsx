@@ -225,7 +225,12 @@ const WordInput: React.FC = () => {
   const sampleText = `שלום
 תודה רבה
 ספר טוב
-ללמוד`;
+ללמוד
+ללכת
+לאכול
+לשתות
+לדבר
+`;
 
   return (
     <div className="w-full max-w-md mx-auto mt-6">
@@ -266,7 +271,7 @@ const WordInput: React.FC = () => {
               onChange={(e) => setInputText(e.target.value)}
               onPaste={handlePaste}
               dir="auto" // Changed to auto to better support mixed LTR/RTL for instructions and RTL for Hebrew
-              placeholder="שלום&#10;תודה רבה&#10;ספר טוב&#10;ללמוד"
+              placeholder="Введите слова на иврите, каждое слово на новой строке..."
             />
           </div>
 
