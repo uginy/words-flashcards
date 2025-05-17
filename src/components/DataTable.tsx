@@ -20,6 +20,13 @@ import {
 } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useState } from "react";
 
 interface DataTableProps<TData, TValue> {
@@ -29,6 +36,11 @@ interface DataTableProps<TData, TValue> {
   searchColumn?: string;
   paginated?: boolean;
   pageSize?: number;
+  filters?: {
+    id: string;
+    label: string;
+    options: { label: string; value: string | boolean }[];
+  }[];
 }
 
 export function DataTable<TData, TValue>({
@@ -38,6 +50,7 @@ export function DataTable<TData, TValue>({
   searchColumn,
   paginated = false,
   pageSize = 10,
+  filters,
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = useState<SortingState>([
     {
@@ -70,8 +83,8 @@ export function DataTable<TData, TValue>({
 
   return (
     <div>
-      {searchable && searchColumn && (
-        <div className="flex items-center py-4">
+      <div className="flex items-center gap-4 py-4">
+        {searchable && searchColumn && (
           <Input
             placeholder="Поиск..."
             value={(table.getColumn(searchColumn)?.getFilterValue() as string) ?? ""}
@@ -80,8 +93,36 @@ export function DataTable<TData, TValue>({
             }
             className="max-w-sm"
           />
-        </div>
-      )}
+        )}
+        {filters?.map((filter) => (
+          <div key={filter.id} className="flex items-center gap-2">
+            <Select
+              value={(table.getColumn(filter.id)?.getFilterValue() as string)?.toString() || undefined}
+              onValueChange={(value) => {
+                if (value === "all") {
+                  table.getColumn(filter.id)?.setFilterValue(undefined);
+                } else {
+                  table.getColumn(filter.id)?.setFilterValue(
+                    filter.options[0]?.value === true ? value === "true" : value
+                  );
+                }
+              }}
+            >
+              <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder={filter.label} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Все {filter.label.toLowerCase()}</SelectItem>
+                {filter.options.map((option) => (
+                  <SelectItem key={option.value.toString()} value={option.value.toString()}>
+                    {option.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        ))}
+      </div>
       <div className="rounded-md border">
         <Table>
           <TableHeader>
