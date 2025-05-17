@@ -11,13 +11,13 @@ interface LLMBatchResponseItem {
   hebrew: string;
   transcription: string;
   russian: string;
-  conjugations?: { // Field is optional
-    past: { [pronoun: string]: string } | null; // Tense keys are mandatory if conjugations object exists, value can be object or null
+  conjugations?: { 
+    past: { [pronoun: string]: string } | null; 
     present: { [pronoun: string]: string } | null;
     future: { [pronoun: string]: string } | null;
     imperative: { [pronoun: string]: string } | null;
-  } | null; // Value of conjugations itself can be an object or null
-  examples?: { hebrew: string; russian: string }[] | null; // Field is optional, value can be array or null
+  } | null; 
+  examples?: { hebrew: string; russian: string }[] | null; 
 }
 
 const systemPrompt = `You are an expert linguist specializing in Hebrew. Your task is to process a list of Hebrew words or phrases and provide detailed information for each. For each item, generate a properly formatted JSON object with required fields as specified below.
@@ -42,46 +42,16 @@ IMPORTANT RULES AND FIELD FORMATS:
     For category "פועל", provide conjugations in EXACTLY this format (in Hebrew only):
     {
       "past": {
-        "אני": "...",
-        "אתה": "...",
-        "את": "...",
-        "הוא": "...",
-        "היא": "...",
-        "אנחנו": "...",
-        "אתם": "...",
-        "אתן": "...",
-        "הם": "...",
-        "הן": "..."
+        "אני": "...", "אתה": "...", "את": "...", "הוא": "...", "היא": "...", "אנחנו": "...", "אתם": "...", "אתן": "...", "הם": "...", "הן": "..."
       },
       "present": {
-        "אני": "...",
-        "אתה": "...",
-        "את": "...",
-        "הוא": "...",
-        "היא": "...",
-        "אנחנו": "...",
-        "אתם": "...",
-        "אתן": "...",
-        "הם": "...",
-        "הן": "..."
+        "אני": "...", "אתה": "...", "את": "...", "הוא": "...", "היא": "...", "אנחנו": "...", "אתם": "...", "אתן": "...", "הם": "...", "הן": "..."
       },
       "future": {
-        "אני": "...",
-        "אתה": "...",
-        "את": "...",
-        "הוא": "...",
-        "היא": "...",
-        "אנחנו": "...",
-        "אתם": "...",
-        "אתן": "...",
-        "הם": "...",
-        "הן": "..."
+        "אני": "...", "אתה": "...", "את": "...", "הוא": "...", "היא": "...", "אנחנו": "...", "אתם": "...", "אתן": "...", "הם": "...", "הן": "..."
       },
       "imperative": {
-        "אתה": "...",
-        "את": "...",
-        "אתם": "...",
-        "אתן": "..."
+        "אתה": "...", "את": "...", "אתם": "...", "אתן": "..."
       }
     }
     - ALL four tense fields (past, present, future, imperative) should be present if applicable.
@@ -93,7 +63,7 @@ IMPORTANT RULES AND FIELD FORMATS:
     - Provide 2-3 usage examples.
     - Each example must be an object with "hebrew" and "russian" string fields.
     - The "examples" field itself should be an array of these objects.
-    - Use emprty array [] for the "examples" field if no examples are available.
+    - Use an empty array [] for the "examples" field if no examples are available.
 
 Return a single JSON object as arguments to the 'save_hebrew_word_details' function. This object must contain a single key "processed_words", which is an array of objects. Each object in the "processed_words" array corresponds to one input Hebrew word/phrase and must strictly follow this structure:
 
@@ -118,9 +88,9 @@ Example of the full argument for 'save_hebrew_word_details' for two words "לכ�
       "russian": "писать",
       "category": "פועל",
       "conjugations": {
-        "past": { "אני": "כתבתי", "אתה": "כתבת", /* ...other pronouns... */ "הן": "כתבו" },
-        "present": { "אני": "כותב", "אתה": "כותב", /* ...other pronouns... */ "הן": "כותבות" },
-        "future": { "אני": "אכתוב", "אתה": "תכתוב", /* ...other pronouns... */ "הן": "יכתבו" },
+        "past": { "אני": "כתבתי", "אתה": "כתבת", "הן": "כתבו" },
+        "present": { "אני": "כותב", "אתה": "כותב", "הן": "כותבות" },
+        "future": { "אני": "אכתוב", "אתה": "תכתוב", "הן": "יכתבו" },
         "imperative": { "אתה": "כתוב", "את": "כתבי", "אתם": "כתבו", "אתן": "כתבנה" }
       },
       "examples": [
@@ -137,12 +107,84 @@ Example of the full argument for 'save_hebrew_word_details' for two words "לכ�
       "examples": [
         { "hebrew": "קראתי ספר מעניין.", "russian": "Я прочитал интересную книгу." },
         { "hebrew": "יש לי הרבה ספרים בבית.", "russian": "У меня дома много книг." }
-      ],
+      ]
     }
   ]
 }
 
 Ensure the entire response for the function call is a single valid JSON object.
+`;
+
+// New system prompt for models that don't support tools well or at all
+const systemPromptForDirectJson = `You are an expert linguist specializing in Hebrew. Your task is to process a list of Hebrew words or phrases and provide detailed information for each.
+Return a single, valid JSON object as your direct response content. This JSON object must NOT be wrapped in markdown (e.g. \\\`\\\`\\\`json ... \\\`\\\`\\\`).
+This JSON object must contain a single key "processed_words". The value of "processed_words" must be an array of objects.
+Each object in the "processed_words" array corresponds to one input Hebrew word/phrase and must strictly follow this structure:
+
+{
+  "hebrew": "The original Hebrew word/phrase",
+  "transcription": "Romanized transcription",
+  "russian": "Russian translation",
+  "category": "One of: 'פועל', 'שם עצם', 'שם תואר', 'אחר'",
+  "conjugations": { // Or null if not a verb or no conjugations
+    "past": { "אני": "...", "אתה": "...", "את": "...", "הוא": "...", "היא": "...", "אנחנו": "...", "אתם": "...", "אתן": "...", "הם": "...", "הן": "..." }, // Or null if not applicable
+    "present": { "אני": "...", "אתה": "...", "את": "...", "הוא": "...", "היא": "...", "אנחנו": "...", "אתם": "...", "אתן": "...", "הם": "...", "הן": "..." }, // Or null if not applicable
+    "future": { "אני": "...", "אתה": "...", "את": "...", "הוא": "...", "היא": "...", "אנחנו": "...", "אתם": "...", "אתן": "...", "הם": "...", "הן": "..." }, // Or null if not applicable
+    "imperative": { "אתה": "...", "את": "...", "אתם": "...", "אתן": "..." } // Or null if not applicable
+  },
+  "examples": [ // Or an empty array [] if no examples
+    { "hebrew": "Example sentence in Hebrew.", "russian": "Russian translation of the example." }
+  ]
+}
+
+IMPORTANT RULES AND FIELD FORMATS:
+1.  **"hebrew"**: Must be an exact match with the input word/phrase.
+2.  **"category"**: Must be one of the exact Hebrew strings: "פועל" (verb), "שם עצם" (noun), "שם תואר" (adjective), "אחר" (other).
+3.  **"transcription"**, **"russian"**: Must be provided.
+4.  **"conjugations"**:
+    - Provide for verbs ("פועל") only. For non-verbs, this field should be null.
+    - If provided, it must be an object with keys: "past", "present", "future", "imperative".
+    - Each tense key should map to an object of pronoun-conjugation pairs (e.g., "אני": "כתבתי") or be null if that specific tense is not applicable. All conjugations must be in Hebrew.
+    - Pronouns should be the standard Hebrew pronouns as listed in the example below.
+5.  **"examples"**:
+    - Provide 2-3 usage examples.
+    - Each example must be an object with "hebrew" and "russian" string fields.
+    - The "examples" field itself should be an array of these objects. Use an empty array [] if no examples are available.
+
+Example of the full JSON object you should return for two words "לכתוב" (verb) and "ספר" (noun):
+{
+  "processed_words": [
+    {
+      "hebrew": "לכתוב",
+      "transcription": "lichtov",
+      "russian": "писать",
+      "category": "פועל",
+      "conjugations": {
+        "past": { "אני": "כתבתי", "אתה": "כתבת", "את": "כתבת", "הוא": "כתב", "היא": "כתבה", "אנחנו": "כתבנו", "אתם": "כתבתם", "אתן": "כתבתן", "הם": "כתבו", "הן": "כתבו" },
+        "present": { "אני": "כותב", "אתה": "כותב", "את": "כותבת", "הוא": "כותב", "היא": "כותבת", "אנחנו": "כותבים", "אתם": "כותבים", "אתן": "כותבות", "הם": "כותבים", "הן": "כותבות" },
+        "future": { "אני": "אכתוב", "אתה": "תכתוב", "את": "תכתבי", "הוא": "יכתוב", "היא": "תכתוב", "אנחנו": "נכתוב", "אתם": "תכתבו", "אתן": "תכתבנה", "הם": "יכתבו", "הן": "יכתבנה" },
+        "imperative": { "אתה": "כתוב", "את": "כתבי", "אתם": "כתבו", "אתן": "כתבנה" }
+      },
+      "examples": [
+        { "hebrew": "אני אוהב לכתוב סיפורים.", "russian": "Я люблю писать рассказы." },
+        { "hebrew": "הוא כתב מכתב לחבר שלו.", "russian": "Он написал письмо своему другу." }
+      ]
+    },
+    {
+      "hebrew": "ספר",
+      "transcription": "sefer",
+      "russian": "книга",
+      "category": "שם עצם",
+      "conjugations": null,
+      "examples": [
+        { "hebrew": "קראתי ספר מעניין.", "russian": "Я прочитал интересную книгу." },
+        { "hebrew": "יש לי הרבה ספרים בבית.", "russian": "У меня дома много книг." }
+      ]
+    }
+  ]
+}
+
+Ensure your entire response is ONLY this single JSON object. Do not include any other text, explanations, or markdown formatting (like \\\`\\\`\\\`json) around the JSON.
 `;
 
 const toolDefinition = {
@@ -184,7 +226,7 @@ const toolDefinition = {
                     additionalProperties: { type: "string" as const }
                   }
                 },
-                additionalProperties: false // Disallow other tense keys
+                additionalProperties: false 
               },
               examples: {
                 type: ["array", "null"] as ["array", "null"],
@@ -208,189 +250,7 @@ const toolDefinition = {
   }
 };
 
-export async function enrichWordsWithLLM(
-  hebrewWords: string[],
-  apiKey: string,
-  modelIdentifier: string,
-  toastFn?: ToastFunction // Опциональный параметр для тוסטов
-): Promise<Word[]> {
-  if (!apiKey || !modelIdentifier) {
-    throw new Error('API key or model not configured.');
-  }
-  if (hebrewWords.length === 0) {
-    return [];
-  }
-
-  // Вспомогательная функция для покShowing toast notification
-  const showToast = (opts: Parameters<ToastFunction>[0]) => {
-    if (toastFn) {
-      toastFn(opts);
-    }
-  };
-
-  // Показываем тост о начале обработки
-  showToast({
-    title: "Обработка",
-    description: `Обрабатываем ${hebrewWords.length} слов...`
-  });
-
-  const openai = new OpenAI({
-    baseURL: "https://openrouter.ai/api/v1",
-    apiKey: apiKey,
-    dangerouslyAllowBrowser: true,
-  });
-
-  const userContent = `Process the following Hebrew words/phrases: ${hebrewWords.join(', ')}`;
-
-  try {
-    const completion = await openai.chat.completions.create({
-      model: modelIdentifier,
-      messages: [
-        { role: 'system', content: systemPrompt },
-        { role: 'user', content: userContent }
-      ],
-      tools: [toolDefinition],
-      tool_choice: { type: "function", function: { name: "save_hebrew_word_details" } },
-      stream: false
-    });
-
-    if (!completion.choices || completion.choices.length === 0 || !completion.choices[0].message) {
-      throw new Error('Invalid LLM response structure: No content or choices from the model.');
-    }
-
-    const message = completion.choices[0].message;
-
-    if (!message.tool_calls || !message.tool_calls[0] || message.tool_calls[0].type !== 'function') {
-      throw new Error('Invalid LLM response: Expected a function call. The model may not support tools or failed to use them.');
-    }
-
-    const functionCall = message.tool_calls[0].function;
-    if (functionCall.name !== "save_hebrew_word_details") {
-      throw new Error(`Invalid LLM response: Expected function call to "save_hebrew_word_details", but got "${functionCall.name}".`);
-    }
-
-    // console.log("Raw functionCall.arguments from LLM:", functionCall.arguments);
-
-    let parsedArgs: { processed_words: LLMBatchResponseItem[] };
-    try {
-      parsedArgs = JSON.parse(functionCall.arguments);
-      // console.log("Parsed arguments (parsedArgs):", JSON.stringify(parsedArgs, null, 2));
-    } catch (e) {
-      console.error('Failed to parse function call arguments as JSON:', functionCall.arguments, e);
-      throw new Error('Failed to parse LLM function call arguments. The response may not be valid JSON.');
-    }
-
-    if (!parsedArgs || !Array.isArray(parsedArgs.processed_words)) {
-      throw new Error('Invalid LLM response: "processed_words" array is missing or not an array in the arguments.');
-    }
-
-    const processedWords = processWordsArray(parsedArgs.processed_words, hebrewWords);
-    
-    // Анализируем результаты обработки
-    const successfullyProcessed = processedWords.filter(w => 
-      w.transcription && w.russian && w.category !== 'אחר'
-    ).length;
-    
-    // Показываем результат обработки
-    showToast({
-      title: "Готово",
-      description: `Успешно обработано ${successfullyProcessed} из ${hebrewWords.length} слов.`,
-      variant: successfullyProcessed === hebrewWords.length ? "default" : "warning"
-    });
-
-    return processedWords;
-
-  } catch (error: any) {
-    console.error('Error enriching words with LLM:', error); // Log the actual error object
-
-    let toastDescription = "Произошла ошибка при обработке слов. Проверьте консоль для деталей."; // Default
-    let returnEmptyArrayForCriticalError = false;
-
-    if (error instanceof Error) {
-        const errorMessage = error.message;
-
-        // Case 1: Model did not make a function call or doesn't support tools
-        if (errorMessage.startsWith('Invalid LLM response: Expected a function call')) {
-            toastDescription = "Некорректный формат ответа. Модель могла не использовать запрошенную функцию или не поддерживает их. Попробуйте другую модель.";
-            returnEmptyArrayForCriticalError = true;
-        }
-        // Case 2: Provider returned an error (e.g., OpenRouter specific errors like "tools field exceeds max depth limit")
-        else if (errorMessage === "Provider returned error" && (error as any).metadata) {
-            const metadata = (error as any).metadata;
-            const provider = metadata.provider_name || 'Unknown';
-            if (typeof metadata.raw === 'string') {
-                try {
-                    const rawDetails = JSON.parse(metadata.raw);
-                    const detailText = typeof rawDetails.detail === 'string' ? rawDetails.detail : (typeof rawDetails.message === 'string' ? rawDetails.message : null);
-
-                    if (typeof detailText === 'string' && detailText.includes("tools field exceeds max depth limit")) {
-                        toastDescription = `Модель от ${provider} не поддерживает расширенные функции (tools field exceeds max depth limit). Пожалуйста, выберите другую модель.`;
-                        returnEmptyArrayForCriticalError = true;
-                      } else if (typeof detailText === 'string') {
-                        toastDescription = `Ошибка от ${provider}: ${detailText}`;
-                        // For other provider errors, we might still return fallback unless specified otherwise.
-                        // If all provider errors should lead to an empty array, set returnEmptyArrayForCriticalError = true here too.
-                      } else {
-                        toastDescription = `Ошибка от ${provider}: ${errorMessage}. Проверьте консоль для полных данных.`;
-                      }
-                } catch (e) {
-                    console.warn("Failed to parse error.metadata.raw from provider error", e);
-                    toastDescription = `Ошибка от ${provider}: ${errorMessage}. Проверьте консоль для полных данных.`;
-                }
-            } else {
-                 toastDescription = `Ошибка от ${provider}: ${errorMessage}. Проверьте консоль для полных данных.`;
-            }
-        }
-        // Case 3: Other specific errors thrown from the try block
-        else if (errorMessage.startsWith('Invalid LLM response structure: No content or choices') ||
-                   errorMessage.startsWith('Invalid LLM response: Expected function call to "save_hebrew_word_details"') ||
-                   errorMessage.startsWith('Failed to parse LLM function call arguments') ||
-                   errorMessage.startsWith('Invalid LLM response: "processed_words" array is missing')) {
-            toastDescription = errorMessage; // Use the specific error message
-            returnEmptyArrayForCriticalError = true; // Treat these as critical for data integrity
-        }
-        // Case 4: Any other Error instance not specifically handled above
-        else {
-            toastDescription = errorMessage; // Use the error's message
-            // Decide if generic errors should also return empty. For now, let them use fallback.
-        }
-    } else if (typeof error === 'string') {
-        // If error is just a string (less common for thrown errors but possible)
-        toastDescription = error;
-    }
-    // If error is of another type, the default toastDescription remains.
-
-    showToast({
-      title: "Ошибка",
-      description: toastDescription,
-      variant: "destructive",
-    });
-    
-    if (returnEmptyArrayForCriticalError) {
-      return []; // Return empty array for critical errors
-    } else {
-      // Fallback: return minimal word entries with default values for non-critical errors or if fallback is desired
-      return hebrewWords.map(word => ({
-        id: String(Date.now()) + Math.random().toString(36).substring(2, 9),
-        hebrew: word,
-        transcription: '',
-        russian: '',
-        category: 'אחר' as WordCategory,
-        showTranslation: false,
-        isLearned: false,
-        learningStage: 0,
-        lastReviewed: null,
-        nextReview: null,
-        dateAdded: Date.now(),
-        conjugations: undefined,
-        examples: [], 
-      }));
-    }
-  }
-}
-
 // Helper function to process the array of words from LLM and map to Word[]
-// This function was previously an inner function and its logic is largely preserved.
 function processWordsArray(llmItems: LLMBatchResponseItem[], originalWords: string[]): Word[] {
   const enrichedWords: Word[] = [];
 
@@ -403,32 +263,29 @@ function processWordsArray(llmItems: LLMBatchResponseItem[], originalWords: stri
     const hebrew = String(currentItem.hebrew || '');
     const transcription = String(currentItem.transcription || '');
     const russian = String(currentItem.russian || '');
-    // Ensure category is one of the allowed WordCategory types, default to 'אחר'
     const categoryInput = String(currentItem.category || 'אחר');
     const category: WordCategory = ['פועל', 'שם עצם', 'שם תואר', 'אחר'].includes(categoryInput) ? categoryInput as WordCategory : 'אחר';
 
-
-    if (!hebrew) { // hebrew is the most critical key from LLM to match with original
+    if (!hebrew) { 
       console.warn('LLM item missing "hebrew" field, cannot process:', currentItem);
       continue;
     }
      if (!transcription || !russian) {
       console.warn('LLM item missing transcription or russian field:', currentItem);
-      // Decide if we add it with empty fields or skip. For now, add with empty.
     }
 
     const llmConjugations = currentItem.conjugations;
     let finalWordConjugations;
     if (llmConjugations === null) {
       finalWordConjugations = null;
-    } else if (llmConjugations) { // it's an object
+    } else if (llmConjugations) { 
       finalWordConjugations = {
         past: llmConjugations.past || null,
         present: llmConjugations.present || null,
         future: llmConjugations.future || null,
         imperative: llmConjugations.imperative || null,
       };
-    } else { // it's undefined
+    } else { 
       finalWordConjugations = undefined;
     }
 
@@ -437,8 +294,8 @@ function processWordsArray(llmItems: LLMBatchResponseItem[], originalWords: stri
     if (llmExamples === null) {
       finalWordExamples = null;
     } else if (Array.isArray(llmExamples)) {
-      finalWordExamples = llmExamples.filter((ex: { hebrew: string; russian: string; }) => ex && typeof ex.hebrew === 'string' && typeof ex.russian === 'string');
-    } else { // it's undefined
+      finalWordExamples = llmExamples.filter((ex: any) => ex && typeof ex.hebrew === 'string' && typeof ex.russian === 'string');
+    } else { 
       finalWordExamples = undefined; 
     }
 
@@ -459,15 +316,12 @@ function processWordsArray(llmItems: LLMBatchResponseItem[], originalWords: stri
     });
   }
 
-  // Ensure we return entries for all original words, even if LLM missed some or returned errors
-  // or if the LLM provided a hebrew word not in the original list (which it shouldn't based on prompt)
   const finalWords: Word[] = [];
   for (const originalWord of originalWords) {
     const foundEnrichedWord = enrichedWords.find(ew => ew.hebrew === originalWord);
     if (foundEnrichedWord) {
       finalWords.push(foundEnrichedWord);
     } else {
-      // LLM did not return this word or it was filtered out due to error/missing fields. Add a minimal entry.
       console.warn(`Word "${originalWord}" not found in LLM response or was invalid. Adding minimal entry.`);
       finalWords.push({
         id: String(Date.now()) + Math.random().toString(36).substring(2, 9),
@@ -481,12 +335,231 @@ function processWordsArray(llmItems: LLMBatchResponseItem[], originalWords: stri
         lastReviewed: null,
         nextReview: null,
         dateAdded: Date.now(),
-        conjugations: undefined, // Default for missing words
-        examples: [],          // Default for missing words (empty array is compatible with examples?: Type[] | null)
+        conjugations: undefined, 
+        examples: [],          
       });
     }
   }
   return finalWords;
 }
 
-// The rest of the file (if any)
+
+export async function enrichWordsWithLLM(
+  hebrewWords: string[],
+  apiKey: string,
+  modelIdentifier: string,
+  toastFn?: ToastFunction, 
+  modelSupportsToolsExplicit?: boolean 
+): Promise<Word[]> {
+  if (!apiKey || !modelIdentifier) {
+    throw new Error('API key or model not configured.');
+  }
+  if (hebrewWords.length === 0) {
+    return [];
+  }
+
+  const showToast = (opts: Parameters<ToastFunction>[0]) => {
+    if (toastFn) {
+      toastFn(opts);
+    }
+  };
+
+  showToast({
+    title: "Обработка",
+    description: `Обрабатываем ${hebrewWords.length} слов...`
+  });
+
+  let effectiveModelSupportsTools: boolean;
+  if (modelSupportsToolsExplicit !== undefined) {
+    effectiveModelSupportsTools = modelSupportsToolsExplicit;
+  } else {
+    // Heuristic: Check if modelIdentifier contains known tool-supporting model names/patterns
+    // This list should be updated as new models are known.
+    const knownToolSupportingModelPatterns = [
+        "gpt-4", "gpt-3.5", // OpenAI
+        "claude-3-opus", "claude-3-sonnet", "claude-3-haiku", // Anthropic
+        "gemini", // Google
+        // Add other patterns if known, e.g. specific OpenRouter model IDs that are known to be tool-capable
+    ];
+    effectiveModelSupportsTools = knownToolSupportingModelPatterns.some(name => modelIdentifier.toLowerCase().includes(name));
+    console.log(`Model "${modelIdentifier}" determined to ${effectiveModelSupportsTools ? 'support' : 'not support'} tools based on heuristic.`);
+  }
+
+  const openai = new OpenAI({
+    baseURL: "https://openrouter.ai/api/v1",
+    apiKey: apiKey,
+    dangerouslyAllowBrowser: true,
+  });
+
+  const userContent = `Process the following Hebrew words/phrases: ${hebrewWords.join(', ')}`;
+
+  try {
+    let parsedArgs: { processed_words: LLMBatchResponseItem[] };
+
+    if (effectiveModelSupportsTools) {
+      // --- Logic for models supporting tools ---
+      console.log("Using TOOL-BASED approach for model:", modelIdentifier);
+      const completion = await openai.chat.completions.create({
+        model: modelIdentifier,
+        messages: [
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: userContent }
+        ],
+        tools: [toolDefinition],
+        tool_choice: { type: "function", function: { name: "save_hebrew_word_details" } },
+        stream: false
+      });
+
+      if (!completion.choices || completion.choices.length === 0 || !completion.choices[0].message) {
+        throw new Error('Invalid LLM response structure: No content or choices from the model (tool mode).');
+      }
+      const message = completion.choices[0].message;
+      if (!message.tool_calls || !message.tool_calls[0] || message.tool_calls[0].type !== 'function') {
+        // This can happen if the model decides not to use the tool, or if it doesn't support it well despite our heuristic.
+        throw new Error('Invalid LLM response: Expected a function call, but model did not use tools as expected. Try a different model or verify tool support.');
+      }
+      const functionCall = message.tool_calls[0].function;
+      if (functionCall.name !== "save_hebrew_word_details") {
+        throw new Error(`Invalid LLM response: Expected function call to "save_hebrew_word_details", but got "${functionCall.name}".`);
+      }
+      try {
+        parsedArgs = JSON.parse(functionCall.arguments);
+      } catch (e) {
+        console.error('Failed to parse function call arguments as JSON (tool mode):', functionCall.arguments, e);
+        throw new Error('Failed to parse LLM function call arguments. The response may not be valid JSON (tool mode).');
+      }
+    } else {
+      // --- Logic for models NOT supporting tools (direct JSON response) ---
+      console.log("Using DIRECT JSON approach for model:", modelIdentifier);
+      const completion = await openai.chat.completions.create({
+        model: modelIdentifier,
+        messages: [
+          { role: 'system', content: systemPromptForDirectJson },
+          { role: 'user', content: userContent }
+        ],
+        // No tools or tool_choice here
+        stream: false
+      });
+
+      if (!completion.choices || !completion.choices.length || !completion.choices[0].message || !completion.choices[0].message.content) {
+        throw new Error('Invalid LLM response structure: No content in message from the model (direct JSON mode).');
+      }
+      const responseContent = completion.choices[0].message.content;
+      try {
+        // Attempt to clean up potential markdown backticks
+        const cleanedResponseContent = responseContent.replace(/^\\\`\\\`\\\`json\\s*|\\s*\\\`\\\`\\\`$/g, '');
+        parsedArgs = JSON.parse(cleanedResponseContent);
+      } catch (e) {
+        console.error('Failed to parse message content as JSON (direct JSON mode):', responseContent, e);
+        throw new Error('Failed to parse LLM response content as JSON. The model may not have returned valid JSON (direct JSON mode).');
+      }
+    }
+
+    if (!parsedArgs || !Array.isArray(parsedArgs.processed_words)) {
+      throw new Error('Invalid LLM response: "processed_words" array is missing or not an array in the parsed arguments.');
+    }
+
+    const processedWordsResult = processWordsArray(parsedArgs.processed_words, hebrewWords);
+    
+    const successfullyProcessed = processedWordsResult.filter(w => 
+      w.transcription && w.russian && w.category !== 'אחר'
+    ).length;
+    
+    showToast({
+      title: "Готово",
+      description: `Успешно обработано ${successfullyProcessed} из ${hebrewWords.length} слов.`,
+      variant: successfullyProcessed === hebrewWords.length ? "default" : "warning"
+    });
+
+    return processedWordsResult;
+
+  } catch (error: any) {
+    console.error('Error enriching words with LLM:', error); 
+
+    let toastDescription = "Произошла ошибка при обработке слов. Проверьте консоль для деталей."; 
+    let returnEmptyArrayForCriticalError = false;
+
+    if (error instanceof Error) {
+        const errorMessage = error.message;
+
+        // This specific message indicates the model was expected to use tools but didn't.
+        if (errorMessage.includes('Expected a function call, but model did not use tools as expected')) {
+            toastDescription = "Модель не использовала инструменты (функции) как ожидалось. Попробуйте другую модель или укажите явно, что модель не поддерживает инструменты.";
+            returnEmptyArrayForCriticalError = true;
+        }
+        // Provider error (like OpenRouter's "tools field exceeds max depth limit")
+        else if (errorMessage === "Provider returned error" && (error as any).metadata) {
+            const metadata = (error as any).metadata;
+            const provider = metadata.provider_name || 'Unknown';
+            if (typeof metadata.raw === 'string') {
+                try {
+                    const rawDetails = JSON.parse(metadata.raw);
+                    const detailText = typeof rawDetails.detail === 'string' ? rawDetails.detail : (typeof rawDetails.message === 'string' ? rawDetails.message : null);
+
+                    if (typeof detailText === 'string' && detailText.includes("tools field exceeds max depth limit")) {
+                        toastDescription = `Модель от ${provider} не поддерживает расширенные функции (tools field exceeds max depth limit). Пожалуйста, выберите другую модель или режим без инструментов.`;
+                        returnEmptyArrayForCriticalError = true;
+                      } else if (typeof detailText === 'string') {
+                        toastDescription = `Ошибка от ${provider}: ${detailText}`;
+                        // Consider if all provider errors should be critical
+                        // returnEmptyArrayForCriticalError = true; 
+                      } else {
+                        toastDescription = `Ошибка от ${provider}: ${errorMessage}. Проверьте консоль для полных данных.`;
+                      }
+                } catch (e) {
+                    console.warn("Failed to parse error.metadata.raw from provider error", e);
+                    toastDescription = `Ошибка от ${provider}: ${errorMessage}. Проверьте консоль для полных данных.`;
+                }
+            } else {
+                 toastDescription = `Ошибка от ${provider}: ${errorMessage}. Проверьте консоль для полных данных.`;
+            }
+        }
+        // Other specific errors thrown from the try block (tool mode or direct JSON mode)
+        else if (errorMessage.startsWith('Invalid LLM response structure: No content or choices') || // Common
+                   errorMessage.startsWith('Invalid LLM response: Expected function call to "save_hebrew_word_details"') || // Tool mode specific
+                   errorMessage.startsWith('Failed to parse LLM function call arguments') || // Tool mode specific
+                   errorMessage.startsWith('Invalid LLM response structure: No content in message from the model (direct JSON mode)') || // Direct JSON specific
+                   errorMessage.startsWith('Failed to parse LLM response content as JSON') || // Direct JSON specific
+                   errorMessage.startsWith('Invalid LLM response: "processed_words" array is missing')) { // Common
+            toastDescription = errorMessage; 
+            returnEmptyArrayForCriticalError = true; 
+        }
+        // Any other Error instance not specifically handled above
+        else {
+            toastDescription = errorMessage; 
+            // Decide if generic errors should also return empty. For now, let them use fallback.
+        }
+    } else if (typeof error === 'string') {
+        // If error is just a string
+        toastDescription = error;
+    }
+    // If error is of another type, the default toastDescription remains.
+
+    showToast({
+      title: "Ошибка",
+      description: toastDescription,
+      variant: "destructive",
+    });
+    
+    if (returnEmptyArrayForCriticalError) {
+      return []; 
+    } else {
+      // Fallback: return minimal word entries with default values
+      return hebrewWords.map(word => ({
+        id: String(Date.now()) + Math.random().toString(36).substring(2, 9),
+        hebrew: word,
+        transcription: '',
+        russian: '',
+        category: 'אחר' as WordCategory,
+        showTranslation: false,
+        isLearned: false,
+        learningStage: 0,
+        lastReviewed: null,
+        nextReview: null,
+        dateAdded: Date.now(),
+        conjugations: undefined,
+        examples: [], 
+      }));
+    }
+  }
+}
