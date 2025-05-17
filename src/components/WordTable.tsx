@@ -123,25 +123,71 @@ const WordTable: React.FC<WordTableProps> = ({ onEditWord }) => {
           toastAdapter({ title: "Ошибка", description: 'Не удалось прочитать файл.', variant: "destructive" });
           return;
         }
+        
         const parsedWords = JSON.parse(content);
 
-        // Validate structure of parsedWords
-        if (!Array.isArray(parsedWords) || !parsedWords.every(word =>
-            typeof word.id === 'string' &&
-            typeof word.hebrew === 'string' &&
-            typeof word.russian === 'string' &&
-            
-            Object.prototype.hasOwnProperty.call(word, 'id') && Object.prototype.hasOwnProperty.call(word, 'hebrew') && Object.prototype.hasOwnProperty.call(word, 'russian')
-        )) {
-          toastAdapter({ title: "Ошибка", description: 'Неверный формат файла. Убедитесь, что это JSON массив объектов Word.', variant: "destructive" });
+        // Validate array structure
+        if (!Array.isArray(parsedWords)) {
+          toastAdapter({ 
+            title: "Ошибка", 
+            description: 'Неверный формат файла. Ожидается массив слов.', 
+            variant: "destructive" 
+          });
           return;
         }
-        
-        replaceAllWords(parsedWords as Word[]);
-        toast({ title: "Успех", description: 'Слова успешно импортированы!' });
+
+        // Validate each word object
+        const isValidWord = (word: any): word is Word => {
+          return (
+            typeof word === 'object' &&
+            word !== null &&
+            typeof word.id === 'string' &&
+            typeof word.hebrew === 'string' &&
+            typeof word.transcription === 'string' &&
+            typeof word.russian === 'string' &&
+            typeof word.category === 'string' &&
+            ['פועל', 'שם עצם', 'שם תואר', 'אחר'].includes(word.category) &&
+            typeof word.showTranslation === 'boolean' &&
+            typeof word.isLearned === 'boolean' &&
+            typeof word.learningStage === 'number' &&
+            // Optional fields
+            (word.lastReviewed === null || typeof word.lastReviewed === 'number') &&
+            (word.nextReview === null || typeof word.nextReview === 'number') &&
+            typeof word.dateAdded === 'number' &&
+            // Conjugations validation
+            (word.conjugations === undefined || word.conjugations === null || 
+              (typeof word.conjugations === 'object' && 
+               ['past', 'present', 'future', 'imperative'].every(tense => 
+                 !word.conjugations[tense] || typeof word.conjugations[tense] === 'object'
+               ))) &&
+            // Examples validation
+            (word.examples === undefined || Array.isArray(word.examples))
+          );
+        };
+
+        if (!parsedWords.every(isValidWord)) {
+          toastAdapter({ 
+            title: "Ошибка", 
+            description: 'Один или несколько объектов в файле не соответствуют формату Word.', 
+            variant: "destructive" 
+          });
+          return;
+        }
+
+        // All validation passed, update the store
+        replaceAllWords(parsedWords);
+        toast({ 
+          title: "Успех", 
+          description: `Импортировано ${parsedWords.length} слов!`
+        });
+
       } catch (error) {
         console.error("Ошибка при импорте слов:", error);
-        toastAdapter({ title: "Ошибка", description: 'Ошибка при импорте слов. Проверьте консоль для деталей.', variant: "destructive" });
+        toastAdapter({ 
+          title: "Ошибка", 
+          description: 'Ошибка при парсинге JSON. Проверьте формат файла.', 
+          variant: "destructive" 
+        });
       } finally {
         if (event.target) {
           event.target.value = '';
@@ -150,7 +196,11 @@ const WordTable: React.FC<WordTableProps> = ({ onEditWord }) => {
     };
 
     reader.onerror = () => {
-      toastAdapter({ title: "Ошибка", description: 'Ошибка при чтении файла.', variant: "destructive" });
+      toastAdapter({ 
+        title: "Ошибка", 
+        description: 'Ошибка при чтении файла.', 
+        variant: "destructive" 
+      });
       if (event.target) {
         event.target.value = '';
       }
