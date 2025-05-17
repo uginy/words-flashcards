@@ -5,13 +5,14 @@ import { useWordsStore } from '../store/wordsStore';
 import EditWordDialog from './EditWordDialog';
 import { DataTable } from './DataTable';
 import { getColumns } from './columns';
-import { Download, Upload, Trash2 } from 'lucide-react';
+import { Download, Upload } from 'lucide-react';
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { DeleteButton } from './DeleteButton';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -189,41 +190,14 @@ const WordTable: React.FC<WordTableProps> = ({ onEditWord }) => {
                   </TooltipContent>
                 </Tooltip>
 
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <AlertDialog>
-                      <AlertDialogTrigger asChild>
-                        <Button 
-                          variant="destructive"
-                          size="icon"
-                          className="h-9 w-9"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </AlertDialogTrigger>
-                      <AlertDialogContent>
-                        <AlertDialogHeader>
-                          <AlertDialogTitle>Удалить все слова?</AlertDialogTitle>
-                          <AlertDialogDescription>
-                            Это действие нельзя отменить. Все слова будут удалены из вашей коллекции.
-                          </AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                          <AlertDialogCancel>Отмена</AlertDialogCancel>
-                          <AlertDialogAction
-                            onClick={performClearAllWords}
-                            className="bg-red-500 hover:bg-red-600"
-                          >
-                            Удалить все
-                          </AlertDialogAction>
-                        </AlertDialogFooter>
-                      </AlertDialogContent>
-                    </AlertDialog>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>Очистить все слова</p>
-                  </TooltipContent>
-                </Tooltip>
+                <DeleteButton
+                  onDelete={performClearAllWords}
+                  tooltipText="Очистить все слова"
+                  dialogTitle="Удалить все слова?"
+                  dialogDescription="Это действие нельзя отменить. Все слова будут удалены из вашей коллекции."
+                  variant="destructive"
+                  className="h-9 w-9"
+                />
               </TooltipProvider>
             </div>
           </div>

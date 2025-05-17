@@ -7,18 +7,8 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { Pen, RotateCcw, Check, Trash, ArrowUpDown } from "lucide-react";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from '@/components/ui/alert-dialog';
+import { Pen, RotateCcw, Check, ArrowUpDown } from "lucide-react";
+import { DeleteButton } from './DeleteButton';
 import {
   Popover,
   PopoverContent,
@@ -264,41 +254,12 @@ export const getColumns = (
                 </TooltipContent>
               </Tooltip>
 
-              <AlertDialog>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <AlertDialogTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-8 w-8 text-red-600 hover:text-red-900"
-                      >
-                        <Trash className="h-4 w-4" />
-                      </Button>
-                    </AlertDialogTrigger>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>Удалить</p>
-                  </TooltipContent>
-                </Tooltip>
-                <AlertDialogContent>
-                  <AlertDialogHeader>
-                    <AlertDialogTitle>Удалить это слово?</AlertDialogTitle>
-                    <AlertDialogDescription>
-                      Это действие нельзя отменить. Слово будет удалено из вашей коллекции.
-                    </AlertDialogDescription>
-                  </AlertDialogHeader>
-                  <AlertDialogFooter>
-                    <AlertDialogCancel>Отмена</AlertDialogCancel>
-                    <AlertDialogAction
-                      onClick={() => deleteWord(word.id)}
-                      className="bg-red-500 hover:bg-red-600"
-                    >
-                      Удалить
-                    </AlertDialogAction>
-                  </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialog>
+              <DeleteButton
+                onDelete={() => deleteWord(word.id)}
+                tooltipText="Удалить"
+                dialogTitle="Удалить это слово?"
+                dialogDescription="Это действие нельзя отменить. Слово будет удалено из вашей коллекции."
+              />
             </TooltipProvider>
           </div>
         );
