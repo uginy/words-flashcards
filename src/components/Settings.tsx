@@ -22,7 +22,7 @@ const Settings: React.FC = () => {
   const [availableModels, setAvailableModels] = useState<OpenRouterModel[]>([]);
   const [filteredModels, setFilteredModels] = useState<OpenRouterModel[]>([]);
   const [isLoadingModels, setIsLoadingModels] = useState<boolean>(false);
-  const [showFreeOnly, setShowFreeOnly] = useState<boolean>(true);
+  const [showFreeOnly, setShowFreeOnly] = useState<boolean>(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
   useEffect(() => {
