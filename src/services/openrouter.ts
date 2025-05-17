@@ -1,5 +1,9 @@
 import OpenAI from "openai";
-import { Word, WordCategory } from "../types"; // Assuming WordCategory is here
+import { Word, WordCategory } from "../types";
+
+type ToastFunction = {
+  (opts: { title: string; description: string; variant?: 'default' | 'destructive' | 'warning' }): void;
+};
 
 // Interface for the expected structure of a single item from the LLM batch response
 interface LLMBatchResponseItem {
@@ -91,7 +95,8 @@ const toolDefinition = {
 export async function enrichWordsWithLLM(
   hebrewWords: string[],
   apiKey: string,
-  modelIdentifier: string // e.g., "mistralai/mistral-7b-instruct"
+  modelIdentifier: string,
+  toastFn?: ToastFunction // Опциональный параметр для тостов
 ): Promise<Word[]> {
   if (!apiKey || !modelIdentifier) {
     throw new Error('API key or model not configured.');
@@ -99,6 +104,19 @@ export async function enrichWordsWithLLM(
   if (hebrewWords.length === 0) {
     return [];
   }
+
+  // Вспомогательная функция для показа тостов
+  const showToast = (opts: Parameters<ToastFunction>[0]) => {
+    if (toastFn) {
+      toastFn(opts);
+    }
+  };
+
+  // Показываем тост о начале обработки
+  showToast({
+    title: "Обработка",
+    description: `Обрабатываем ${hebrewWords.length} слов...`
+  });
 
   const openai = new OpenAI({
     baseURL: "https://openrouter.ai/api/v1",
@@ -122,6 +140,11 @@ export async function enrichWordsWithLLM(
 
     if (!completion.choices || completion.choices.length === 0 || !completion.choices[0].message) {
       console.error('Invalid LLM response structure: No content or choices.', completion);
+      showToast({
+        title: "Ошибка",
+        description: "Не удалось получить ответ от сервиса.",
+        variant: "destructive",
+      });
       throw new Error('Invalid LLM response structure: No content or choices.');
     }
 
@@ -130,12 +153,22 @@ export async function enrichWordsWithLLM(
 
     if (!message.tool_calls || !message.tool_calls[0] || message.tool_calls[0].type !== 'function') {
       console.error('Invalid LLM response: Expected a function call.', message);
+      showToast({
+        title: "Ошибка",
+        description: "Некорректный формат ответа от сервиса.",
+        variant: "destructive",
+      });
       throw new Error('Invalid LLM response: Expected a function call.');
     }
 
     const functionCall = message.tool_calls[0].function;
     if (functionCall.name !== "save_hebrew_word_details") {
       console.error(`Invalid LLM response: Expected function call to "save_hebrew_word_details", got "${functionCall.name}".`, message);
+      showToast({
+        title: "Ошибка",
+        description: "Неверный тип ответа от сервиса.",
+        variant: "destructive",
+      });
       throw new Error(`Invalid LLM response: Expected function call to "save_hebrew_word_details".`);
     }
 
@@ -144,18 +177,48 @@ export async function enrichWordsWithLLM(
       parsedArgs = JSON.parse(functionCall.arguments);
     } catch (e) {
       console.error('Failed to parse function call arguments as JSON:', functionCall.arguments, e);
+      showToast({
+        title: "Ошибка",
+        description: "Не удалось обработать ответ сервиса.",
+        variant: "destructive",
+      });
       throw new Error('Failed to parse LLM function call arguments.');
     }
 
     if (!parsedArgs || !Array.isArray(parsedArgs.processed_words)) {
       console.error('Invalid LLM response: "processed_words" array missing or not an array in function arguments.', parsedArgs);
+      showToast({
+        title: "Ошибка",
+        description: "Некорректный формат данных в ответе.",
+        variant: "destructive",
+      });
       throw new Error('Invalid LLM response: "processed_words" array missing or malformed.');
     }
+
+    const processedWords = processWordsArray(parsedArgs.processed_words, hebrewWords);
     
-    return processWordsArray(parsedArgs.processed_words, hebrewWords);
+    // Анализируем результаты обработки
+    const successfullyProcessed = processedWords.filter(w => 
+      w.transcription && w.russian && w.category !== 'אחר'
+    ).length;
+    
+    // Показываем результат обработки
+    showToast({
+      title: "Готово",
+      description: `Успешно обработано ${successfullyProcessed} из ${hebrewWords.length} слов.`,
+      variant: successfullyProcessed === hebrewWords.length ? "default" : "warning"
+    });
+
+    return processedWords;
 
   } catch (error) {
     console.error('Error enriching words with LLM:', error);
+    showToast({
+      title: "Ошибка",
+      description: "Произошла ошибка при обработке слов. Проверьте консоль для деталей.",
+      variant: "destructive",
+    });
+    
     // Fallback: return minimal word entries with default values
     return hebrewWords.map(word => ({
       id: String(Date.now()) + Math.random().toString(36).substring(2, 9),
