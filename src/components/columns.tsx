@@ -2,6 +2,13 @@ import { ColumnDef } from "@tanstack/react-table";
 import { Word } from "@/types";
 import { Button } from "@/components/ui/button";
 import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { Pen, RotateCcw, Check, Trash } from "lucide-react";
+import {
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
@@ -156,51 +163,81 @@ export const getColumns = (
   },
   {
     id: "actions",
-    header: "Действия",
-    cell: ({ row }) => {
-      const word = row.original;
-      return (
-        <div className="flex justify-end gap-2">
-          <Button
-            variant="ghost"
-            className="h-8 px-2 lg:px-3"
-            onClick={() => setEditingWord(word)}
-          >
-            Изменить
-          </Button>
-          <Button
-            variant="ghost"
-            className="h-8 px-2 lg:px-3"
-            onClick={() => word.isLearned ? markAsNotLearned(word.id) : markAsLearned(word.id)}
-          >
-            {word.isLearned ? 'Повторить' : 'Отметить изученным'}
-          </Button>
-          <AlertDialog>
-            <AlertDialogTrigger asChild>
-              <Button variant="ghost" className="h-8 px-2 lg:px-3 text-red-600 hover:text-red-900">
-                Удалить
-              </Button>
-            </AlertDialogTrigger>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>Удалить это слово?</AlertDialogTitle>
-                <AlertDialogDescription>
-                  Это действие нельзя отменить. Слово будет удалено из вашей коллекции.
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel>Отмена</AlertDialogCancel>
-                <AlertDialogAction
-                  onClick={() => deleteWord(word.id)}
-                  className="bg-red-500 hover:bg-red-600"
-                >
-                  Удалить
-                </AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
-        </div>
-      );
-    },
+    header: "Действия",      cell: ({ row }) => {
+        const word = row.original;
+        return (
+          <div className="flex justify-end gap-2">
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8"
+                    onClick={() => setEditingWord(word)}
+                  >
+                    <Pen className="h-4 w-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Изменить</p>
+                </TooltipContent>
+              </Tooltip>
+
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className={`h-8 w-8 ${word.isLearned ? 'text-blue-600' : 'text-green-600'}`}
+                    onClick={() => word.isLearned ? markAsNotLearned(word.id) : markAsLearned(word.id)}
+                  >
+                    {word.isLearned ? <RotateCcw className="h-4 w-4" /> : <Check className="h-4 w-4" />}
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>{word.isLearned ? 'Повторить' : 'Отметить изученным'}</p>
+                </TooltipContent>
+              </Tooltip>
+
+              <AlertDialog>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <AlertDialogTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 text-red-600 hover:text-red-900"
+                      >
+                        <Trash className="h-4 w-4" />
+                      </Button>
+                    </AlertDialogTrigger>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Удалить</p>
+                  </TooltipContent>
+                </Tooltip>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Удалить это слово?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      Это действие нельзя отменить. Слово будет удалено из вашей коллекции.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Отмена</AlertDialogCancel>
+                    <AlertDialogAction
+                      onClick={() => deleteWord(word.id)}
+                      className="bg-red-500 hover:bg-red-600"
+                    >
+                      Удалить
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            </TooltipProvider>
+          </div>
+        );
+      },
   },
 ];

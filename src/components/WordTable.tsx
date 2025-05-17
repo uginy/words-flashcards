@@ -5,6 +5,13 @@ import { useWordsStore } from '../store/wordsStore';
 import EditWordDialog from './EditWordDialog';
 import { DataTable } from './DataTable';
 import { getColumns } from './columns';
+import { Download, Upload, Trash2 } from 'lucide-react';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -139,52 +146,85 @@ const WordTable: React.FC<WordTableProps> = ({ onEditWord }) => {
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <h3 className="text-lg font-medium text-gray-800">Список слов</h3>
             <div className="flex flex-wrap gap-2">
-              <Button
-                onClick={handleExportWords}
-                variant="secondary"
-              >
-                Экспорт слов
-              </Button>
-              <div>
-                <input
-                  id="import-file"
-                  type="file"
-                  accept=".json"
-                  className="hidden"
-                  onChange={handleImportWords}
-                  ref={fileInputRef}
-                />
-                <Button
-                  onClick={() => fileInputRef.current?.click()}
-                  variant="secondary"
-                >
-                  Импорт слов
-                </Button>
-              </div>
-              <AlertDialog>
-                <AlertDialogTrigger asChild>
-                  <Button variant="destructive">
-                    Очистить все слова
-                  </Button>
-                </AlertDialogTrigger>
-                <AlertDialogContent>
-                  <AlertDialogHeader>
-                    <AlertDialogTitle>Удалить все слова?</AlertDialogTitle>
-                    <AlertDialogDescription>
-                      Это действие нельзя отменить. Все слова будут удалены из вашей коллекции.
-                    </AlertDialogDescription>
-                  </AlertDialogHeader>
-                  <AlertDialogFooter>
-                    <AlertDialogCancel>Отмена</AlertDialogCancel>
-                    <AlertDialogAction
-                      onClick={performClearAllWords}
-                      className="bg-red-500 hover:bg-red-600"
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      onClick={handleExportWords}
+                      variant="secondary"
+                      size="icon"
+                      className="h-9 w-9"
                     >
-                      Удалить все
-                    </AlertDialogAction>
-                  </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialog>
+                      <Download className="h-4 w-4" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Экспорт слов</p>
+                  </TooltipContent>
+                </Tooltip>
+
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <div>
+                      <input
+                        id="import-file"
+                        type="file"
+                        accept=".json"
+                        className="hidden"
+                        onChange={handleImportWords}
+                        ref={fileInputRef}
+                      />
+                      <Button
+                        onClick={() => fileInputRef.current?.click()}
+                        variant="secondary"
+                        size="icon"
+                        className="h-9 w-9"
+                      >
+                        <Upload className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Импорт слов</p>
+                  </TooltipContent>
+                </Tooltip>
+
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button 
+                          variant="destructive"
+                          size="icon"
+                          className="h-9 w-9"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Удалить все слова?</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            Это действие нельзя отменить. Все слова будут удалены из вашей коллекции.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Отмена</AlertDialogCancel>
+                          <AlertDialogAction
+                            onClick={performClearAllWords}
+                            className="bg-red-500 hover:bg-red-600"
+                          >
+                            Удалить все
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Очистить все слова</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
             </div>
           </div>
 
