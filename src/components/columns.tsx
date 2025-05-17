@@ -88,6 +88,7 @@ export const getColumns = (
         <ArrowUpDown className="ml-2 h-4 w-4" />
       </Button>
     ),
+    filterFn: "includesString",
   },
   {
     accessorKey: "transcription",

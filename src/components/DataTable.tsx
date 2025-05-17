@@ -33,7 +33,7 @@ interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
   searchable?: boolean;
-  searchColumn?: string;
+  searchColumns?: { id: string; placeholder: string }[];
   paginated?: boolean;
   pageSize?: number;
   filters?: {
@@ -47,7 +47,7 @@ export function DataTable<TData, TValue>({
   columns,
   data,
   searchable = false,
-  searchColumn,
+  searchColumns = [],
   paginated = false,
   pageSize = 10,
   filters,
@@ -84,15 +84,20 @@ export function DataTable<TData, TValue>({
   return (
     <div>
       <div className="flex items-center gap-4 py-4">
-        {searchable && searchColumn && (
-          <Input
-            placeholder="Поиск..."
-            value={(table.getColumn(searchColumn)?.getFilterValue() as string) ?? ""}
-            onChange={(event) =>
-              table.getColumn(searchColumn)?.setFilterValue(event.target.value)
-            }
-            className="max-w-sm"
-          />
+        {searchable && searchColumns && searchColumns.length > 0 && (
+          <div className="flex gap-2">
+            {searchColumns.map((column) => (
+              <Input
+                key={column.id}
+                placeholder={column.placeholder}
+                value={(table.getColumn(column.id)?.getFilterValue() as string) ?? ""}
+                onChange={(event) =>
+                  table.getColumn(column.id)?.setFilterValue(event.target.value)
+                }
+                className="max-w-[200px]"
+              />
+            ))}
+          </div>
         )}
         {filters?.map((filter) => (
           <div key={filter.id} className="flex items-center gap-2">

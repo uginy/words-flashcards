@@ -206,7 +206,10 @@ const WordTable: React.FC<WordTableProps> = ({ onEditWord }) => {
             columns={columns}
             data={allWords}
             searchable
-            searchColumn="hebrew"
+            searchColumns={[
+              { id: "hebrew", placeholder: "Поиск на иврите..." },
+              { id: "russian", placeholder: "Поиск по переводу..." }
+            ]}
             paginated
             pageSize={10}
             filters={[

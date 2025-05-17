@@ -149,7 +149,6 @@ export async function enrichWordsWithLLM(
     }
 
     const message = completion.choices[0].message;
-    console.log('LLM response message:', message);
 
     if (!message.tool_calls || !message.tool_calls[0] || message.tool_calls[0].type !== 'function') {
       console.error('Invalid LLM response: Expected a function call.', message);
