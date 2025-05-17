@@ -198,7 +198,7 @@ const FlashCard: React.FC<FlashCardProps> = ({ word: propWord, reverse, onMarkAs
                 </>
               )}
             </div>
-            <div className="w-full flex flex-col gap-3 sm:flex-row sm:justify-between sm:items-center pt-8 pb-16">
+            <div className="w-full flex flex-col gap-3 sm:flex-row sm:justify-between sm:items-center pt-8 pb-4">
               <div className="flex flex-col sm:flex-row gap-2">
                 <button
                   type="button"
@@ -264,7 +264,7 @@ const FlashCard: React.FC<FlashCardProps> = ({ word: propWord, reverse, onMarkAs
                 </>
               )}
             </div>
-            <div className="w-full flex flex-col gap-3 sm:flex-row sm:justify-between sm:items-center pt-8 pb-16">
+            <div className="w-full flex flex-col gap-3 sm:flex-row sm:justify-between sm:items-center pt-8 pb-4">
               <div className="flex flex-col sm:flex-row gap-2">
                 <button
                   type="button"
