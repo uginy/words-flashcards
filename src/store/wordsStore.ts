@@ -47,6 +47,7 @@ interface WordsStore extends WordsState {
   toggleTranslation: (id: string) => void;
   nextWord: (toast?: ToastFn) => void;
   resetProgress: () => void;
+  resetWordProgress: (id: string, toast?: ToastFn) => void; // Новый метод для сброса прогресса отдельного слова
   deleteWord: (id: string, toast?: ToastFn) => void;
   updateWord: (updatedWord: Word) => void;
   updateWords: (words: Word[] | null) => void;
@@ -246,6 +247,31 @@ export const useWordsStore = create<WordsStore>((set, get) => {
         })),
         currentIndex: state.words.length > 0 ? 0 : 0,
       }));
+    },
+    
+    // Сброс прогресса обучения для конкретного слова
+    resetWordProgress: (id, toast) => {
+      set(state => {
+        const updatedWords = state.words.map(word => 
+          word.id === id ? {
+            ...word,
+            learningStage: 0,
+            lastReviewed: null,
+            nextReview: null,
+            // Оставляем isLearned без изменений, чтобы не влиять на основную статистику
+          } : word  
+        );
+        
+        toast?.({
+          title: 'Успех!',
+          description: 'Прогресс изучения слова сброшен',
+        });
+        
+        return {
+          ...state,
+          words: updatedWords,
+        };
+      });
     },
 
     deleteWord: (id) => {

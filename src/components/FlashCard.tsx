@@ -20,6 +20,7 @@ const FlashCard: React.FC<FlashCardProps> = ({ word: propWord, reverse, onMarkAs
   const currentIndex = useWordsStore((state) => state.currentIndex);
   const markAsLearned = useWordsStore((state) => state.markAsLearned);
   const nextWord = useWordsStore((state) => state.nextWord);
+  const resetWordProgress = useWordsStore((state) => state.resetWordProgress);
 
   
   const word = propWord ?? getCurrentWord(words, currentIndex);
@@ -90,6 +91,12 @@ const FlashCard: React.FC<FlashCardProps> = ({ word: propWord, reverse, onMarkAs
     } else {
       nextWord();
     }
+  };
+  
+  const handleResetProgress = (e: React.MouseEvent) => {
+    e.stopPropagation(); // Предотвращаем срабатывание onClick карточки (переворот)
+    if (!word) return;
+    resetWordProgress(word.id);
   };
 
   // Цветовая карта для категорий
@@ -192,16 +199,30 @@ const FlashCard: React.FC<FlashCardProps> = ({ word: propWord, reverse, onMarkAs
               )}
             </div>
             <div className="w-full flex flex-col gap-3 sm:flex-row sm:justify-between sm:items-center pt-8 pb-16">
+              <div className="flex flex-col sm:flex-row gap-2">
+                <button
+                  type="button"
+                  className="w-full sm:w-auto px-3 py-2 rounded-md bg-green-500 text-white text-base sm:text-lg hover:bg-green-600 transition-colors"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleMarkLearned();
+                  }}
+                >
+                  Знаю
+                </button>
+                {!!word.learningStage && word.learningStage > 0 && (
+                  <button
+                    type="button"
+                    className="w-full sm:w-auto px-3 py-2 rounded-md bg-blue-500 text-white text-sm hover:bg-blue-600 transition-colors"
+                    onClick={handleResetProgress}
+                    title="Сбросить прогресс изучения"
+                  >
+                    Сбросить уровень ({word.learningStage})
+                  </button>
+                )}
+              </div>
               <button
-                className="w-full sm:w-auto px-3 py-2 rounded-md bg-green-500 text-white text-base sm:text-lg hover:bg-green-600 transition-colors"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleMarkLearned();
-                }}
-              >
-                Знаю
-              </button>
-              <button
+                type="button"
                 className="w-full sm:w-auto px-3 py-2 rounded-md bg-orange-500 text-white text-base sm:text-lg hover:bg-orange-600 transition-colors"
                 onClick={(e) => {
                   e.stopPropagation();
@@ -244,16 +265,30 @@ const FlashCard: React.FC<FlashCardProps> = ({ word: propWord, reverse, onMarkAs
               )}
             </div>
             <div className="w-full flex flex-col gap-3 sm:flex-row sm:justify-between sm:items-center pt-8 pb-16">
+              <div className="flex flex-col sm:flex-row gap-2">
+                <button
+                  type="button"
+                  className="w-full sm:w-auto px-3 py-2 rounded-md bg-green-500 text-white text-base sm:text-lg hover:bg-green-600 transition-colors"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleMarkLearned();
+                  }}
+                >
+                  Знаю
+                </button>
+                {word.learningStage && word.learningStage > 0 && (
+                  <button
+                    type="button"
+                    className="w-full sm:w-auto px-3 py-2 rounded-md bg-blue-500 text-white text-sm hover:bg-blue-600 transition-colors"
+                    onClick={handleResetProgress}
+                    title="Сбросить прогресс изучения"
+                  >
+                    Сбросить уровень ({word.learningStage})
+                  </button>
+                )}
+              </div>
               <button
-                className="w-full sm:w-auto px-3 py-2 rounded-md bg-green-500 text-white text-base sm:text-lg hover:bg-green-600 transition-colors"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleMarkLearned();
-                }}
-              >
-                Знаю
-              </button>
-              <button
+                type="button"
                 className="w-full sm:w-auto px-3 py-2 rounded-md bg-orange-500 text-white text-base sm:text-lg hover:bg-orange-600 transition-colors"
                 onClick={(e) => {
                   e.stopPropagation();
