@@ -365,6 +365,15 @@ const WordTable: React.FC<WordTableProps> = ({ onEditWord }) => {
                 <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Статус
                 </th>
+                <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Уровень
+                </th>
+                <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Дата добавления
+                </th>
+                <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">
+                  Повторение
+                </th>
                 <th scope="col" className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Действия
                 </th>
@@ -391,6 +400,28 @@ const WordTable: React.FC<WordTableProps> = ({ onEditWord }) => {
                           </PopoverContent>
                         </Popover>
                       )}
+                      {word.examples && word.examples.length > 0 && (
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <button
+                              type="button"
+                              className="text-xs text-blue-600 hover:text-blue-800 mt-1 ml-2"
+                            >
+                              Примеры ({word.examples.length})
+                            </button>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-auto max-w-[600px]" align="start">
+                            <div className="space-y-2">
+                              {word.examples.map((example, index) => (
+                                <div key={index} className="border-b last:border-b-0 pb-2">
+                                  <p dir="rtl" className="text-sm font-medium">{example.hebrew}</p>
+                                  <p className="text-sm text-gray-600">{example.russian}</p>
+                                </div>
+                              ))}
+                            </div>
+                          </PopoverContent>
+                        </Popover>
+                      )}
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap">
                       <div className="text-sm text-gray-900">{word.russian}</div>
@@ -414,6 +445,34 @@ const WordTable: React.FC<WordTableProps> = ({ onEditWord }) => {
                       }`}>
                         {word.isLearned ? 'Изучено' : 'Не изучено'}
                       </span>
+                    </td>
+                    <td className="px-4 py-3 whitespace-nowrap">
+                      <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full
+                        ${word.learningStage === 5 ? 'bg-blue-100 text-blue-800' :
+                          word.learningStage === 4 ? 'bg-green-100 text-green-800' :
+                          word.learningStage === 3 ? 'bg-yellow-100 text-yellow-800' :
+                          word.learningStage === 2 ? 'bg-orange-100 text-orange-800' :
+                          word.learningStage === 1 ? 'bg-red-100 text-red-800' :
+                          'bg-gray-100 text-gray-800'}`}
+                      >
+                        {word.learningStage || 0}/5
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 whitespace-nowrap">
+                      <div className="text-sm text-gray-500">
+                        {new Date(word.dateAdded).toLocaleDateString()}
+                      </div>
+                    </td>
+                    <td className="px-4 py-3 whitespace-nowrap hidden md:table-cell">
+                      <div className="text-sm text-gray-500">
+                        {word.nextReview && word.nextReview > Date.now() ? (
+                          <>След.: {new Date(word.nextReview).toLocaleDateString()}</>
+                        ) : word.lastReviewed ? (
+                          <>Посл.: {new Date(word.lastReviewed).toLocaleDateString()}</>
+                        ) : (
+                          'Нет повторений'
+                        )}
+                      </div>
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap text-right text-sm font-medium">
                       <button
