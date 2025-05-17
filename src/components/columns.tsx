@@ -7,7 +7,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { Pen, RotateCcw, Check, ArrowUpDown } from "lucide-react";
+import { Pen, RotateCcw, Check, ArrowUpDown, BookOpen, Languages } from "lucide-react";
 import { DeleteButton } from './DeleteButton';
 import {
   Popover,
@@ -41,35 +41,53 @@ export const getColumns = (
           <div className="text-base font-medium text-gray-900" dir="rtl">{word.hebrew}</div>
           <div className="flex gap-2">
             {word.conjugations && (
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button variant="link" className="text-xs p-0 h-auto">
-                    Показать спряжение
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto max-w-[600px]" align="start">
-                  <ConjugationDisplay conjugations={word.conjugations} />
-                </PopoverContent>
-              </Popover>
+              <TooltipProvider>
+                <Tooltip>
+                  <Popover>
+                    <TooltipTrigger asChild>
+                      <PopoverTrigger asChild>
+                        <Button variant="ghost" size="icon" className="h-6 w-6">
+                          <BookOpen className="h-4 w-4" />
+                        </Button>
+                      </PopoverTrigger>
+                    </TooltipTrigger>
+                    <PopoverContent className="w-auto max-w-[600px]" align="start">
+                      <ConjugationDisplay conjugations={word.conjugations} />
+                    </PopoverContent>
+                    <TooltipContent>
+                      <p>Показать спряжение</p>
+                    </TooltipContent>
+                  </Popover>
+                </Tooltip>
+              </TooltipProvider>
             )}
             {word.examples && word.examples.length > 0 && (
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button variant="link" className="text-xs p-0 h-auto">
-                    Примеры ({word.examples.length})
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto max-w-[600px]" align="start">
-                  <div className="space-y-2">
-                    {word.examples.map((example, index) => (
-                      <div key={`${word.id}-example-${index}`} className="border-b last:border-b-0 pb-2">
-                        <p dir="rtl" className="text-sm font-medium">{example.hebrew}</p>
-                        <p className="text-sm text-gray-600">{example.russian}</p>
+              <TooltipProvider>
+                <Tooltip>
+                  <Popover>
+                    <TooltipTrigger asChild>
+                      <PopoverTrigger asChild>
+                        <Button variant="ghost" size="icon" className="h-6 w-6">
+                          <Languages className="h-4 w-8" />
+                        </Button>
+                      </PopoverTrigger>
+                    </TooltipTrigger>
+                    <PopoverContent className="w-auto max-w-[600px]" align="start">
+                      <div className="space-y-2">
+                        {word.examples.map((example, index) => (
+                          <div key={`${word.id}-example-${index}`} className="border-b last:border-b-0 pb-2">
+                            <p dir="rtl" className="text-sm font-medium">{example.hebrew}</p>
+                            <p className="text-sm text-gray-600">{example.russian}</p>
+                          </div>
+                        ))}
                       </div>
-                    ))}
-                  </div>
-                </PopoverContent>
-              </Popover>
+                    </PopoverContent>
+                    <TooltipContent>
+                      <p>Примеры использования</p>
+                    </TooltipContent>
+                  </Popover>
+                </Tooltip>
+              </TooltipProvider>
             )}
           </div>
         </div>
