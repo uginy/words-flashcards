@@ -126,8 +126,7 @@ Example of the full argument for 'save_hebrew_word_details' for two words "לכ�
       "examples": [
         { "hebrew": "אני אוהב לכתוב סיפורים.", "russian": "Я люблю писать рассказы." },
         { "hebrew": "הוא כתב מכתב לחבר שלו.", "russian": "Он написал письмо своему другу." }
-      ],
-      "error": null
+      ]
     },
     {
       "hebrew": "ספר",
@@ -139,7 +138,6 @@ Example of the full argument for 'save_hebrew_word_details' for two words "לכ�
         { "hebrew": "קראתי ספר מעניין.", "russian": "Я прочитал интересную книгу." },
         { "hebrew": "יש לי הרבה ספרים בבית.", "russian": "У меня дома много книг." }
       ],
-      "error": null
     }
   ]
 }
@@ -200,7 +198,6 @@ const toolDefinition = {
                   required: ["hebrew", "russian"]
                 }
               },
-              error: { type: ["string", "null"] as ["string", "null"], description: "If an error occurred processing this specific word, a brief explanation. Null otherwise." }
             },
             required: ["hebrew", "transcription", "russian", "category"]
           }
@@ -290,12 +287,12 @@ export async function enrichWordsWithLLM(
       throw new Error(`Invalid LLM response: Expected function call to "save_hebrew_word_details".`);
     }
 
-    console.log("Raw functionCall.arguments from LLM:", functionCall.arguments);
+    // console.log("Raw functionCall.arguments from LLM:", functionCall.arguments);
 
     let parsedArgs: { processed_words: LLMBatchResponseItem[] };
     try {
       parsedArgs = JSON.parse(functionCall.arguments);
-      console.log("Parsed arguments (parsedArgs):", JSON.stringify(parsedArgs, null, 2));
+      // console.log("Parsed arguments (parsedArgs):", JSON.stringify(parsedArgs, null, 2));
     } catch (e) {
       console.error('Failed to parse function call arguments as JSON:', functionCall.arguments, e);
       showToast({
@@ -368,12 +365,6 @@ function processWordsArray(llmItems: LLMBatchResponseItem[], originalWords: stri
     if (!currentItem || typeof currentItem !== 'object') {
       console.warn('Skipping invalid item in LLM response:', currentItem);
       continue;
-    }
-    if (currentItem.error) {
-      console.warn(`LLM reported error for word "${currentItem.hebrew || 'unknown'}": ${String(currentItem.error)}`);
-      // We might still want to add a minimal entry for this word if it's in originalWords
-      // For now, we'll rely on the post-loop check to add missing words.
-      continue; 
     }
 
     const hebrew = String(currentItem.hebrew || '');
