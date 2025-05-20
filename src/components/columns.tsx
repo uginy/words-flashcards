@@ -109,19 +109,6 @@ export const getColumns = (
     filterFn: "includesString",
   },
   {
-    accessorKey: "transcription",
-    header: ({ column }) => (
-      <Button
-        variant="ghost"
-        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        className="-ml-4"
-      >
-        Транскрипция
-        <ArrowUpDown className="ml-2 h-4 w-4" />
-      </Button>
-    ),
-  },
-  {
     accessorKey: "category",
     header: ({ column }) => (
       <Button
