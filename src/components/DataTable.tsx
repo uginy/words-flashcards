@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { loadTableSettings, saveTableSettings } from "@/utils/tableSettings";
 import {
   ColumnDef,
   flexRender,
@@ -75,7 +76,7 @@ export function DataTable<TData, TValue>({
     getPaginationRowModel: getPaginationRowModel(),
     initialState: {
       pagination: {
-        pageSize: 10,
+        pageSize: loadTableSettings().pageSize,
       },
     },
     state: {
@@ -86,12 +87,12 @@ export function DataTable<TData, TValue>({
     },
   });
 
-  // useEffect to call onFilteredRowCountChange when filtered rows change
   useEffect(() => {
     if (onFilteredRowCountChange) {
-      onFilteredRowCountChange(table.getFilteredRowModel().rows.length);
+      const filteredRows = table.getFilteredRowModel().rows;
+      onFilteredRowCountChange(filteredRows.length);
     }
-  }, [table.getFilteredRowModel().rows.length, onFilteredRowCountChange, table]);
+  }, [table, onFilteredRowCountChange]);
 
   return (
     <div>
@@ -191,23 +192,51 @@ export function DataTable<TData, TValue>({
         </Table>
       </div>
       {paginated && (
-        <div className="flex items-center justify-end space-x-2 py-4">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => table.previousPage()}
-            disabled={!table.getCanPreviousPage()}
-          >
-            Назад
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => table.nextPage()}
-            disabled={!table.getCanNextPage()}
-          >
-            Вперед
-          </Button>
+        <div className="flex items-center justify-between py-4">
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-gray-700">Записей на странице</span>
+            <Select
+              value={table.getState().pagination.pageSize.toString()}
+              onValueChange={(value) => {
+                const newPageSize = Number.parseInt(value);
+                table.setPageSize(newPageSize);
+                saveTableSettings({ pageSize: newPageSize });
+              }}
+            >
+              <SelectTrigger className="w-[70px]">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {[5, 10, 20, 30, 50].map((pageSize) => (
+                  <SelectItem key={pageSize} value={pageSize.toString()}>
+                    {pageSize}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <span className="text-sm text-gray-700">
+              Страница {table.getState().pagination.pageIndex + 1} из{" "}
+              {table.getPageCount()}
+            </span>
+          </div>
+          <div className="flex items-center space-x-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => table.previousPage()}
+              disabled={!table.getCanPreviousPage()}
+            >
+              Назад
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => table.nextPage()}
+              disabled={!table.getCanNextPage()}
+            >
+              Вперед
+            </Button>
+          </div>
         </div>
       )}
     </div>

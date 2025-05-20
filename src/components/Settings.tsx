@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Combobox } from './ui/combobox';
 import { DEFAULT_OPENROUTER_API_KEY, DEFAULT_OPENROUTER_MODEL } from '../config/openrouter';
+import { loadTableSettings, saveTableSettings } from '@/utils/tableSettings';
 
 const OPENROUTER_API_KEY_STORAGE_KEY = 'openRouterApiKey';
 const OPENROUTER_SELECTED_MODEL_STORAGE_KEY = 'openRouterModel';
@@ -18,6 +19,7 @@ interface OpenRouterModel {
 
 const Settings: React.FC = () => {
   const [apiKey, setApiKey] = useState<string>('');
+  const [pageSize, setPageSize] = useState<number>(10);
   const [selectedModel, setSelectedModel] = useState<string>('');
   const [availableModels, setAvailableModels] = useState<OpenRouterModel[]>([]);
   const [filteredModels, setFilteredModels] = useState<OpenRouterModel[]>([]);
@@ -38,6 +40,8 @@ const Settings: React.FC = () => {
     } else {
       setSelectedModel(DEFAULT_OPENROUTER_MODEL);
     }
+    const tableSettings = loadTableSettings();
+    setPageSize(tableSettings.pageSize);
   }, []);
 
   useEffect(() => {
@@ -81,6 +85,7 @@ const Settings: React.FC = () => {
   };
 
   const handleSaveSettings = () => {
+    saveTableSettings({ pageSize });
     const keyToSave = apiKey && apiKey.trim() !== '' ? apiKey : DEFAULT_OPENROUTER_API_KEY;
     const modelToSave = selectedModel && selectedModel.trim() !== '' ? selectedModel : DEFAULT_OPENROUTER_MODEL;
     localStorage.setItem(OPENROUTER_API_KEY_STORAGE_KEY, keyToSave);
@@ -112,6 +117,26 @@ const Settings: React.FC = () => {
       <div className="space-y-6">
         {/* Words Import/Export Section Removed */}
         
+        {/* Table Settings */}
+        <h3 className="text-lg font-medium text-gray-800 mb-4">Настройки таблицы</h3>
+        <div>
+          <label htmlFor="pageSize" className="block text-sm font-medium text-gray-700 mb-1">
+            Количество записей на странице
+          </label>
+          <select
+            id="pageSize"
+            className="w-full px-3 py-2 text-gray-700 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            value={pageSize}
+            onChange={(e) => setPageSize(Number(e.target.value))}
+          >
+            <option value="5">5</option>
+            <option value="10">10</option>
+            <option value="20">20</option>
+            <option value="30">30</option>
+            <option value="50">50</option>
+          </select>
+        </div>
+
         {/* OpenRouter Settings */}
         <h3 className="text-lg font-medium text-gray-800 mb-4">Настройки LLM (OpenRouter)</h3>
         

@@ -13,17 +13,6 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { DeleteButton } from './DeleteButton';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from '@/components/ui/alert-dialog';
 import { Button } from "@/components/ui/button";
 
 interface WordTableProps {
