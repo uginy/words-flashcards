@@ -92,7 +92,7 @@ export function DataTable<TData, TValue>({
       const filteredRows = table.getFilteredRowModel().rows;
       onFilteredRowCountChange(filteredRows.length);
     }
-  }, [table, onFilteredRowCountChange]);
+  }, [table, columnFilters, onFilteredRowCountChange]);
 
   return (
     <div>
