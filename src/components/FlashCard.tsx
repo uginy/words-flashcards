@@ -13,28 +13,28 @@ interface FlashCardProps {
   onNext?: () => void;
 }
 
- 
+
 const FlashCard: React.FC<FlashCardProps> = ({ word: propWord, reverse, onMarkAsLearned, onNext }) => {
-  
+
   const words = useWordsStore((state) => state.words);
   const currentIndex = useWordsStore((state) => state.currentIndex);
   const markAsLearned = useWordsStore((state) => state.markAsLearned);
   const nextWord = useWordsStore((state) => state.nextWord);
   const resetWordProgress = useWordsStore((state) => state.resetWordProgress);
 
-  
+
   const word = propWord ?? getCurrentWord(words, currentIndex);
 
   const [flipped, setFlipped] = useState(false);
 
-  
-  const renderExamples = (examples: Array<{hebrew?: string, russian?: string} | string>) => {
+
+  const renderExamples = (examples: Array<{ hebrew?: string, russian?: string } | string>) => {
     return (
       <div className="mt-4 text-left">
         <h4 className="text-md font-semibold text-gray-600 mb-1">Примеры:</h4>
         <ul className="list-disc list-inside text-sm text-gray-500">
           {examples.map((example, index) => {
-            
+
             if (
               typeof example === 'object' &&
               example !== null &&
@@ -48,7 +48,7 @@ const FlashCard: React.FC<FlashCardProps> = ({ word: propWord, reverse, onMarkAs
                 </li>
               );
             }
-            
+
             if (typeof example === 'string') {
               return <li key={`example-${index}-${example}`}>{example}</li>;
             }
@@ -92,7 +92,7 @@ const FlashCard: React.FC<FlashCardProps> = ({ word: propWord, reverse, onMarkAs
       nextWord();
     }
   };
-  
+
   const handleResetProgress = (e: React.MouseEvent) => {
     e.stopPropagation(); // Предотвращаем срабатывание onClick карточки (переворот)
     if (!word) return;
@@ -100,9 +100,9 @@ const FlashCard: React.FC<FlashCardProps> = ({ word: propWord, reverse, onMarkAs
   };
 
   // Цветовая карта для категорий
-  
+
   const getCategoryColor = (category: string) => {
-    
+
     const cat = category?.toLowerCase();
     if (["adjective", "прилагательное", "תואר"].includes(cat)) {
       return { bg: "bg-purple-100", text: "text-purple-800" };
@@ -116,187 +116,154 @@ const FlashCard: React.FC<FlashCardProps> = ({ word: propWord, reverse, onMarkAs
     return { bg: "bg-gray-100", text: "text-gray-800", category: "bg-gray-300" };
   };
 
-  
+
   if (!word) return null;
 
   const categoryColors = getCategoryColor(word.category);
 
   return (
-    <div className="w-full max-w-xl mx-auto px-2 sm:px-0">
-      <div className="card-container relative min-h-[340px] sm:min-h-[400px]">
-        
-        <div className="absolute top-3 right-4 z-10">
-          {word.isLearned ? (
-            <span 
-              title={`Уровень знания: ${word.learningStage || 1} из 5`} 
-              className="inline-flex items-center text-green-600"
+    <div>
+      <div className="w-full max-w-xl mx-auto px-2 sm:px-0">
+        <div className="w-full flex flex-col gap-3 sm:flex-row sm:justify-between sm:items-center pb-6">
+        <div className="flex gap-2">
+          <button
+            type="button"
+            className="w-full sm:w-auto px-3 py-2 rounded-md bg-green-500 text-white text-base sm:text-lg hover:bg-green-600 transition-colors"
+            onClick={(e) => {
+              e.stopPropagation();
+              handleMarkLearned();
+            }}
+          >
+            Знаю
+          </button>
+          {!!word.learningStage && word.learningStage > 0 && (
+            <button
+              type="button"
+              className="w-full sm:w-auto px-3 py-2 rounded-md bg-blue-500 text-white text-sm hover:bg-blue-600 transition-colors"
+              onClick={handleResetProgress}
+              title="Сбросить прогресс изучения"
             >
-              <div className="relative">
-                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="bg-green-100 rounded-full p-1">
-                  <circle cx="12" cy="12" r="11" stroke="currentColor" fill="#dcfce7" />
-                  <path d="M7 13l3 3 6-6" stroke="currentColor" />
-                </svg>
-                {word.learningStage && word.learningStage > 0 && (
-                  <div className="absolute -top-1 -right-1 bg-blue-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
-                    {word.learningStage}
-                  </div>
-                )}
-              </div>
-            </span>
-          ) : (
-            <span title="Не изучено" className="inline-flex items-center text-gray-400">
-              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className="bg-gray-100 rounded-full p-1">
-                <circle cx="12" cy="12" r="11" stroke="currentColor" fill="#f3f4f6" />
-                <path d="M8 7h8m-8 10h8m-7-2c0-2 3-2 3-4s-3-2-3-4m6 8c0-2-3-2-3-4s3-2 3-4" />
-              </svg>
-            </span>
+              Сбросить уровень ({word.learningStage})
+            </button>
           )}
         </div>
-        <div className={`card ${flipped ? 'flipped' : ''}`}> 
-          <div
-            className={`card-front rounded-xl p-4 sm:p-6 flex flex-col justify-between items-center shadow-lg relative ${categoryColors.bg}`}
-            onClick={handleFlip}
-            onKeyDown={handleKeyDown}
-            role="button"
-            tabIndex={0}
-          >
-            <div className="text-center">
-              <div className={`inline-block px-2 py-1 rounded-full text-sm ${categoryColors.bg} ${categoryColors.text} ${categoryColors.category} mb-2`}>
-                {word.category}
-              </div>
-              {reverse ? (
-                <>
-                  <h2 className={`text-4xl font-bold mb-2 ${categoryColors.text}`}>{word.russian}</h2>
-                  <p className={`text-xl ${categoryColors.text} mb-3`}>[Переведите на иврит]</p>
-                  <p className="text-sm text-gray-500 mt-2">Нажмите, чтобы увидеть ответ</p>
-                  
-                  {word.examples && word.examples.length > 0 && renderExamples(word.examples)}
-                </>
-              ) : (
-                <>
-                  <h2 className={`text-5xl font-bold mb-2 ${categoryColors.text} flex items-center justify-between`}>
-                    {word.hebrew}
-                    <button
-                      type="button"
-                      aria-label="Произнести"
-                      className="ml-6 inline-flex items-center hover:text-blue-600 focus:outline-none"
-                      onClick={e => {
-                        e.stopPropagation();
-                        if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
-                          const utter = new window.SpeechSynthesisUtterance(word.hebrew);
-                          utter.lang = 'he-IL';
-                          window.speechSynthesis.speak(utter);
-                        }
-                      }}
-                    >
-                      <svg width="68" height="68" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><path d="M11 5L6 9H2v6h4l5 4V5z"/><path d="M23 9v6"/></svg>
-                    </button>
-                  </h2>
-                  <p className={`text-xl ${categoryColors.text} mb-3`}>[{word.transcription}]</p>
-                  <p className="text-sm text-gray-500 mt-2">Нажмите, чтобы увидеть перевод</p>
-                  {word.examples && word.examples.length > 0 && renderExamples(word.examples)}
-                </>
-              )}
-            </div>
-            <div className="w-full flex flex-col gap-3 sm:flex-row sm:justify-between sm:items-center pt-8 pb-4">
-              <div className="flex flex-col sm:flex-row gap-2">
-                <button
-                  type="button"
-                  className="w-full sm:w-auto px-3 py-2 rounded-md bg-green-500 text-white text-base sm:text-lg hover:bg-green-600 transition-colors"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleMarkLearned();
-                  }}
-                >
-                  Знаю
-                </button>
-                {!!word.learningStage && word.learningStage > 0 && (
-                  <button
-                    type="button"
-                    className="w-full sm:w-auto px-3 py-2 rounded-md bg-blue-500 text-white text-sm hover:bg-blue-600 transition-colors"
-                    onClick={handleResetProgress}
-                    title="Сбросить прогресс изучения"
-                  >
-                    Сбросить уровень ({word.learningStage})
-                  </button>
-                )}
-              </div>
-              <button
-                type="button"
-                className="w-full sm:w-auto px-3 py-2 rounded-md bg-orange-500 text-white text-base sm:text-lg hover:bg-orange-600 transition-colors"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleSkip();
-                }}
+        <button
+          type="button"
+          className="w-full sm:w-auto px-3 py-2 rounded-md bg-orange-500 text-white text-base sm:text-lg hover:bg-orange-600 transition-colors"
+          onClick={(e) => {
+            e.stopPropagation();
+            handleSkip();
+          }}
+        >
+          Далее
+        </button>
+      </div>
+        <div className="card-container min-h-[340px] sm:min-h-[400px]">
+          <div className="absolute top-3 right-4 z-10">
+            {word.isLearned ? (
+              <span
+                title={`Уровень знания: ${word.learningStage || 1} из 5`}
+                className="inline-flex items-center text-green-600"
               >
-                Далее
-              </button>
-            </div>
-          </div>
-          
-          <div
-            className={`card-back rounded-xl p-4 sm:p-6 flex flex-col justify-between items-center shadow-lg relative ${categoryColors.bg}`}
-            onClick={handleFlip}
-            onKeyDown={handleKeyDown}
-            role="button"
-            tabIndex={0}
-          >
-            <div className="text-center">
-              {reverse ? (
-                <>
-                  <h2 className={`text-5xl font-bold mb-2 ${categoryColors.text}`}>{word.hebrew}</h2>
-                  <p className={`text-xl ${categoryColors.text} mb-3`}>[{word.transcription}]</p>
-                  <p className={`text-lg ${categoryColors.text} mt-2`}>{word.russian}</p>
-                  
-                  {word.examples && word.examples.length > 0 && renderExamples(word.examples)}
-                </>
-              ) : (
-                <>
-                  <h3 className={`text-4xl font-medium mb-1 ${categoryColors.text}`}>{word.russian}</h3>
-                  
-                  {word.examples && word.examples.length > 0 && renderExamples(word.examples)}
-                  {word.category === "פועל" && word.conjugations && (
-                    <div className="text-left mx-auto max-w-[400px] px-2 my-4">
-                      <div className={`font-medium text-lg mb-2 ${categoryColors.text}`}>Спряжения:</div>
-                      <CompactConjugation conjugations={word.conjugations} />
+                <div className="relative">
+                  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="bg-green-100 rounded-full p-1">
+                    <circle cx="12" cy="12" r="11" stroke="currentColor" fill="#dcfce7" />
+                    <path d="M7 13l3 3 6-6" stroke="currentColor" />
+                  </svg>
+                  {word.learningStage && word.learningStage > 0 && (
+                    <div className="absolute -top-1 -right-1 bg-blue-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                      {word.learningStage}
                     </div>
                   )}
-                </>
-              )}
-            </div>
-            <div className="w-full flex flex-col gap-3 sm:flex-row sm:justify-between sm:items-center pt-8 pb-4">
-              <div className="flex flex-col sm:flex-row gap-2">
-                <button
-                  type="button"
-                  className="w-full sm:w-auto px-3 py-2 rounded-md bg-green-500 text-white text-base sm:text-lg hover:bg-green-600 transition-colors"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleMarkLearned();
-                  }}
-                >
-                  Знаю
-                </button>
-                {!!word.learningStage && word.learningStage > 0 && (
-                  <button
-                    type="button"
-                    className="w-full sm:w-auto px-3 py-2 rounded-md bg-blue-500 text-white text-sm hover:bg-blue-600 transition-colors"
-                    onClick={handleResetProgress}
-                    title="Сбросить прогресс изучения"
-                  >
-                    Сбросить уровень ({word.learningStage})
-                  </button>
+                </div>
+              </span>
+            ) : (
+              <span title="Не изучено" className="inline-flex items-center text-gray-400">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className="bg-gray-100 rounded-full p-1">
+                  <circle cx="12" cy="12" r="11" stroke="currentColor" fill="#f3f4f6" />
+                  <path d="M8 7h8m-8 10h8m-7-2c0-2 3-2 3-4s-3-2-3-4m6 8c0-2-3-2-3-4s3-2 3-4" />
+                </svg>
+              </span>
+            )}
+          </div>
+          <div className={`card ${flipped ? 'flipped' : ''}`}>
+            <div
+              className={`card-front rounded-xl p-4 sm:p-6 flex flex-col justify-between items-center shadow-lg relative ${categoryColors.bg}`}
+              onClick={handleFlip}
+              onKeyDown={handleKeyDown}
+              role="button"
+              tabIndex={0}
+            >
+              <div className="text-center">
+                <div className={`inline-block px-2 py-1 rounded-full text-sm ${categoryColors.bg} ${categoryColors.text} ${categoryColors.category} mb-2`}>
+                  {word.category}
+                </div>
+                {reverse ? (
+                  <>
+                    <h2 className={`text-4xl font-bold mb-2 ${categoryColors.text}`}>{word.russian}</h2>
+                    <p className={`text-xl ${categoryColors.text} mb-3`}>[Переведите на иврит]</p>
+                    <p className="text-sm text-gray-500 mt-2">Нажмите, чтобы увидеть ответ</p>
+
+                    {word.examples && word.examples.length > 0 && renderExamples(word.examples)}
+                  </>
+                ) : (
+                  <>
+                    <h2 className={`text-5xl font-bold mb-2 ${categoryColors.text} flex items-center justify-between`}>
+                      {word.hebrew}
+                      <button
+                        type="button"
+                        aria-label="Произнести"
+                        className="ml-6 inline-flex items-center hover:text-blue-600 focus:outline-none"
+                        onClick={e => {
+                          e.stopPropagation();
+                          if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+                            const utter = new window.SpeechSynthesisUtterance(word.hebrew);
+                            utter.lang = 'he-IL';
+                            window.speechSynthesis.speak(utter);
+                          }
+                        }}
+                      >
+                        <svg width="68" height="68" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><path d="M11 5L6 9H2v6h4l5 4V5z" /><path d="M23 9v6" /></svg>
+                      </button>
+                    </h2>
+                    <p className={`text-xl ${categoryColors.text} mb-3`}>[{word.transcription}]</p>
+                    <p className="text-sm text-gray-500 mt-2">Нажмите, чтобы увидеть перевод</p>
+                    {word.examples && word.examples.length > 0 && renderExamples(word.examples)}
+                  </>
                 )}
               </div>
-              <button
-                type="button"
-                className="w-full sm:w-auto px-3 py-2 rounded-md bg-orange-500 text-white text-base sm:text-lg hover:bg-orange-600 transition-colors"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleSkip();
-                }}
-              >
-                Далее
-              </button>
+            </div>
+
+            <div
+              className={`card-back rounded-xl p-4 sm:p-6 flex flex-col justify-between items-center shadow-lg relative ${categoryColors.bg}`}
+              onClick={handleFlip}
+              onKeyDown={handleKeyDown}
+              role="button"
+              tabIndex={0}
+            >
+              <div className="text-center">
+                {reverse ? (
+                  <>
+                    <h2 className={`text-5xl font-bold mb-2 ${categoryColors.text}`}>{word.hebrew}</h2>
+                    <p className={`text-xl ${categoryColors.text} mb-3`}>[{word.transcription}]</p>
+                    <p className={`text-lg ${categoryColors.text} mt-2`}>{word.russian}</p>
+
+                    {word.examples && word.examples.length > 0 && renderExamples(word.examples)}
+                  </>
+                ) : (
+                  <>
+                    <h3 className={`text-4xl font-medium mb-1 ${categoryColors.text}`}>{word.russian}</h3>
+
+                    {word.examples && word.examples.length > 0 && renderExamples(word.examples)}
+                    {word.category === "פועל" && word.conjugations && (
+                      <div className="text-left mx-auto max-w-[400px] px-2 my-4">
+                        <div className={`font-medium text-lg mb-2 ${categoryColors.text}`}>Спряжения:</div>
+                        <CompactConjugation conjugations={word.conjugations} />
+                      </div>
+                    )}
+                  </>
+                )}
+              </div>
             </div>
           </div>
         </div>
