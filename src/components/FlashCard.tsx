@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import CompactConjugation from './CompactConjugation';
-
+import { SpeakerIcon } from './SpeakerIcon';
 import { useWordsStore } from '../store/wordsStore';
 import { getCurrentWord } from '../store/wordsStore';
 
@@ -32,7 +32,7 @@ const FlashCard: React.FC<FlashCardProps> = ({ word: propWord, reverse, onMarkAs
     return (
       <div className="mt-4 text-left">
         <h4 className="text-md font-semibold text-gray-600 mb-1">Примеры:</h4>
-        <ul className="list-disc list-inside text-sm text-gray-500">
+        <ul className="list-none list-inside text-sm text-gray-500">
           {examples.map((example, index) => {
 
             if (
@@ -42,8 +42,17 @@ const FlashCard: React.FC<FlashCardProps> = ({ word: propWord, reverse, onMarkAs
               typeof example.russian === 'string'
             ) {
               return (
-                <li key={`example-${index}-${example.hebrew}`}>
-                  <span className="font-medium text-black">{example.hebrew}</span>
+                <li key={`example-${index}-${example.hebrew}`} className='flex flex-row gap-2 items-center flex-0'>
+                  <span>
+                    <SpeakerIcon
+                      text={example.hebrew}
+                      className="ml-2 h-8 w-8 hover:text-blue-600"
+                    />
+                  </span>
+                  <span className="font-medium text-black flex items-center">
+                    {example.hebrew}
+
+                  </span>
                   <span className="ml-2 text-gray-400">— {example.russian}</span>
                 </li>
               );
@@ -125,39 +134,39 @@ const FlashCard: React.FC<FlashCardProps> = ({ word: propWord, reverse, onMarkAs
     <div>
       <div className="w-full max-w-xl mx-auto px-2 sm:px-0">
         <div className="w-full flex flex-col gap-3 sm:flex-row sm:justify-between sm:items-center pb-6">
-        <div className="flex gap-2">
-          <button
-            type="button"
-            className="w-full sm:w-auto px-3 py-2 rounded-md bg-green-500 text-white text-base sm:text-lg hover:bg-green-600 transition-colors"
-            onClick={(e) => {
-              e.stopPropagation();
-              handleMarkLearned();
-            }}
-          >
-            Знаю
-          </button>
-          {!!word.learningStage && word.learningStage > 0 && (
+          <div className="flex gap-2">
             <button
               type="button"
-              className="w-full sm:w-auto px-3 py-2 rounded-md bg-blue-500 text-white text-sm hover:bg-blue-600 transition-colors"
-              onClick={handleResetProgress}
-              title="Сбросить прогресс изучения"
+              className="w-full sm:w-auto px-3 py-2 rounded-md bg-green-500 text-white text-base sm:text-lg hover:bg-green-600 transition-colors"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleMarkLearned();
+              }}
             >
-              Сбросить уровень ({word.learningStage})
+              Знаю
             </button>
-          )}
+            {!!word.learningStage && word.learningStage > 0 && (
+              <button
+                type="button"
+                className="w-full sm:w-auto px-3 py-2 rounded-md bg-blue-500 text-white text-sm hover:bg-blue-600 transition-colors"
+                onClick={handleResetProgress}
+                title="Сбросить прогресс изучения"
+              >
+                Сбросить уровень ({word.learningStage})
+              </button>
+            )}
+          </div>
+          <button
+            type="button"
+            className="w-full sm:w-auto px-3 py-2 rounded-md bg-orange-500 text-white text-base sm:text-lg hover:bg-orange-600 transition-colors"
+            onClick={(e) => {
+              e.stopPropagation();
+              handleSkip();
+            }}
+          >
+            Далее
+          </button>
         </div>
-        <button
-          type="button"
-          className="w-full sm:w-auto px-3 py-2 rounded-md bg-orange-500 text-white text-base sm:text-lg hover:bg-orange-600 transition-colors"
-          onClick={(e) => {
-            e.stopPropagation();
-            handleSkip();
-          }}
-        >
-          Далее
-        </button>
-      </div>
         <div className="card-container min-h-[340px] sm:min-h-[400px]">
           <div className="absolute top-3 right-4 z-10">
             {word.isLearned ? (
@@ -208,23 +217,15 @@ const FlashCard: React.FC<FlashCardProps> = ({ word: propWord, reverse, onMarkAs
                   </>
                 ) : (
                   <>
-                    <h2 className={`text-5xl font-bold mb-2 ${categoryColors.text} flex items-center justify-between`}>
+                    <h2 className={`text-5xl font-bold mb-2 ${categoryColors.text} flex items-center justify-center`}>
                       {word.hebrew}
-                      <button
-                        type="button"
-                        aria-label="Произнести"
-                        className="ml-6 inline-flex items-center hover:text-blue-600 focus:outline-none"
-                        onClick={e => {
-                          e.stopPropagation();
-                          if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
-                            const utter = new window.SpeechSynthesisUtterance(word.hebrew);
-                            utter.lang = 'he-IL';
-                            window.speechSynthesis.speak(utter);
-                          }
-                        }}
-                      >
-                        <svg width="68" height="68" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><path d="M11 5L6 9H2v6h4l5 4V5z" /><path d="M23 9v6" /></svg>
-                      </button>
+                      <span>
+                        <SpeakerIcon
+                          text={word.hebrew}
+                          size="speaker"
+                          className="ml-6 hover:text-blue-600"
+                        />
+                      </span>
                     </h2>
                     <p className={`text-xl ${categoryColors.text} mb-3`}>[{word.transcription}]</p>
                     <p className="text-sm text-gray-500 mt-2">Нажмите, чтобы увидеть перевод</p>

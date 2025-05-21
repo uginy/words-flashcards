@@ -15,11 +15,12 @@ import {
 interface IconButtonProps {
   icon: React.ReactNode;
   tooltip: string;
-  onClick?: () => void;
+  onClick?: (event: React.MouseEvent<HTMLButtonElement>) => void;
   badge?: number;
   popoverContent?: React.ReactNode;
   className?: string;
   variant?: "ghost" | "default" | "destructive" | "outline" | "secondary" | "link";
+  size?: "default" | "sm" | "lg" | "icon" | "speaker"
 }
 
 export const IconButton: React.FC<IconButtonProps> = ({
@@ -28,13 +29,14 @@ export const IconButton: React.FC<IconButtonProps> = ({
   onClick,
   badge,
   popoverContent,
-  className = "h-6 w-6",
+  className,
   variant = "ghost",
+  size = "icon"
 }) => {
   const button = (
     <Button
       variant={variant}
-      size="icon"
+      size={size}
       className={className}
       onClick={onClick}
     >
