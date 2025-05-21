@@ -1,9 +1,11 @@
 import OpenAI from "openai";
-import { Word, WordCategory } from "../types";
+import type { Word, WordCategory } from "../types";
 
-type ToastFunction = {
-  (opts: { title: string; description: string; variant?: 'default' | 'destructive' | 'warning' }): void;
-};
+type ToastFunction = (opts: {
+  title: string;
+  description: string;
+  variant?: 'default' | 'destructive' | 'warning'
+}) => void;
 
 // Interface for the expected structure of a single item from the LLM batch response
 interface LLMBatchResponseItem {
@@ -275,10 +277,16 @@ function processWordsArray(llmItems: LLMBatchResponseItem[], originalWords: stri
     }
 
     const llmConjugations = currentItem.conjugations;
-    let finalWordConjugations;
+    let finalWordConjugations: {
+      past: { [key: string]: string } | null;
+      present: { [key: string]: string } | null;
+      future: { [key: string]: string } | null;
+      imperative: { [key: string]: string } | null;
+    } | null | undefined;
+    
     if (llmConjugations === null) {
       finalWordConjugations = null;
-    } else if (llmConjugations) { 
+    } else if (llmConjugations) {
       finalWordConjugations = {
         past: llmConjugations.past || null,
         present: llmConjugations.present || null,
@@ -290,13 +298,18 @@ function processWordsArray(llmItems: LLMBatchResponseItem[], originalWords: stri
     }
 
     const llmExamples = currentItem.examples;
-    let finalWordExamples;
+    let finalWordExamples: { hebrew: string; russian: string }[] | null | undefined;
     if (llmExamples === null) {
       finalWordExamples = null;
     } else if (Array.isArray(llmExamples)) {
-      finalWordExamples = llmExamples.filter((ex: any) => ex && typeof ex.hebrew === 'string' && typeof ex.russian === 'string');
-    } else { 
-      finalWordExamples = undefined; 
+      finalWordExamples = llmExamples.filter((ex): ex is { hebrew: string; russian: string } =>
+        ex && typeof ex === 'object' &&
+        'hebrew' in ex && 'russian' in ex &&
+        typeof ex.hebrew === 'string' &&
+        typeof ex.russian === 'string'
+      );
+    } else {
+      finalWordExamples = undefined;
     }
 
     enrichedWords.push({
@@ -447,7 +460,7 @@ export async function enrichWordsWithLLM(
       const responseContent = completion.choices[0].message.content;
       try {
         // Attempt to clean up potential markdown backticks
-        const cleanedResponseContent = responseContent.replace(/^\\\`\\\`\\\`json\\s*|\\s*\\\`\\\`\\\`$/g, '');
+        const cleanedResponseContent = responseContent.replace(/^```json\s*|\s*```$/g, '');
         parsedArgs = JSON.parse(cleanedResponseContent);
       } catch (e) {
         console.error('Failed to parse message content as JSON (direct JSON mode):', responseContent, e);
@@ -461,105 +474,121 @@ export async function enrichWordsWithLLM(
 
     const processedWordsResult = processWordsArray(parsedArgs.processed_words, hebrewWords);
     
-    const successfullyProcessed = processedWordsResult.filter(w => 
+    const successfullyProcessed = processedWordsResult.filter(w =>
       w.transcription && w.russian && w.category !== 'אחר'
-    ).length;
-    
+    );
+    const failedWords = processedWordsResult.filter(w =>
+      !w.transcription || !w.russian || w.category === 'אחר'
+    );
+
+    if (failedWords.length > 0) {
+      showToast({
+        title: "Ошибка обработки",
+        description: `Не удалось обработать ${failedWords.length} слов корректно.`,
+        variant: "destructive"
+      });
+      throw new Error(`Failed to process words: ${failedWords.map(w => w.hebrew).join(', ')}`);
+    }
+
+    if (successfullyProcessed.length === 0) {
+      throw new Error('No words were processed successfully');
+    }
+
     showToast({
       title: "Готово",
-      description: `Успешно обработано ${successfullyProcessed} из ${hebrewWords.length} слов.`,
-      variant: successfullyProcessed === hebrewWords.length ? "default" : "warning"
+      description: `Успешно обработано ${successfullyProcessed.length} слов.`,
+      variant: "default"
     });
 
     return processedWordsResult;
 
-  } catch (error: any) {
-    console.error('Error enriching words with LLM:', error); 
+  } catch (error) {
+    console.error('Error enriching words with LLM:', error);
 
-    let toastDescription = "Произошла ошибка при обработке слов. Проверьте консоль для деталей."; 
-    let returnEmptyArrayForCriticalError = false;
+    let errorMessage: string;
+    let isCriticalError = false;
 
     if (error instanceof Error) {
-        const errorMessage = error.message;
-
-        // This specific message indicates the model was expected to use tools but didn't.
-        if (errorMessage.includes('Expected a function call, but model did not use tools as expected')) {
-            toastDescription = "Модель не использовала инструменты (функции) как ожидалось. Попробуйте другую модель или укажите явно, что модель не поддерживает инструменты.";
-            returnEmptyArrayForCriticalError = true;
+        if (error.message.includes('Expected a function call')) {
+            errorMessage = "Модель не поддерживает необходимые функции. Попробуйте другую модель или отключите использование инструментов.";
+            isCriticalError = true;
         }
-        // Provider error (like OpenRouter's "tools field exceeds max depth limit")
-        else if (errorMessage === "Provider returned error" && (error as any).metadata) {
-            const metadata = (error as any).metadata;
+        else if (error.message === "Provider returned error" && 'metadata' in error) {
+            interface ProviderMetadata {
+                provider_name?: string;
+                raw?: string;
+            }
+            const metadata = (error as { metadata: ProviderMetadata }).metadata;
             const provider = metadata.provider_name || 'Unknown';
-            if (typeof metadata.raw === 'string') {
+            
+            if (metadata?.raw?.includes?.("tools field exceeds max depth limit")) {
+                errorMessage = `Модель ${provider} не поддерживает расширенные функции. Выберите другую модель.`;
+                isCriticalError = true;
+            } else if (metadata?.raw) {
                 try {
-                    const rawDetails = JSON.parse(metadata.raw);
-                    const detailText = typeof rawDetails.detail === 'string' ? rawDetails.detail : (typeof rawDetails.message === 'string' ? rawDetails.message : null);
-
-                    if (typeof detailText === 'string' && detailText.includes("tools field exceeds max depth limit")) {
-                        toastDescription = `Модель от ${provider} не поддерживает расширенные функции (tools field exceeds max depth limit). Пожалуйста, выберите другую модель или режим без инструментов.`;
-                        returnEmptyArrayForCriticalError = true;
-                      } else if (typeof detailText === 'string') {
-                        toastDescription = `Ошибка от ${provider}: ${detailText}`;
-                        // Consider if all provider errors should be critical
-                        // returnEmptyArrayForCriticalError = true; 
-                      } else {
-                        toastDescription = `Ошибка от ${provider}: ${errorMessage}. Проверьте консоль для полных данных.`;
-                      }
-                } catch (e) {
-                    console.warn("Failed to parse error.metadata.raw from provider error", e);
-                    toastDescription = `Ошибка от ${provider}: ${errorMessage}. Проверьте консоль для полных данных.`;
+                    const rawError = JSON.parse(metadata.raw);
+                    errorMessage = `Ошибка от ${provider}: ${rawError.detail || rawError.message || error.message}`;
+                } catch {
+                    errorMessage = `Ошибка от ${provider}: ${error.message}`;
                 }
+                isCriticalError = true;
             } else {
-                 toastDescription = `Ошибка от ${provider}: ${errorMessage}. Проверьте консоль для полных данных.`;
+                errorMessage = `Ошибка от ${provider}: ${error.message}`;
+                isCriticalError = true;
             }
         }
-        // Other specific errors thrown from the try block (tool mode or direct JSON mode)
-        else if (errorMessage.startsWith('Invalid LLM response structure: No content or choices') || // Common
-                   errorMessage.startsWith('Invalid LLM response: Expected function call to "save_hebrew_word_details"') || // Tool mode specific
-                   errorMessage.startsWith('Failed to parse LLM function call arguments') || // Tool mode specific
-                   errorMessage.startsWith('Invalid LLM response structure: No content in message from the model (direct JSON mode)') || // Direct JSON specific
-                   errorMessage.startsWith('Failed to parse LLM response content as JSON') || // Direct JSON specific
-                   errorMessage.startsWith('Invalid LLM response: "processed_words" array is missing')) { // Common
-            toastDescription = errorMessage; 
-            returnEmptyArrayForCriticalError = true; 
+        else if (
+            error.message.startsWith('Invalid LLM response') ||
+            error.message.startsWith('Failed to parse') ||
+            error.message.includes('No words were processed successfully')
+        ) {
+            errorMessage = error.message;
+            isCriticalError = true;
         }
-        // Any other Error instance not specifically handled above
+        else if (error.message.includes('Failed to process words:')) {
+            errorMessage = "Некоторые слова не удалось обработать. Проверьте их корректность и попробуйте снова.";
+            isCriticalError = false;
+        }
         else {
-            toastDescription = errorMessage; 
-            // Decide if generic errors should also return empty. For now, let them use fallback.
+            errorMessage = "Произошла непредвиденная ошибка при обработке слов. Попробуйте позже.";
+            isCriticalError = true;
         }
-    } else if (typeof error === 'string') {
-        // If error is just a string
-        toastDescription = error;
+    } else {
+        errorMessage = "Неизвестная ошибка при обработке слов";
+        isCriticalError = true;
     }
-    // If error is of another type, the default toastDescription remains.
 
     showToast({
-      title: "Ошибка",
-      description: toastDescription,
-      variant: "destructive",
+        title: isCriticalError ? "Критическая ошибка" : "Ошибка",
+        description: errorMessage,
+        variant: "destructive"
     });
-    
-    if (returnEmptyArrayForCriticalError) {
-      return []; 
-    } else {
-      // Fallback: return minimal word entries with default values
-      return hebrewWords.map(word => ({
-        id: String(Date.now()) + Math.random().toString(36).substring(2, 9),
-        hebrew: word,
-        transcription: '',
-        russian: '',
-        category: 'אחר' as WordCategory,
-        showTranslation: false,
-        isLearned: false,
-        learningStage: 0,
-        lastReviewed: null,
-        nextReview: null,
-        dateAdded: Date.now(),
-        conjugations: undefined,
-        examples: [], 
-      }));
+
+    if (isCriticalError) {
+        return [];
     }
+
+    // Fallback: return minimal word entries with user-friendly message
+    showToast({
+      title: "Частичная обработка",
+      description: "Слова добавлены с минимальной информацией. Попробуйте обработать их позже.",
+      variant: "warning"
+    });
+
+    return hebrewWords.map(word => ({
+      id: String(Date.now()) + Math.random().toString(36).substring(2, 9),
+      hebrew: word,
+      transcription: '',
+      russian: '',
+      category: 'אחר' as WordCategory,
+      showTranslation: false,
+      isLearned: false,
+      learningStage: 0,
+      lastReviewed: null,
+      nextReview: null,
+      dateAdded: Date.now(),
+      conjugations: undefined,
+      examples: []
+    }));
   }
 }
