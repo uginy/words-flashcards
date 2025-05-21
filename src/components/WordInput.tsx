@@ -3,7 +3,8 @@ import { useState, useEffect } from 'react';
 import { WordSuggestions } from './WordSuggestions';
 import { parseAndTranslateWords } from '../utils/translation';
 import { enrichWordsWithLLM } from '../services/openrouter';
-import { Word } from '../types';
+import { translateToHebrew } from '../services/translation';
+import type { Word } from '../types';
 import { useToast } from '../hooks/use-toast';
 import { useWordsStore } from '../store/wordsStore';
 
@@ -17,25 +18,32 @@ function chunkArray<T>(arr: T[], size: number): T[][] {
 }
 
  
+interface LLMResponseWord {
+  hebrew: string;
+  russian: string;
+  transcription: string;
+  category: string;
+}
+
 function validateLLMWordsResponse(data: unknown): Word[] {
   if (Array.isArray(data)) {
-    return data.filter((w: unknown) =>
+    return data.filter((w: unknown): w is LLMResponseWord =>
       w !== null &&
       typeof w === 'object' &&
-      typeof (w as any).hebrew === 'string' &&
-      typeof (w as any).russian === 'string' &&
-      typeof (w as any).transcription === 'string' &&
-      typeof (w as any).category === 'string'
+      typeof (w as LLMResponseWord).hebrew === 'string' &&
+      typeof (w as LLMResponseWord).russian === 'string' &&
+      typeof (w as LLMResponseWord).transcription === 'string' &&
+      typeof (w as LLMResponseWord).category === 'string'
     ) as Word[];
   }
-  if (!data || typeof data !== 'object' || !Array.isArray((data as any).words)) return [];
-  return (data as any).words.filter((w: unknown) =>
+  if (!data || typeof data !== 'object' || !Array.isArray((data as { words?: unknown[] }).words)) return [];
+  return (data as { words: unknown[] }).words.filter((w: unknown): w is LLMResponseWord =>
     w !== null &&
     typeof w === 'object' &&
-    typeof (w as any).hebrew === 'string' &&
-    typeof (w as any).russian === 'string' &&
-    typeof (w as any).transcription === 'string' &&
-    typeof (w as any).category === 'string'
+    typeof (w as LLMResponseWord).hebrew === 'string' &&
+    typeof (w as LLMResponseWord).russian === 'string' &&
+    typeof (w as LLMResponseWord).transcription === 'string' &&
+    typeof (w as LLMResponseWord).category === 'string'
   ) as Word[];
 }
 
@@ -51,9 +59,14 @@ const WordInput: React.FC = () => {
       'primary', 'secondary', 'accent', 'successAlt', 'errorAlt',
       'infoAlt', 'warningAlt', 'neutralAlt', 'primaryAlt', 'secondaryAlt', 'accentAlt'
     ] as const;
-    let mappedVariant: typeof allowedVariants[number] | undefined = undefined;
-    if (opts.variant === 'destructive') mappedVariant = 'error';
-    else if (opts.variant && allowedVariants.includes(opts.variant as any)) mappedVariant = opts.variant as typeof allowedVariants[number];
+    type AllowedVariant = typeof allowedVariants[number];
+    
+    let mappedVariant: AllowedVariant | undefined = undefined;
+    if (opts.variant === 'destructive') {
+      mappedVariant = 'error';
+    } else if (opts.variant && allowedVariants.includes(opts.variant as AllowedVariant)) {
+      mappedVariant = opts.variant as AllowedVariant;
+    }
     toast({ ...opts, variant: mappedVariant });
   };
   const [inputText, setInputText] = useState('');
@@ -89,8 +102,16 @@ const WordInput: React.FC = () => {
     let wordsToAdd: Word[] = [];
     let failedWords: string[] = [];
     let pathTaken: 'structured' | 'llm' | 'none' = 'none';
-
+    
     try {
+      const apiKey = localStorage.getItem('openRouterApiKey') || DEFAULT_OPENROUTER_API_KEY;
+      const model = localStorage.getItem('openRouterModel') || DEFAULT_OPENROUTER_MODEL;
+      if (!apiKey || !model || apiKey === "YOUR_DEFAULT_API_KEY_HERE" || model === "YOUR_DEFAULT_MODEL_ID_HERE") {
+        setError('OpenRouter API key or model не настроены. Укажите их в Settings или пропишите значения по умолчанию.');
+        setIsLoading(false);
+        return;
+      }
+
       if (inputText.includes(' - ')) {
         pathTaken = 'structured';
         try {
@@ -98,25 +119,48 @@ const WordInput: React.FC = () => {
           if (!Array.isArray(wordsToAdd)) {
             throw new Error('Failed to parse words');
           }
-        } catch (error) {
+        } catch {
           setError('Failed to parse the input text. Please check the format.');
           setIsLoading(false);
           return;
         }
       } else {
         pathTaken = 'llm';
-        const apiKey = localStorage.getItem('openRouterApiKey') || DEFAULT_OPENROUTER_API_KEY;
-        const model = localStorage.getItem('openRouterModel') || DEFAULT_OPENROUTER_MODEL;
-        if (!apiKey || !model || apiKey === "YOUR_DEFAULT_API_KEY_HERE" || model === "YOUR_DEFAULT_MODEL_ID_HERE") {
-          setError('OpenRouter API key or model не настроены. Укажите их в Settings или пропишите значения по умолчанию.');
-          setIsLoading(false);
-          return;
-        }
         // Split and clean input
-        let hebrewWordsForLlm = inputText
+        const wordsToTranslate = inputText
           .split(/\r\n|\r|\n/)
           .map(line => line.trim())
           .filter(line => line.length > 0);
+
+        if (wordsToTranslate.length === 0) {
+          setError('Нет слов для добавления. Пожалуйста, введите слова.');
+          setIsLoading(false);
+          return;
+        }
+
+        // Try to detect if input is in Russian (contains Cyrillic characters)
+        const containsCyrillic = /[а-яА-ЯёЁ]/.test(inputText);
+        let hebrewWordsForLlm: string[];
+
+        if (containsCyrillic) {
+          try {
+            // Join words with newlines for translation
+            const formattedInput = wordsToTranslate.join('\n');
+            
+            // Translate Russian words to Hebrew
+            toast({
+              title: "Перевод",
+              description: "Переводим слова на иврит...",
+            });
+            hebrewWordsForLlm = await translateToHebrew(formattedInput, apiKey, model);
+          } catch (error) {
+            setError(`Ошибка при переводе слов на иврит: ${error instanceof Error ? error.message : String(error)}`);
+            setIsLoading(false);
+            return;
+          }
+        } else {
+          hebrewWordsForLlm = wordsToTranslate;
+        }
         if (hebrewWordsForLlm.length === 0) {
           setError('Нет слов для добавления. Пожалуйста, введите слова.');
           setIsLoading(false);
@@ -275,7 +319,8 @@ const WordInput: React.FC = () => {
           )}
           <div className="mb-3">
             <label htmlFor="wordInput" className="block text-sm font-medium text-gray-700 mb-1">
-              Добавляйте список слов, каждое слово должно быть на новой строке. Мы сами проанализируем его и корректно добавим в базу.
+              Добавляйте список слов на иврите или русском языке, каждое слово должно быть на новой строке.
+              Мы сами проанализируем его и корректно добавим в базу.
             </label>
             <textarea
               id="wordInput"
@@ -285,7 +330,7 @@ const WordInput: React.FC = () => {
               onChange={(e) => setInputText(e.target.value)}
               onPaste={handlePaste}
               dir="auto" // Changed to auto to better support mixed LTR/RTL for instructions and RTL for Hebrew
-              placeholder="Введите слова на иврите, каждое слово на новой строке..."
+              placeholder="Введите слова на русском или иврите, каждое слово на новой строке..."
             />
           </div>
 
