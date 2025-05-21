@@ -13,13 +13,13 @@ interface LLMBatchResponseItem {
   hebrew: string;
   transcription: string;
   russian: string;
-  conjugations?: { 
-    past: { [pronoun: string]: string } | null; 
+  conjugations?: {
+    past: { [pronoun: string]: string } | null;
     present: { [pronoun: string]: string } | null;
     future: { [pronoun: string]: string } | null;
     imperative: { [pronoun: string]: string } | null;
-  } | null; 
-  examples?: { hebrew: string; russian: string }[] | null; 
+  } | null;
+  examples?: { hebrew: string; russian: string }[] | null;
 }
 
 const systemPrompt = `You are an expert linguist specializing in Hebrew. Your task is to process a list of Hebrew words or phrases and provide detailed information for each. For each item, generate a properly formatted JSON object with required fields as specified below.
@@ -228,7 +228,7 @@ const toolDefinition = {
                     additionalProperties: { type: "string" as const }
                   }
                 },
-                additionalProperties: false 
+                additionalProperties: false
               },
               examples: {
                 type: ["array", "null"] as ["array", "null"],
@@ -268,11 +268,11 @@ function processWordsArray(llmItems: LLMBatchResponseItem[], originalWords: stri
     const categoryInput = String(currentItem.category || 'אחר');
     const category: WordCategory = ['פועל', 'שם עצם', 'שם תואר', 'אחר'].includes(categoryInput) ? categoryInput as WordCategory : 'אחר';
 
-    if (!hebrew) { 
+    if (!hebrew) {
       console.warn('LLM item missing "hebrew" field, cannot process:', currentItem);
       continue;
     }
-     if (!transcription || !russian) {
+    if (!transcription || !russian) {
       console.warn('LLM item missing transcription or russian field:', currentItem);
     }
 
@@ -283,7 +283,7 @@ function processWordsArray(llmItems: LLMBatchResponseItem[], originalWords: stri
       future: { [key: string]: string } | null;
       imperative: { [key: string]: string } | null;
     } | null | undefined;
-    
+
     if (llmConjugations === null) {
       finalWordConjugations = null;
     } else if (llmConjugations) {
@@ -293,7 +293,7 @@ function processWordsArray(llmItems: LLMBatchResponseItem[], originalWords: stri
         future: llmConjugations.future || null,
         imperative: llmConjugations.imperative || null,
       };
-    } else { 
+    } else {
       finalWordConjugations = undefined;
     }
 
@@ -348,8 +348,8 @@ function processWordsArray(llmItems: LLMBatchResponseItem[], originalWords: stri
         lastReviewed: null,
         nextReview: null,
         dateAdded: Date.now(),
-        conjugations: undefined, 
-        examples: [],          
+        conjugations: undefined,
+        examples: [],
       });
     }
   }
@@ -361,8 +361,8 @@ export async function enrichWordsWithLLM(
   hebrewWords: string[],
   apiKey: string,
   modelIdentifier: string,
-  toastFn?: ToastFunction, 
-  modelSupportsToolsExplicit?: boolean 
+  toastFn?: ToastFunction,
+  modelSupportsToolsExplicit?: boolean
 ): Promise<Word[]> {
   if (!apiKey || !modelIdentifier) {
     throw new Error('API key or model not configured.');
@@ -389,10 +389,10 @@ export async function enrichWordsWithLLM(
     // Heuristic: Check if modelIdentifier contains known tool-supporting model names/patterns
     // This list should be updated as new models are known.
     const knownToolSupportingModelPatterns = [
-        "gpt-4", "gpt-3.5", // OpenAI
-        "claude-3-opus", "claude-3-sonnet", "claude-3-haiku", // Anthropic
-        "gemini", // Google
-        // Add other patterns if known, e.g. specific OpenRouter model IDs that are known to be tool-capable
+      "gpt-4", "gpt-3.5", // OpenAI
+      "claude-3-opus", "claude-3-sonnet", "claude-3-haiku", // Anthropic
+      "gemini", // Google
+      // Add other patterns if known, e.g. specific OpenRouter model IDs that are known to be tool-capable
     ];
     effectiveModelSupportsTools = knownToolSupportingModelPatterns.some(name => modelIdentifier.toLowerCase().includes(name));
     console.log(`Model "${modelIdentifier}" determined to ${effectiveModelSupportsTools ? 'support' : 'not support'} tools based on heuristic.`);
@@ -444,20 +444,27 @@ export async function enrichWordsWithLLM(
     } else {
       // --- Logic for models NOT supporting tools (direct JSON response) ---
       console.log("Using DIRECT JSON approach for model:", modelIdentifier);
-      const completion = await openai.chat.completions.create({
-        model: modelIdentifier,
-        messages: [
-          { role: 'system', content: systemPromptForDirectJson },
-          { role: 'user', content: userContent }
-        ],
-        // No tools or tool_choice here
-        stream: false
-      });
+      let completion: any = {}
+      try {
+        completion = await openai.chat.completions.create({
+          model: modelIdentifier,
+          messages: [
+            { role: 'system', content: systemPromptForDirectJson },
+            { role: 'user', content: userContent }
+          ],
+          // No tools or tool_choice here
+          stream: false
+        });
+      } catch (e: any) {
+        if(e?.status === 401) {          
+            throw new Error(e.message ?? 'Authentication or Api key error found')
+        }        
+      }
 
-      if (!completion.choices || !completion.choices.length || !completion.choices[0].message || !completion.choices[0].message.content) {
+      if (!completion?.choices || !completion?.choices?.length || !completion?.choices[0]?.message || !completion.choices[0].message.content) {
         throw new Error('Invalid LLM response structure: No content in message from the model (direct JSON mode).');
       }
-      const responseContent = completion.choices[0].message.content;
+      const responseContent = completion?.choices[0].message.content;
       try {
         // Attempt to clean up potential markdown backticks
         const cleanedResponseContent = responseContent.replace(/^```json\s*|\s*```$/g, '');
@@ -473,7 +480,7 @@ export async function enrichWordsWithLLM(
     }
 
     const processedWordsResult = processWordsArray(parsedArgs.processed_words, hebrewWords);
-    
+
     const successfullyProcessed = processedWordsResult.filter(w =>
       w.transcription && w.russian && w.category !== 'אחר'
     );
@@ -509,63 +516,65 @@ export async function enrichWordsWithLLM(
     let isCriticalError = false;
 
     if (error instanceof Error) {
-        if (error.message.includes('Expected a function call')) {
-            errorMessage = "Модель не поддерживает необходимые функции. Попробуйте другую модель или отключите использование инструментов.";
-            isCriticalError = true;
-        }
-        else if (error.message === "Provider returned error" && 'metadata' in error) {
-            interface ProviderMetadata {
-                provider_name?: string;
-                raw?: string;
-            }
-            const metadata = (error as { metadata: ProviderMetadata }).metadata;
-            const provider = metadata.provider_name || 'Unknown';
-            
-            if (metadata?.raw?.includes?.("tools field exceeds max depth limit")) {
-                errorMessage = `Модель ${provider} не поддерживает расширенные функции. Выберите другую модель.`;
-                isCriticalError = true;
-            } else if (metadata?.raw) {
-                try {
-                    const rawError = JSON.parse(metadata.raw);
-                    errorMessage = `Ошибка от ${provider}: ${rawError.detail || rawError.message || error.message}`;
-                } catch {
-                    errorMessage = `Ошибка от ${provider}: ${error.message}`;
-                }
-                isCriticalError = true;
-            } else {
-                errorMessage = `Ошибка от ${provider}: ${error.message}`;
-                isCriticalError = true;
-            }
-        }
-        else if (
-            error.message.startsWith('Invalid LLM response') ||
-            error.message.startsWith('Failed to parse') ||
-            error.message.includes('No words were processed successfully')
-        ) {
-            errorMessage = error.message;
-            isCriticalError = true;
-        }
-        else if (error.message.includes('Failed to process words:')) {
-            errorMessage = "Некоторые слова не удалось обработать. Проверьте их корректность и попробуйте снова.";
-            isCriticalError = false;
-        }
-        else {
-            errorMessage = "Произошла непредвиденная ошибка при обработке слов. Попробуйте позже.";
-            isCriticalError = true;
-        }
-    } else {
-        errorMessage = "Неизвестная ошибка при обработке слов";
+
+      if (error.message.includes('Expected a function call')) {
+        errorMessage = "Модель не поддерживает необходимые функции. Попробуйте другую модель или отключите использование инструментов.";
         isCriticalError = true;
+      }
+      else if (error.message === "Provider returned error" && 'metadata' in error) {
+        interface ProviderMetadata {
+          provider_name?: string;
+          raw?: string;
+        }
+        const metadata = (error as { metadata: ProviderMetadata }).metadata;
+        const provider = metadata.provider_name || 'Unknown';
+
+        if (metadata?.raw?.includes?.("tools field exceeds max depth limit")) {
+          errorMessage = `Модель ${provider} не поддерживает расширенные функции. Выберите другую модель.`;
+          isCriticalError = true;
+        } else if (metadata?.raw) {
+          try {
+            const rawError = JSON.parse(metadata.raw);
+            errorMessage = `Ошибка от ${provider}: ${rawError.detail || rawError.message || error.message}`;
+          } catch {
+            errorMessage = `Ошибка от ${provider}: ${error.message}`;
+          }
+          isCriticalError = true;
+        } else {
+          errorMessage = `Ошибка от ${provider}: ${error.message}`;
+          isCriticalError = true;
+        }
+      }
+      else if (
+        error.message.startsWith('Invalid LLM response') ||
+        error.message.startsWith('Failed to parse') ||
+        error.message.includes('No words were processed successfully')
+      ) {
+        errorMessage = error.message;
+        isCriticalError = true;
+      }
+      else if (error.message.includes('Failed to process words:')) {
+        errorMessage = "Некоторые слова не удалось обработать. Проверьте их корректность и попробуйте снова.";
+        isCriticalError = false;
+      }
+      else {
+        errorMessage = "Произошла непредвиденная ошибка при обработке слов. Попробуйте позже.";
+        isCriticalError = true;
+      }
+      throw new Error(error.message) 
+    } else {
+      errorMessage = "Неизвестная ошибка при обработке слов";
+      isCriticalError = true;
     }
 
     showToast({
-        title: isCriticalError ? "Критическая ошибка" : "Ошибка",
-        description: errorMessage,
-        variant: "destructive"
+      title: isCriticalError ? "Критическая ошибка" : "Ошибка",
+      description: errorMessage,
+      variant: "destructive"
     });
 
     if (isCriticalError) {
-        return [];
+      return [];
     }
 
     // Fallback: return minimal word entries with user-friendly message
