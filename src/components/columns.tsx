@@ -170,34 +170,34 @@ export const getColumns = (
       );
     },
   },
-  // {
-  //   accessorKey: "learningStage",
-  //   header: ({ column }) => (
-  //     <Button
-  //       variant="ghost"
-  //       onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-  //       className="-ml-4"
-  //     >
-  //       Уровень
-  //       <ArrowUpDown className="ml-2 h-4 w-4" />
-  //     </Button>
-  //   ),
-  //   cell: ({ row }) => {
-  //     const stage = row.getValue("learningStage") as number;
-  //     return (
-  //       <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full
-  //         ${stage === 5 ? 'bg-blue-100 text-blue-800' :
-  //           stage === 4 ? 'bg-green-100 text-green-800' :
-  //           stage === 3 ? 'bg-yellow-100 text-yellow-800' :
-  //           stage === 2 ? 'bg-orange-100 text-orange-800' :
-  //           stage === 1 ? 'bg-red-100 text-red-800' :
-  //           'bg-gray-100 text-gray-800'}`}
-  //       >
-  //         {stage || 0}/5
-  //       </span>
-  //     );
-  //   },
-  // },
+  {
+    accessorKey: "learningStage",
+    header: ({ column }) => (
+      <Button
+        variant="ghost"
+        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        className="-ml-4"
+      >
+        Уровень
+        <ArrowUpDown className="ml-2 h-4 w-4" />
+      </Button>
+    ),
+    cell: ({ row }) => {
+      const stage = row.getValue("learningStage") as number;
+      return (
+        <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full
+          ${stage === 5 ? 'bg-blue-100 text-blue-800' :
+            stage === 4 ? 'bg-green-100 text-green-800' :
+            stage === 3 ? 'bg-yellow-100 text-yellow-800' :
+            stage === 2 ? 'bg-orange-100 text-orange-800' :
+            stage === 1 ? 'bg-red-100 text-red-800' :
+            'bg-gray-100 text-gray-800'}`}
+        >
+          {stage || 0}/5
+        </span>
+      );
+    },
+  },
   {
     accessorKey: "dateAdded",
     header: ({ column }) => (
