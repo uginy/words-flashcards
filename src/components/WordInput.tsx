@@ -1,5 +1,6 @@
 import { DEFAULT_OPENROUTER_API_KEY, DEFAULT_OPENROUTER_MODEL } from '../config/openrouter';
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
+import { WordSuggestions } from './WordSuggestions';
 import { parseAndTranslateWords } from '../utils/translation';
 import { enrichWordsWithLLM } from '../services/openrouter';
 import { Word } from '../types';
@@ -251,6 +252,19 @@ const WordInput: React.FC = () => {
         <div className="flex justify-between items-center mb-2">
           <h3 className="text-lg font-medium text-gray-800">Добавить слова</h3>
         </div>
+
+        <WordSuggestions
+          onWordsReceived={(words) => {
+            setInputText(prevText => {
+              if (prevText.trim()) {
+                return `${prevText}\n${words}`;
+              }
+              return words;
+            });
+          }}
+          apiKey={localStorage.getItem('openRouterApiKey') || DEFAULT_OPENROUTER_API_KEY}
+          modelIdentifier={localStorage.getItem('openRouterModel') || DEFAULT_OPENROUTER_MODEL}
+        />
 
         <form onSubmit={handleSubmit}>
           {error && (
