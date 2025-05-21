@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { Button } from './ui/button';
+import { Input } from './ui/input';
 import { useToast } from '../hooks/use-toast';
 import { fetchSuggestedWords } from '../services/wordSuggestions';
 
@@ -26,6 +27,9 @@ const CATEGORIES = [
   { value: 'other', label: 'Другое (אחר)' },
 ];
 
+const getCatLabel = (value: string) => CATEGORIES?.find(el => el.value === value)?.label ?? CATEGORIES[0].label;
+const getLevelLabel = (value: string) => LEVELS?.find(el => el.value === value)?.label ?? LEVELS[0].label;
+
 export const WordSuggestions: React.FC<WordSuggestionsProps> = ({
   onWordsReceived,
   apiKey,
@@ -33,6 +37,7 @@ export const WordSuggestions: React.FC<WordSuggestionsProps> = ({
 }) => {
   const [level, setLevel] = useState(() => LEVELS.find(l => l.default)?.value || LEVELS[0].value);
   const [category, setCategory] = useState(CATEGORIES[0].value);
+  const [wordCount, setWordCount] = useState(20);
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
 
@@ -40,17 +45,18 @@ export const WordSuggestions: React.FC<WordSuggestionsProps> = ({
     setIsLoading(true);
     try {
       const words = await fetchSuggestedWords({
-        category,
-        level,
+        category: getCatLabel(category),
+        level: getLevelLabel(level),
         apiKey,
         modelIdentifier,
+        count: wordCount,
       });
 
       if (words.length > 0) {
         onWordsReceived(words.join('\n'));
         toast({
           title: 'Успех!',
-          description: `Получено ${words.length} слов`,
+          description: `Мы успешно предложили ${words.length} слов и вставили в поле`,
           variant: 'success',
         });
       } else {
@@ -100,6 +106,23 @@ export const WordSuggestions: React.FC<WordSuggestionsProps> = ({
             ))}
           </SelectContent>
         </Select>
+      </div>
+
+      <div className="flex gap-4 items-center">
+        <span className="text-sm text-gray-700">Количество слов:</span>
+        <Input
+          type="number"
+          min="1"
+          max="40"
+          value={wordCount}
+          onChange={(e) => {
+            const value = Number.parseInt(e.target.value, 10);
+            if (Number.isInteger(value) && value >= 1 && value <= 40) {
+              setWordCount(value);
+            }
+          }}
+          className="w-24"
+        />
       </div>
 
       <Button

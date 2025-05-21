@@ -3,15 +3,17 @@ interface SuggestWordsParams {
   level: string;
   apiKey: string;
   modelIdentifier: string;
+  count: number;
 }
 
 export const fetchSuggestedWords = async ({
   category,
   level,
   apiKey,
-  modelIdentifier
+  modelIdentifier,
+  count
 }: SuggestWordsParams): Promise<string[]> => {
-  const prompt = `Предложи список из 20 новых слов на иврите для изучения. Категория: ${category}. Уровень: ${level}. Ответ дай в виде списка слов на иврите, разделенных запятыми, без нумерации и дополнительных пояснений. Только слова через запятую.`;
+  const prompt = `Предложи список из ${count} новых слов на иврите для изучения. Категория: ${category}. Уровень: ${level}. Ответ дай в виде списка слов на иврите, разделенных запятыми, без нумерации и дополнительных пояснений. Только слова через запятую.`;
 
   try {
     const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
