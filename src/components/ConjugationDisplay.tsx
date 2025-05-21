@@ -1,5 +1,6 @@
 import React from 'react';
 import { Word } from '@/types';
+import { SpeakerIcon } from './SpeakerIcon';
 
 interface ConjugationDisplayProps {
   conjugations: NonNullable<Word['conjugations']>;
@@ -26,9 +27,17 @@ const ConjugationDisplay: React.FC<ConjugationDisplayProps> = ({ conjugations })
               </div>
               <div className="space-y-2.5">
                 {Object.entries(forms).map(([person, form]) => (
-                  <div key={person} className="grid grid-cols-[120px,1fr] gap-4 items-center text-sm">
-                    <span className="text-muted-foreground font-medium">{person}</span>
-                    <span className="font-medium" dir="rtl">{form}</span>
+                  <div key={person} className="flex flex-row gap-4 text-sm justify-between items-center">
+                    <span className="flex-1 text-muted-foreground font-medium">{person}</span>
+                    <span>
+                      {form}
+                    </span>
+                    <span className="font-medium" dir="rtl">
+                      <SpeakerIcon
+                        text={`${person} ${form}`}
+                        className="ml-6 hover:text-blue-600"
+                      />
+                    </span>
                   </div>
                 ))}
               </div>

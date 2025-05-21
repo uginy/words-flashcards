@@ -1,5 +1,6 @@
 import React from 'react';
 import { Word } from '@/types';
+import { SpeakerIcon } from './SpeakerIcon';
 
 interface CompactConjugationProps {
   conjugations: NonNullable<Word['conjugations']>;
@@ -25,8 +26,16 @@ const CompactConjugation: React.FC<CompactConjugationProps> = ({ conjugations })
             <div className="grid grid-cols-2 gap-x-8 gap-y-0.5">
               {Object.entries(forms).map(([person, form]) => (
                 <div key={person} className="flex justify-between items-center text-sm">
-                  <span className="text-muted-foreground">{person}</span>
-                  <span className="font-medium" dir="rtl">{form}</span>
+                  <span className="flex-1 text-muted-foreground font-medium">{person}</span>
+                  <span>
+                    {form}
+                  </span>
+                  <span className="font-medium" dir="rtl">
+                    <SpeakerIcon
+                      text={`${person} ${form}`}
+                      className="ml-6 hover:text-blue-600"
+                    />
+                  </span>
                 </div>
               ))}
             </div>
