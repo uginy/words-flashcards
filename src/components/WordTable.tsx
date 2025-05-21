@@ -1,6 +1,7 @@
-import React, { useState, useRef } from 'react';
+import type { FC } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
-import { Word } from '../types';
+import type { Word } from '../types';
 import { useWordsStore } from '../store/wordsStore';
 import EditWordDialog from './EditWordDialog';
 import { DataTable } from './DataTable';
@@ -23,7 +24,7 @@ interface WordTableProps {
   onEditWord?: (word: Word) => void;
 }
 
-const WordTable: React.FC<WordTableProps> = ({ onEditWord }) => {
+const WordTable: FC<WordTableProps> = ({ onEditWord }) => {
   const allWords = useWordsStore(state => state.words);
   const replaceAllWords = useWordsStore(state => state.replaceAllWords);
   const clearAllWords = useWordsStore(state => state.clearAllWords);
@@ -34,6 +35,11 @@ const WordTable: React.FC<WordTableProps> = ({ onEditWord }) => {
   const { toast } = useToast();
   const [editingWord, setEditingWord] = useState<Word | null>(null);
   const [filteredWordCount, setFilteredWordCount] = useState<number>(allWords.length);
+
+  // Update filteredWordCount when allWords changes
+  useEffect(() => {
+    setFilteredWordCount(allWords.length);
+  }, [allWords]);
 
   const columns = getColumns(setEditingWord, markAsLearned, markAsNotLearned, deleteWord);
 
