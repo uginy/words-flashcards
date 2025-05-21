@@ -278,7 +278,7 @@ const WordInput: React.FC = () => {
 `;
 
   return (
-    <div className="w-full max-w-md mx-auto mt-6">
+    <div className="w-full mx-auto mt-6">
       {importedWordsText && (
         <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
           <p className="text-blue-800 mb-2">Обнаружены импортированные слова!</p>

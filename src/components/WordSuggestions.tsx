@@ -79,7 +79,7 @@ export const WordSuggestions: React.FC<WordSuggestionsProps> = ({
   };
 
   return (
-    <div className="flex flex-col gap-4 mb-4">
+    <div className="flex flex-row gap-4 mb-4">
       <div className="flex gap-4">
         <Select value={category} onValueChange={setCategory}>
           <SelectTrigger className="w-[200px]">
@@ -109,7 +109,7 @@ export const WordSuggestions: React.FC<WordSuggestionsProps> = ({
       </div>
 
       <div className="flex gap-4 items-center">
-        <span className="text-sm text-gray-700">Количество слов:</span>
+        <span className="text-sm text-gray-700">Cлов:</span>
         <Input
           type="number"
           min="1"
