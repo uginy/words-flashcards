@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useSpeechSynthesis } from '../hooks/useSpeechSynthesis';
 import CompactConjugation from './CompactConjugation';
 import { SpeakerIcon } from './SpeakerIcon';
 import { useWordsStore } from '../store/wordsStore';
@@ -26,6 +27,28 @@ const FlashCard: React.FC<FlashCardProps> = ({ word: propWord, reverse, onMarkAs
   const word = propWord ?? getCurrentWord(words, currentIndex);
 
   const [flipped, setFlipped] = useState(false);
+  
+  const { speak, error: speechError } = useSpeechSynthesis({
+    text: word?.hebrew || '',
+    lang: 'he-IL'
+  });
+
+  // Automatically speak when card appears or changes
+  useEffect(() => {
+    let timeoutId: NodeJS.Timeout | undefined;
+    
+    if (!flipped && word?.hebrew) {
+      timeoutId = setTimeout(() => {
+        speak();
+      }, 1000);
+    }
+
+    return () => {
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
+    };
+  }, [word?.hebrew, flipped, speak]);
 
 
   const renderExamples = (examples: Array<{ hebrew?: string, russian?: string } | string>) => {
@@ -70,6 +93,10 @@ const FlashCard: React.FC<FlashCardProps> = ({ word: propWord, reverse, onMarkAs
 
   const handleFlip = () => {
     setFlipped(!flipped);
+    // Stop any ongoing speech when flipping to reverse side
+    if (!flipped) {
+      window.speechSynthesis.cancel();
+    }
   };
 
   const handleKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
@@ -266,6 +293,11 @@ const FlashCard: React.FC<FlashCardProps> = ({ word: propWord, reverse, onMarkAs
                 )}
               </div>
             </div>
+            {speechError && (
+              <div className="mt-4 text-center text-red-500 text-sm">
+                {speechError}
+              </div>
+            )}
           </div>
         </div>
       </div>
