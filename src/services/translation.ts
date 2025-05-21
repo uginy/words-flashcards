@@ -17,23 +17,27 @@ export async function translateToHebrew(
   });
 
   const systemPrompt = `You are a professional Russian to Hebrew translator.
-Your task is to translate the given Russian words into Hebrew.
+Your task is to translate the given Russian words into Hebrew, providing multiple translations where applicable.
 
 Given text format: Words in Russian, separated by newlines.
-Required output format: A comma-separated list of translated Hebrew words.
+Required output format: A comma-separated list where each Russian word can have multiple Hebrew translations without niqqud separated by commas.
 
 Example input:
 кошка
 собака
-дом
+идти
 
 Example output:
-חתול, כלב, בית
+חתול, חתלתול
+כלב
+ללכת, להלך
 
 Important:
-- Return ONLY the translated words in a single line, separated by commas
+- For each word, provide all relevant translations separated by commas without niqqud
+- Each word's translations should be on a new line
 - Do not add any additional text or explanations
-- Preserve the original order of words`;
+- Preserve the original order of words
+- Use appropriate synonyms and variations where they exist`;
 
   try {
     const completion = await openai.chat.completions.create({
@@ -49,11 +53,14 @@ Important:
       throw new Error('Invalid translation response');
     }
 
-    // Split by commas and filter empty items
+    // Split response into lines and process each line's translations
     return completion.choices[0].message.content
-      .split(',')
-      .map(word => word.trim())
-      .filter(word => word.length > 0);
+      .split('\n')
+      .map(line => line.trim())
+      .filter(line => line.length > 0)
+      .flatMap(line =>
+        line.split(',').map(word => word.trim()).filter(word => word.length > 0)
+      );
   } catch (error) {
     console.error('Translation error:', error);
     throw error;

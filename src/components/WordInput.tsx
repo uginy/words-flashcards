@@ -140,7 +140,6 @@ const WordInput: React.FC = () => {
 
         // Try to detect if input is in Russian (contains Cyrillic characters)
         const containsCyrillic = /[а-яА-ЯёЁ]/.test(inputText);
-        let hebrewWordsForLlm: string[];
 
         if (containsCyrillic) {
           try {
@@ -152,15 +151,25 @@ const WordInput: React.FC = () => {
               title: "Перевод",
               description: "Переводим слова на иврит...",
             });
-            hebrewWordsForLlm = await translateToHebrew(formattedInput, apiKey, model);
+            
+            const translations = await translateToHebrew(formattedInput, apiKey, model);
+            
+            // Insert translations into input field as separate lines
+            const translatedText = translations
+              .map(translation => translation.split(',').map(t => t.trim()).join('\n'))
+              .join('\n');
+            
+            setInputText(translatedText);
+            setIsLoading(false);
+            return; // Stop here - don't process translations immediately
           } catch (error) {
             setError(`Ошибка при переводе слов на иврит: ${error instanceof Error ? error.message : String(error)}`);
             setIsLoading(false);
             return;
           }
-        } else {
-          hebrewWordsForLlm = wordsToTranslate;
         }
+        
+        let hebrewWordsForLlm = wordsToTranslate;
         if (hebrewWordsForLlm.length === 0) {
           setError('Нет слов для добавления. Пожалуйста, введите слова.');
           setIsLoading(false);
