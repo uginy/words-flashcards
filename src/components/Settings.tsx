@@ -31,7 +31,7 @@ const Settings: React.FC = () => {
   const [availableModels, setAvailableModels] = useState<OpenRouterModel[]>([]);
   const [filteredModels, setFilteredModels] = useState<OpenRouterModel[]>([]);
   const [isLoadingModels, setIsLoadingModels] = useState<boolean>(false);
-  const [showFreeOnly, setShowFreeOnly] = useState<boolean>(false);
+  const [showFreeOnly, setShowFreeOnly] = useState<boolean>(true);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
   useEffect(() => {
@@ -199,6 +199,7 @@ const Settings: React.FC = () => {
             <input
                 id="freeOnly"
                 type="checkbox"
+                disabled
                 className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
                 checked={showFreeOnly}
                 onChange={(e) => setShowFreeOnly(e.target.checked)}
