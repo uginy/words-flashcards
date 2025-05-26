@@ -38,7 +38,13 @@ export const getColumns = (
       cell: ({ row }) => {
         const word = row.original;
         return (
-          <div className="text-base font-medium text-gray-900" dir="rtl">{word.hebrew}</div>
+          <div className="flex items-center justify-end gap-2 text-base font-medium text-gray-900" dir="rtl">
+            <span>{word.hebrew}</span>
+            <SpeakerIcon
+              text={word.hebrew}
+              className="text-gray-500 hover:text-blue-600 transition-colors cursor-pointer"
+            />
+          </div>
         );
       },
     },

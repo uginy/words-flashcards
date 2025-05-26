@@ -28,7 +28,7 @@ export const SpeakerIcon: React.FC<SpeakerIconProps> = ({
 
   return (
     <IconButton
-      icon={<Volume2 className="h-20 w-20" />}
+      icon={<Volume2 className="h-4 w-4" />}
       onClick={(e: MouseEvent<HTMLButtonElement>) => {
         e.stopPropagation();
         speak();
