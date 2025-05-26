@@ -37,7 +37,8 @@ Important:
 - Each word's translations should be on a new line
 - Do not add any additional text or explanations
 - Preserve the original order of words
-- Use appropriate synonyms and variations where they exist`;
+- Use appropriate synonyms and variations where they exist
+- **CRITICAL: For verbs, ALWAYS use the infinitive form in Hebrew (לפעיל form). If you receive a conjugated verb in Russian (like "работаю", "делаю", "иду"), convert it to the infinitive form in Hebrew (like "לעבוד", "לעשות", "ללכת")**`;
 
   try {
     const completion = await openai.chat.completions.create({

@@ -28,6 +28,7 @@ IMPORTANT RULES AND FIELD FORMATS:
 
 1.  **Original Word**:
     "hebrew": exact match with input word/phrase, no modifications allowed
+    **CRITICAL: If the input Hebrew word is a verb that appears to be in a conjugated form, it should be converted to its infinitive form (לפעיל form) in the "hebrew" field. For example, if processing "עובד" (working), convert it to "לעבוד" (to work).**
 
 2.  **Category** (one of these exact values):
     - "פועל" for verbs
@@ -143,6 +144,7 @@ Each object in the "processed_words" array corresponds to one input Hebrew word/
 
 IMPORTANT RULES AND FIELD FORMATS:
 1.  **"hebrew"**: Must be an exact match with the input word/phrase.
+    **CRITICAL: If the input Hebrew word is a verb that appears to be in a conjugated form, it should be converted to its infinitive form (לפעיל form) in the "hebrew" field. For example, if processing "עובד" (working), convert it to "לעבוד" (to work).**
 2.  **"category"**: Must be one of the exact Hebrew strings: "פועל" (verb), "שם עצם" (noun), "שם תואר" (adjective), "פרזות" (phrases), "אחר" (other).
 3.  **"transcription"**, **"russian"**: Must be provided.
 4.  **"conjugations"**:
