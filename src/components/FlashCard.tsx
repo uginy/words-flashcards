@@ -197,7 +197,7 @@ const FlashCard: React.FC<FlashCardProps> = ({ word: propWord, reverse, onMarkAs
             Далее
           </button>
         </div>
-        <div className="card-container min-h-[340px] sm:min-h-[400px]">
+        <div className="card-container min-h-[340px] sm:min-h-[400px] relative">
           <div className="absolute top-3 right-4 z-10">
             {word.isLearned ? (
               <span
@@ -227,7 +227,7 @@ const FlashCard: React.FC<FlashCardProps> = ({ word: propWord, reverse, onMarkAs
           </div>
           <div className={`card ${flipped ? 'flipped' : ''}`}>
             <div
-              className={`card-front rounded-xl p-4 sm:p-6 flex flex-col justify-between items-center shadow-lg relative ${categoryColors.bg}`}
+              className={`card-front rounded-xl p-4 sm:p-6 flex flex-col justify-between items-center shadow-lg cursor-pointer ${categoryColors.bg}`}
               onClick={handleFlip}
               onKeyDown={handleKeyDown}
               role="button"
@@ -266,7 +266,7 @@ const FlashCard: React.FC<FlashCardProps> = ({ word: propWord, reverse, onMarkAs
             </div>
 
             <div
-              className={`card-back rounded-xl p-4 sm:p-6 flex flex-col justify-between items-center shadow-lg relative ${categoryColors.bg}`}
+              className={`card-back rounded-xl p-4 sm:p-6 flex flex-col justify-between items-center shadow-lg cursor-pointer ${categoryColors.bg}`}
               onClick={handleFlip}
               onKeyDown={handleKeyDown}
               role="button"
