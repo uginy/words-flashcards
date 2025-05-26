@@ -62,40 +62,6 @@ export const getColumns = (
                   </Tooltip>
                 </TooltipProvider>
               )}
-              {word.examples && word.examples.length > 0 && (
-                <TooltipProvider>
-                  <Tooltip>
-                    <Popover>
-                      <TooltipTrigger asChild>
-                        <PopoverTrigger asChild>
-                          <Button variant="ghost" size="icon" className="h-6 w-6">
-                            <Languages className="h-4 w-8" />
-                          </Button>
-                        </PopoverTrigger>
-                      </TooltipTrigger>
-                      <PopoverContent className="w-auto max-w-[600px]" align="start">
-                        <div className="space-y-2">
-                          {word.examples.map((example, index) => (
-                            <div key={`${word.id}-example-${index}`} className="border-b last:border-b-0 pb-2">
-                              <p dir="rtl" className="text-sm font-medium">
-                                <SpeakerIcon
-                                  text={example.hebrew}
-                                  className="ml-6 hover:text-blue-600"
-                                />
-                                {example.hebrew}
-                              </p>
-                              <p className="text-sm text-gray-600">{example.russian}</p>
-                            </div>
-                          ))}
-                        </div>
-                      </PopoverContent>
-                      <TooltipContent>
-                        <p>Примеры использования</p>
-                      </TooltipContent>
-                    </Popover>
-                  </Tooltip>
-                </TooltipProvider>
-              )}
             </div>
           </div>
         );
@@ -127,6 +93,62 @@ export const getColumns = (
           <ArrowUpDown className="ml-2 h-4 w-4" />
         </Button>
       ),
+    },
+    {
+      accessorKey: "examples",
+      header: ({ column }) => (
+        <Button
+          variant="ghost"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          className="-ml-4"
+        >
+          Примеры
+          <ArrowUpDown className="ml-2 h-4 w-4" />
+        </Button>
+      ),
+      cell: ({ row }) => {
+        const word = row.original;
+        return (
+          <div>
+            {word.examples && word.examples.length > 0 ? (
+              <TooltipProvider>
+                <Tooltip>
+                  <Popover>
+                    <TooltipTrigger asChild>
+                      <PopoverTrigger asChild>
+                        <Button variant="ghost" size="icon" className="h-6 w-6">
+                          <Languages className="h-4 w-4" />
+                        </Button>
+                      </PopoverTrigger>
+                    </TooltipTrigger>
+                    <PopoverContent className="w-auto max-w-[600px]" align="start">
+                      <div className="space-y-2">
+                        {word.examples.map((example, index) => (
+                          <div key={`${word.id}-example-${index}`} className="border-b last:border-b-0 pb-2">
+                            <p dir="rtl" className="text-sm font-medium">
+                              <SpeakerIcon
+                                text={example.hebrew}
+                                className="ml-6 hover:text-blue-600"
+                              />
+                              {example.hebrew}
+                            </p>
+                            <p className="text-sm text-gray-600">{example.russian}</p>
+                          </div>
+                        ))}
+                      </div>
+                    </PopoverContent>
+                    <TooltipContent>
+                      <p>Примеры использования</p>
+                    </TooltipContent>
+                  </Popover>
+                </Tooltip>
+              </TooltipProvider>
+            ) : (
+              <span className="text-sm text-gray-400">—</span>
+            )}
+          </div>
+        );
+      },
     },
     {
       accessorKey: "category",
