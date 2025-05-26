@@ -125,8 +125,6 @@ const Settings: React.FC = () => {
     }
   };
 
-  // Removed handleExportWords and handleImportWords as part of import/export refactor
-
   return (
     <div className="w-full max-w-2xl mx-auto p-4 sm:p-6 bg-white rounded-lg shadow-md">
       <h2 className="text-2xl font-semibold text-gray-800 mb-4">Настройки</h2>
@@ -197,8 +195,8 @@ const Settings: React.FC = () => {
               <SelectItem value="default">По умолчанию (системный)</SelectItem>
               {availableVoices
                 .filter(voice => voice.lang.includes('he') || voice.lang.includes('ru') || voice.lang.includes('en'))
-                .map((voice) => (
-                  <SelectItem key={voice.name} value={voice.name}>
+                .map((voice,i) => (
+                  <SelectItem key={voice.name + i} value={voice.name}>
                     {voice.name} ({voice.lang})
                   </SelectItem>
                 ))}

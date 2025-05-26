@@ -20,15 +20,20 @@ export const fetchSuggestedWords = async ({
   const getLevelDescription = (level: string) => {
     if (level.includes('Алеф') || level.includes('א')) {
       return 'начальный уровень - самые базовые, простые слова для новичков';
-    } else if (level.includes('Бет') || level.includes('ב')) {
+    }
+    if (level.includes('Бет') || level.includes('ב')) {
       return 'элементарный уровень - простые повседневные слова';
-    } else if (level.includes('Гимель') || level.includes('ג')) {
+    }
+    if (level.includes('Гимель') || level.includes('ג')) {
       return 'средний уровень - более сложные слова, требующие хорошего знания языка';
-    } else if (level.includes('Далет') || level.includes('ד')) {
+    }
+    if (level.includes('Далет') || level.includes('ד')) {
       return 'выше среднего уровень - продвинутые слова для опытных изучающих';
-    } else if (level.includes('Һей') || level.includes('ה')) {
+    }
+    if (level.includes('Һей') || level.includes('ה')) {
       return 'высокий уровень - сложные академические и специализированные термины';
-    } else if (level.includes('Вав') || level.includes('ו')) {
+    }
+    if (level.includes('Вав') || level.includes('ו')) {
       return 'профессиональный уровень - очень сложные слова, литературная лексика, архаизмы';
     }
     return 'средний уровень';
