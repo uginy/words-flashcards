@@ -12,12 +12,12 @@ interface WordSuggestionsProps {
 }
 
 const LEVELS = [
-  { value: 'gimel', label: 'Гимель (ג)', default: true },
-  { value: 'alef', label: 'Алеф (א)' },
-  { value: 'bet', label: 'Бет (ב)' },
-  { value: 'dalet', label: 'Далет (ד)' },
-  { value: 'hey', label: 'Һей (ה)' },
-  { value: 'vav', label: 'Вав (ו)' },
+  { value: 'alef', label: 'Алеф (א) - Начальный', default: true },
+  { value: 'bet', label: 'Бет (ב) - Элементарный' },
+  { value: 'gimel', label: 'Гимель (ג) - Средний' },
+  { value: 'dalet', label: 'Далет (ד) - Выше среднего' },
+  { value: 'hey', label: 'Һей (ה) - Высокий' },
+  { value: 'vav', label: 'Вав (ו) - Профессиональный' },
 ];
 
 const CATEGORIES = [
