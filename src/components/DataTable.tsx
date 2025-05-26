@@ -95,7 +95,7 @@ export function DataTable<TData, TValue>({
   }, [table, columnFilters, onFilteredRowCountChange]);
 
   return (
-    <div>
+    <div className="w-full">
       <div className="flex items-center gap-4 py-4">
         {searchable && searchColumns && searchColumns.length > 0 && (
           <div className="flex gap-2">
@@ -141,8 +141,8 @@ export function DataTable<TData, TValue>({
           </div>
         ))}
       </div>
-      <div className="rounded-md border">
-        <Table>
+      <div className="rounded-md border w-full overflow-auto">
+        <Table className="w-full">
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id}>

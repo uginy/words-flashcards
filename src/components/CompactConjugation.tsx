@@ -15,18 +15,20 @@ const CompactConjugation: React.FC<CompactConjugationProps> = ({ conjugations })
   };
 
   return (
-    <div className="space-y-3 text-sm">
+    <div className="text-sm grid grid-cols-4 gap-x-8">
       {(Object.entries(conjugations) as [string, Record<string, string>][])
         .filter(([, forms]) => forms && Object.keys(forms).length > 0)
         .map(([tense, forms]) => (
           <div key={tense}>
-            <div className="font-medium mb-1">
+            <div className="font-medium bg-slate-300 px-3 py-1 rounded-sm text-center">
               {sections[tense]}
             </div>
-            <div className="grid grid-cols-2 gap-x-8 gap-y-0.5">
+            <div className="grid grid-cols-1 gap-x-8">
               {Object.entries(forms).map(([person, form]) => (
                 <div key={person} className="flex justify-between items-center text-sm">
-                  <span className="flex-1 text-muted-foreground font-medium">{person}</span>
+                  <span className="flex-1 text-muted-foreground font-medium px-2">
+                    {person}
+                  </span>
                   <span>
                     {form}
                   </span>

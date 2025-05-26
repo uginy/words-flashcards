@@ -162,7 +162,7 @@ const FlashCard: React.FC<FlashCardProps> = ({ word: propWord, reverse, onMarkAs
 
   return (
     <div>
-      <div className="w-full max-w-xl mx-auto px-2 sm:px-0">
+      <div className="w-full max-w-7xl mx-auto px-2 sm:px-0">
         <div className="w-full flex flex-col gap-3 sm:flex-row sm:justify-between sm:items-center pb-6">
           <div className="flex gap-2">
             <button
@@ -233,7 +233,7 @@ const FlashCard: React.FC<FlashCardProps> = ({ word: propWord, reverse, onMarkAs
               role="button"
               tabIndex={0}
             >
-              <div className="text-center">
+              <div className="text-center w-full">
                 <div className={`inline-block px-2 py-1 rounded-full text-sm ${categoryColors.bg} ${categoryColors.text} ${categoryColors.category} mb-2`}>
                   {word.category}
                 </div>
@@ -272,7 +272,7 @@ const FlashCard: React.FC<FlashCardProps> = ({ word: propWord, reverse, onMarkAs
               role="button"
               tabIndex={0}
             >
-              <div className="text-center">
+              <div className="text-center w-full">
                 {reverse ? (
                   <>
                     <h2 className={`text-5xl font-bold mb-2 ${categoryColors.text}`}>{word.hebrew}</h2>
@@ -287,7 +287,7 @@ const FlashCard: React.FC<FlashCardProps> = ({ word: propWord, reverse, onMarkAs
 
                     {word.examples && word.examples.length > 0 && renderExamples(word.examples)}
                     {word.category === "פועל" && word.conjugations && (
-                      <div className="text-left mx-auto max-w-[400px] px-2 my-4">
+                      <div className="text-left mx-auto w-full px-2 my-4">
                         <div className={`font-medium text-lg mb-2 ${categoryColors.text}`}>Спряжения:</div>
                         <CompactConjugation conjugations={word.conjugations} />
                       </div>

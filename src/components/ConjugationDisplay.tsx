@@ -15,7 +15,7 @@ const ConjugationDisplay: React.FC<ConjugationDisplayProps> = ({ conjugations })
   };
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-2">
+    <div className="grid grid-cols-4 gap-4 p-2">
       {(Object.entries(conjugations) as [string, Record<string, string>][]).map(
         ([tense, forms]) => {
           if (!forms || Object.keys(forms).length === 0) return null;

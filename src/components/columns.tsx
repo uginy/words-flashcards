@@ -152,7 +152,7 @@ export const getColumns = (
                         </Button>
                       </PopoverTrigger>
                     </TooltipTrigger>
-                    <PopoverContent className="w-auto max-w-[600px]" align="start">
+                    <PopoverContent className="w-auto max-w-[1000px]" align="start">
                       <ConjugationDisplay conjugations={word.conjugations} />
                     </PopoverContent>
                     <TooltipContent>
