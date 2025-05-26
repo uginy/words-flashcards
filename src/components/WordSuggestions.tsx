@@ -24,6 +24,7 @@ const CATEGORIES = [
   { value: 'verb', label: 'Глагол (פועל)' },
   { value: 'noun', label: 'Существительное (שם עצם)' },
   { value: 'adjective', label: 'Прилагательное (שם תואר)' },
+  { value: 'phrases', label: 'Фразы (פרזות)' },
   { value: 'other', label: 'Другое (אחר)' },
 ];
 

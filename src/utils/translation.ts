@@ -5,11 +5,11 @@ export const parseAndTranslateWords = (text: string): Word[] => {
   const lines = text.split('\n').filter(line => line.trim().length > 0);
   const newWords: Word[] = [];
 
-  lines.forEach(line => {
+  for (const line of lines) {
     const parts = line.split(' - ').map(part => part.trim());
     if (parts.length < 4) {
       console.warn(`Skipping malformed line: ${line}`);
-      return; // Expect at least category, hebrew, transcription, russian
+      continue; // Expect at least category, hebrew, transcription, russian
     }
 
     const [categoryStr, hebrew, transcription, russian, conjugations, example] = parts;
@@ -28,6 +28,10 @@ export const parseAndTranslateWords = (text: string): Word[] => {
       case 'прилагательное':
         category = 'שם תואר';
         break;
+      case 'phrases':
+      case 'фразы':
+        category = 'פרזות';
+        break;
       default:
         category = 'אחר';
     }
@@ -35,7 +39,7 @@ export const parseAndTranslateWords = (text: string): Word[] => {
     // Basic validation for Hebrew characters in the Hebrew field
     if (!/[\u0590-\u05FF]/.test(hebrew)) {
       console.warn(`Skipping line with potentially non-Hebrew word in 'hebrew' field: ${line}`);
-      return;
+      continue;
     }
 
     newWords.push({
@@ -49,7 +53,7 @@ export const parseAndTranslateWords = (text: string): Word[] => {
       isLearned: false, // Corrected from 'learned' to 'isLearned'
       dateAdded: Date.now(),
     });
-  });
+  }
 
   return newWords;
 };

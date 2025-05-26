@@ -149,6 +149,9 @@ const FlashCard: React.FC<FlashCardProps> = ({ word: propWord, reverse, onMarkAs
     if (["noun", "существительное", "שם עצם"].includes(cat)) {
       return { bg: "bg-green-100", text: "text-green-800", category: "bg-green-300" };
     }
+    if (["phrase", "фраза", "פרזות"].includes(cat)) {
+      return { bg: "bg-orange-100", text: "text-orange-800", category: "bg-orange-300" };
+    }
     return { bg: "bg-gray-100", text: "text-gray-800", category: "bg-gray-300" };
   };
 

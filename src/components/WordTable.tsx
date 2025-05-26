@@ -215,6 +215,7 @@ const WordTable: FC<WordTableProps> = ({ onEditWord }) => {
                   { label: "Глагол", value: "פועל" },
                   { label: "Существительное", value: "שם עצם" },
                   { label: "Прилагательное", value: "שם תואר" },
+                  { label: "Фразы", value: "פרזות" },
                 ]
               },
               {

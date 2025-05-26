@@ -33,6 +33,7 @@ IMPORTANT RULES AND FIELD FORMATS:
     - "פועל" for verbs
     - "שם עצם" for nouns
     - "שם תואר" for adjectives
+    - "פרזות" for phrases and expressions
     - "אחר" for other types
 
 3.  **Required Fields**:
@@ -41,7 +42,8 @@ IMPORTANT RULES AND FIELD FORMATS:
     - "category": from the list above
 
 4.  **Conjugations** (for verbs only):
-    For category "פועל", provide conjugations in EXACTLY this format (in Hebrew only):
+    For category "פועל", provide conjugations in EXACTLY this format (in Hebrew only).
+    For category "פרזות" (phrases), set conjugations to null as phrases don't have conjugations:
     {
       "past": {
         "אני": "...", "אתה": "...", "את": "...", "הוא": "...", "היא": "...", "אנחנו": "...", "אתם": "...", "אתן": "...", "הם": "...", "הן": "..."
@@ -59,7 +61,7 @@ IMPORTANT RULES AND FIELD FORMATS:
     - ALL four tense fields (past, present, future, imperative) should be present if applicable.
     - Within each tense, include all relevant pronouns as shown.
     - Use null for a tense if it's not applicable (e.g. imperative for some verbs or other tenses if they don't exist).
-    - For non-verbs, omit the "conjugations" field entirely or set it to null.
+    - For non-verbs (including phrases "פרזות"), omit the "conjugations" field entirely or set it to null.
 
 5.  **Examples**:
     - Provide 2-3 usage examples.
@@ -127,7 +129,7 @@ Each object in the "processed_words" array corresponds to one input Hebrew word/
   "hebrew": "The original Hebrew word/phrase",
   "transcription": "Romanized transcription",
   "russian": "Russian translation",
-  "category": "One of: 'פועל', 'שם עצם', 'שם תואר', 'אחר'",
+  "category": "One of: 'פועל', 'שם עצם', 'שם תואר', 'פרזות', 'אחר'",
   "conjugations": { // Or null if not a verb or no conjugations
     "past": { "אני": "...", "אתה": "...", "את": "...", "הוא": "...", "היא": "...", "אנחנו": "...", "אתם": "...", "אתן": "...", "הם": "...", "הן": "..." }, // Or null if not applicable
     "present": { "אני": "...", "אתה": "...", "את": "...", "הוא": "...", "היא": "...", "אנחנו": "...", "אתם": "...", "אתן": "...", "הם": "...", "הן": "..." }, // Or null if not applicable
@@ -141,10 +143,10 @@ Each object in the "processed_words" array corresponds to one input Hebrew word/
 
 IMPORTANT RULES AND FIELD FORMATS:
 1.  **"hebrew"**: Must be an exact match with the input word/phrase.
-2.  **"category"**: Must be one of the exact Hebrew strings: "פועל" (verb), "שם עצם" (noun), "שם תואר" (adjective), "אחר" (other).
+2.  **"category"**: Must be one of the exact Hebrew strings: "פועל" (verb), "שם עצם" (noun), "שם תואר" (adjective), "פרזות" (phrases), "אחר" (other).
 3.  **"transcription"**, **"russian"**: Must be provided.
 4.  **"conjugations"**:
-    - Provide for verbs ("פועל") only. For non-verbs, this field should be null.
+    - Provide for verbs ("פועל") only. For non-verbs (including phrases "פרזות"), this field should be null.
     - If provided, it must be an object with keys: "past", "present", "future", "imperative".
     - Each tense key should map to an object of pronoun-conjugation pairs (e.g., "אני": "כתבתי") or be null if that specific tense is not applicable. All conjugations must be in Hebrew.
     - Pronouns should be the standard Hebrew pronouns as listed in the example below.
@@ -206,7 +208,7 @@ const toolDefinition = {
               hebrew: { type: "string" as const, description: "The original Hebrew word/phrase provided in the input." },
               transcription: { type: "string" as const, description: "Romanized transcription of the Hebrew word/phrase." },
               russian: { type: "string" as const, description: "Russian translation of the Hebrew word/phrase." },
-              category: { type: "string" as const, enum: ["פועל", "שם עצם", "שם תואר", "אחר"], description: "Category of the word: פועל (verb), שם עצם (noun), שם תואר (adjective), אחר (other)." },
+              category: { type: "string" as const, enum: ["פועל", "שם עצם", "שם תואר", "פרזות", "אחר"], description: "Category of the word: פועל (verb), שם עצם (noun), שם תואר (adjective), פרזות (phrases), אחר (other)." },
               conjugations: {
                 type: ["object", "null"] as ["object", "null"],
                 description: "Hebrew conjugations if the word is a verb (פועל). Null otherwise. Structure should be { 'tenseName': { 'pronoun': 'conjugation' } }, e.g., { 'past': { 'אני': 'עשיתי' } }. All conjugations must be in Hebrew with Hebrew pronouns.",
@@ -266,7 +268,7 @@ function processWordsArray(llmItems: LLMBatchResponseItem[], originalWords: stri
     const transcription = String(currentItem.transcription || '');
     const russian = String(currentItem.russian || '');
     const categoryInput = String(currentItem.category || 'אחר');
-    const category: WordCategory = ['פועל', 'שם עצם', 'שם תואר', 'אחר'].includes(categoryInput) ? categoryInput as WordCategory : 'אחר';
+    const category: WordCategory = ['פועל', 'שם עצם', 'שם תואר', 'פרזות', 'אחר'].includes(categoryInput) ? categoryInput as WordCategory : 'אחר';
 
     if (!hebrew) {
       console.warn('LLM item missing "hebrew" field, cannot process:', currentItem);

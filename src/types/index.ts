@@ -1,4 +1,4 @@
-export type WordCategory = 'שם עצם' | 'פועל' | 'שם תואר' | 'אחר';
+export type WordCategory = 'שם עצם' | 'פועל' | 'שם תואר' | 'פרזות' | 'אחר';
 
 export interface Word {
   id: string;
