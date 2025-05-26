@@ -9,6 +9,7 @@ interface SpeakerIconProps {
   className?: string;
   size?: "default" | "sm" | "lg" | "icon" | "speaker";
   rate?: number;
+  voice?: string;
 }
 
 export const SpeakerIcon: React.FC<SpeakerIconProps> = ({
@@ -16,9 +17,10 @@ export const SpeakerIcon: React.FC<SpeakerIconProps> = ({
   lang = 'he-IL',
   className,
   size = "icon",
-  rate
+  rate,
+  voice
 }) => {
-  const { speak, isSupported, error } = useSpeechSynthesis({ text, lang, rate });
+  const { speak, isSupported, error } = useSpeechSynthesis({ text, lang, rate, voice });
 
   if (!isSupported) {
     return null;

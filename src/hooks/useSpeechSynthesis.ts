@@ -4,12 +4,14 @@ interface UseSpeechSynthesisProps {
   text: string;
   lang?: string;
   rate?: number;
+  voice?: string;
 }
 
-export const useSpeechSynthesis = ({ text, lang = 'he-IL', rate }: UseSpeechSynthesisProps) => {
+export const useSpeechSynthesis = ({ text, lang = 'he-IL', rate, voice }: UseSpeechSynthesisProps) => {
   const [isSupported, setIsSupported] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [availableVoices, setAvailableVoices] = useState<SpeechSynthesisVoice[]>([]);
 
   useEffect(() => {
     const supported = 'speechSynthesis' in window;
@@ -17,6 +19,16 @@ export const useSpeechSynthesis = ({ text, lang = 'he-IL', rate }: UseSpeechSynt
     setIsLoading(false);
     if (!supported) {
       setError('Speech synthesis is not supported in this browser');
+    } else {
+      // Load available voices
+      const loadVoices = () => {
+        const voices = window.speechSynthesis.getVoices();
+        setAvailableVoices(voices);
+      };
+      
+      loadVoices();
+      // Some browsers load voices asynchronously
+      window.speechSynthesis.onvoiceschanged = loadVoices;
     }
   }, []);
 
@@ -34,6 +46,15 @@ export const useSpeechSynthesis = ({ text, lang = 'he-IL', rate }: UseSpeechSynt
       const speechRate = rate ?? parseFloat(localStorage.getItem('speechRate') || '1');
       utterance.rate = Math.max(0.1, Math.min(10, speechRate)); // Clamp between 0.1 and 10
       
+      // Set voice from settings or parameter
+      const selectedVoiceName = voice ?? localStorage.getItem('speechVoice');
+      if (selectedVoiceName && selectedVoiceName !== 'default') {
+        const selectedVoice = availableVoices.find(v => v.name === selectedVoiceName);
+        if (selectedVoice) {
+          utterance.voice = selectedVoice;
+        }
+      }
+      
       // Stop any ongoing speech
       window.speechSynthesis.cancel();
       
@@ -42,12 +63,13 @@ export const useSpeechSynthesis = ({ text, lang = 'he-IL', rate }: UseSpeechSynt
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to speak text');
     }
-  }, [text, lang, rate, isSupported]);
+  }, [text, lang, rate, voice, availableVoices, isSupported]);
 
   return {
     speak,
     isSupported,
     isLoading,
-    error
+    error,
+    availableVoices
   };
 };
