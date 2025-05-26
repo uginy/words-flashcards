@@ -5,6 +5,7 @@ import FlashCard from './components/FlashCard';
 import WordInput from './components/WordInput';
 import WordTable from './components/WordTable';
 import Statistics from './components/Statistics';
+import BackgroundTasksIndicator from './components/BackgroundTasksIndicator';
 import { useWordsStore, getStats } from './store/wordsStore';
 import Settings from './components/Settings';
 import {
@@ -287,6 +288,7 @@ function App() {
   return (
     <div>
       <Toaster />
+      <BackgroundTasksIndicator />
       <Layout tabs={tabs} activeTab={activeTab} onTabChange={setActiveTab}>
         {activeTab === 'add' ? (
           <div ref={wordInputRef}>

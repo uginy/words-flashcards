@@ -50,6 +50,7 @@ function validateLLMWordsResponse(data: unknown): Word[] {
 const WordInput: React.FC = () => {
   const existingWords = useWordsStore(state => state.words);
   const addWords = useWordsStore(state => state.addWords);
+  const startBackgroundWordProcessing = useWordsStore(state => state.startBackgroundWordProcessing);
   const { toast } = useToast();
 
   // Adapter for toast to map 'destructive' to 'error' and filter allowed variants
@@ -91,6 +92,32 @@ const WordInput: React.FC = () => {
         title: "Успех!",
         description: 'Импортированные слова загружены в форму. Нажмите "Добавить" для завершения импорта.',
       });
+    }
+  };
+
+  const handleBackgroundSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!inputText.trim()) return;
+
+    const apiKey = localStorage.getItem('openRouterApiKey') || DEFAULT_OPENROUTER_API_KEY;
+    const model = localStorage.getItem('openRouterModel') || DEFAULT_OPENROUTER_MODEL;
+    
+    if (!apiKey || !model || apiKey === "YOUR_DEFAULT_API_KEY_HERE" || model === "YOUR_DEFAULT_MODEL_ID_HERE") {
+      setError('OpenRouter API key or model не настроены. Укажите их в Settings или пропишите значения по умолчанию.');
+      return;
+    }
+
+    try {
+      await startBackgroundWordProcessing(inputText, toastAdapter);
+      setInputText('');
+      setError(null);
+      toast({
+        title: 'Фоновая обработка запущена!',
+        description: 'Слова будут добавлены в фоновом режиме. Вы можете продолжать использовать приложение.',
+        variant: 'success',
+      });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Ошибка запуска фоновой обработки');
     }
   };
 
@@ -331,6 +358,12 @@ const WordInput: React.FC = () => {
               Добавляйте список слов на иврите или русском языке, каждое слово должно быть на новой строке.
               Мы сами проанализируем его и корректно добавим в базу.
             </label>
+            <div className="mb-2 p-3 bg-blue-50 border border-blue-200 rounded-md">
+              <p className="text-sm text-blue-800">
+                💡 <strong>Новая функция:</strong> Используйте кнопку "Добавить в фоне" для обработки больших списков слов.
+                Процесс будет продолжаться даже при переходе на другие страницы приложения!
+              </p>
+            </div>
             <textarea
               id="wordInput"
               rows={6}
@@ -367,13 +400,21 @@ const WordInput: React.FC = () => {
             </button>
           </div>
 
-          <div className="flex justify-end">
+          <div className="flex justify-end gap-3">
+            <button
+              type="button"
+              onClick={handleBackgroundSubmit}
+              className="py-2 px-4 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors disabled:opacity-50"
+              disabled={isLoading || !inputText.trim()}
+            >
+              🔄 Добавить в фоне
+            </button>
             <button
               type="submit"
               className="py-2 px-4 bg-green-500 text-white rounded-md hover:bg-green-600 transition-colors disabled:opacity-50"
               disabled={isLoading || !inputText.trim()}
             >
-              {isLoading ? 'Обработка...' : 'Добавить'}
+              {isLoading ? 'Обработка...' : 'Добавить сейчас'}
             </button>
           </div>
         </form>
