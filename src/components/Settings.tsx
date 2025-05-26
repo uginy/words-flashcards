@@ -27,6 +27,7 @@ interface OpenRouterModel {
 const Settings: React.FC = () => {
   const [apiKey, setApiKey] = useState<string>('');
   const [pageSize, setPageSize] = useState<number>(10);
+  const [speechRate, setSpeechRate] = useState<number>(1);
   const [selectedModel, setSelectedModel] = useState<string>('');
   const [availableModels, setAvailableModels] = useState<OpenRouterModel[]>([]);
   const [filteredModels, setFilteredModels] = useState<OpenRouterModel[]>([]);
@@ -46,6 +47,10 @@ const Settings: React.FC = () => {
       setSelectedModel(storedModel);
     } else {
       setSelectedModel(DEFAULT_OPENROUTER_MODEL);
+    }
+    const storedSpeechRate = localStorage.getItem('speechRate');
+    if (storedSpeechRate) {
+      setSpeechRate(parseFloat(storedSpeechRate));
     }
     const tableSettings = loadTableSettings();
     setPageSize(tableSettings.pageSize);
@@ -97,6 +102,7 @@ const Settings: React.FC = () => {
     const modelToSave = selectedModel && selectedModel.trim() !== '' ? selectedModel : DEFAULT_OPENROUTER_MODEL;
     localStorage.setItem(OPENROUTER_API_KEY_STORAGE_KEY, keyToSave);
     localStorage.setItem(OPENROUTER_SELECTED_MODEL_STORAGE_KEY, modelToSave);
+    localStorage.setItem('speechRate', speechRate.toString());
     setApiKey(keyToSave);
     setSelectedModel(modelToSave);
     setMessage({ type: 'success', text: 'Settings saved successfully!' });
@@ -142,6 +148,24 @@ const Settings: React.FC = () => {
               ))}
             </SelectContent>
           </Select>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Скорость озвучки
+          </label>
+          <div className="flex items-center gap-4">
+            <input
+              type="range"
+              min="0.1"
+              max="3"
+              step="0.1"
+              value={speechRate}
+              onChange={(e) => setSpeechRate(parseFloat(e.target.value))}
+              className="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+            />
+            <span className="text-sm text-gray-600 min-w-[3rem]">{speechRate.toFixed(1)}x</span>
+          </div>
         </div>
 
         {/* OpenRouter Settings */}

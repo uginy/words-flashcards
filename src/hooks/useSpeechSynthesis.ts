@@ -3,9 +3,10 @@ import { useCallback, useEffect, useState } from 'react';
 interface UseSpeechSynthesisProps {
   text: string;
   lang?: string;
+  rate?: number;
 }
 
-export const useSpeechSynthesis = ({ text, lang = 'he-IL' }: UseSpeechSynthesisProps) => {
+export const useSpeechSynthesis = ({ text, lang = 'he-IL', rate }: UseSpeechSynthesisProps) => {
   const [isSupported, setIsSupported] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -29,6 +30,10 @@ export const useSpeechSynthesis = ({ text, lang = 'he-IL' }: UseSpeechSynthesisP
       const utterance = new SpeechSynthesisUtterance(text);
       utterance.lang = lang;
       
+      // Set speech rate from settings or use default
+      const speechRate = rate ?? parseFloat(localStorage.getItem('speechRate') || '1');
+      utterance.rate = Math.max(0.1, Math.min(10, speechRate)); // Clamp between 0.1 and 10
+      
       // Stop any ongoing speech
       window.speechSynthesis.cancel();
       
@@ -37,7 +42,7 @@ export const useSpeechSynthesis = ({ text, lang = 'he-IL' }: UseSpeechSynthesisP
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to speak text');
     }
-  }, [text, lang, isSupported]);
+  }, [text, lang, rate, isSupported]);
 
   return {
     speak,
