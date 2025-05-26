@@ -38,32 +38,7 @@ export const getColumns = (
       cell: ({ row }) => {
         const word = row.original;
         return (
-          <div>
-            <div className="text-base font-medium text-gray-900" dir="rtl">{word.hebrew}</div>
-            <div className="flex gap-2">
-              {word.conjugations && (
-                <TooltipProvider>
-                  <Tooltip>
-                    <Popover>
-                      <TooltipTrigger asChild>
-                        <PopoverTrigger asChild>
-                          <Button variant="ghost" size="icon" className="h-6 w-6">
-                            <BookOpen className="h-4 w-4" />
-                          </Button>
-                        </PopoverTrigger>
-                      </TooltipTrigger>
-                      <PopoverContent className="w-auto max-w-[600px]" align="start">
-                        <ConjugationDisplay conjugations={word.conjugations} />
-                      </PopoverContent>
-                      <TooltipContent>
-                        <p>Показать спряжение</p>
-                      </TooltipContent>
-                    </Popover>
-                  </Tooltip>
-                </TooltipProvider>
-              )}
-            </div>
-          </div>
+          <div className="text-base font-medium text-gray-900" dir="rtl">{word.hebrew}</div>
         );
       },
     },
@@ -139,6 +114,49 @@ export const getColumns = (
                     </PopoverContent>
                     <TooltipContent>
                       <p>Примеры использования</p>
+                    </TooltipContent>
+                  </Popover>
+                </Tooltip>
+              </TooltipProvider>
+            ) : (
+              <span className="text-sm text-gray-400">—</span>
+            )}
+          </div>
+        );
+      },
+    },
+    {
+      accessorKey: "conjugations",
+      header: ({ column }) => (
+        <Button
+          variant="ghost"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          className="-ml-4"
+        >
+          Спряжения
+          <ArrowUpDown className="ml-2 h-4 w-4" />
+        </Button>
+      ),
+      cell: ({ row }) => {
+        const word = row.original;
+        return (
+          <div>
+            {word.conjugations ? (
+              <TooltipProvider>
+                <Tooltip>
+                  <Popover>
+                    <TooltipTrigger asChild>
+                      <PopoverTrigger asChild>
+                        <Button variant="ghost" size="icon" className="h-6 w-6">
+                          <BookOpen className="h-4 w-4" />
+                        </Button>
+                      </PopoverTrigger>
+                    </TooltipTrigger>
+                    <PopoverContent className="w-auto max-w-[600px]" align="start">
+                      <ConjugationDisplay conjugations={word.conjugations} />
+                    </PopoverContent>
+                    <TooltipContent>
+                      <p>Показать спряжение</p>
                     </TooltipContent>
                   </Popover>
                 </Tooltip>
@@ -235,7 +253,7 @@ export const getColumns = (
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
           className="-ml-4"
         >
-          Дата добавления
+          Дата
           <ArrowUpDown className="ml-2 h-4 w-4" />
         </Button>
       ),
