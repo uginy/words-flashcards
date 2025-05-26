@@ -4,6 +4,7 @@ import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { useToast } from '../hooks/use-toast';
 import { fetchSuggestedWords } from '../services/wordSuggestions';
+import { useWordsStore } from '../store/wordsStore';
 
 interface WordSuggestionsProps {
   onWordsReceived: (words: string) => void;
@@ -41,11 +42,13 @@ export const WordSuggestions: React.FC<WordSuggestionsProps> = ({
   const [wordCount, setWordCount] = useState(20);
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
+  const words = useWordsStore(state => state.words);
 
   const handleSuggestWords = async () => {
     setIsLoading(true);
     try {
-      const words = await fetchSuggestedWords({
+      // Получаем все предложенные слова от LLM
+      const allSuggestedWords = await fetchSuggestedWords({
         category: getCatLabel(category),
         level: getLevelLabel(level),
         apiKey,
@@ -53,12 +56,33 @@ export const WordSuggestions: React.FC<WordSuggestionsProps> = ({
         count: wordCount,
       });
 
-      if (words.length > 0) {
-        onWordsReceived(words.join('\n'));
+      // Проверяем дубликаты с существующими словами
+      const existingWords = words.map(word => word.hebrew);
+      const uniqueWords = allSuggestedWords.filter(word => 
+        !existingWords.includes(word)
+      );
+
+      const duplicatesCount = allSuggestedWords.length - uniqueWords.length;
+
+      if (uniqueWords.length > 0) {
+        onWordsReceived(uniqueWords.join('\n'));
+        
+        // Формируем сообщение с учетом дубликатов
+        let description = `Добавлено ${uniqueWords.length} слов`;
+        if (duplicatesCount > 0) {
+          description += `, исключено ${duplicatesCount} дубликатов из ${allSuggestedWords.length} предложенных`;
+        }
+        
         toast({
           title: 'Успех!',
-          description: `Мы успешно предложили ${words.length} слов и вставили в поле`,
+          description,
           variant: 'success',
+        });
+      } else if (duplicatesCount > 0) {
+        toast({
+          title: 'Внимание',
+          description: `Все ${allSuggestedWords.length} предложенных слов уже есть в вашей коллекции`,
+          variant: 'warning',
         });
       } else {
         toast({
