@@ -123,6 +123,14 @@ async function processWordsInBackground(
 
     const existingWords = get().words;
 
+    // Check if task was cancelled
+    const currentState = get();
+    const task = currentState.backgroundTasks.find(t => t.id === taskId);
+    if (task?.cancelled) {
+      console.log(`🚫 DEBUG: Task ${taskId} was cancelled, stopping processing`);
+      return;
+    }
+
     if (inputText.includes(' - ')) {
       // Structured input - process immediately and complete task
       try {
@@ -213,6 +221,14 @@ async function processWordsInBackground(
         const formattedInput = wordsToTranslate.join('\n');
         const translations = await translateToHebrew(formattedInput, apiKey, model);
         
+        // Check if task was cancelled after translation
+        const postTranslationState = get();
+        const postTranslationTask = postTranslationState.backgroundTasks.find(t => t.id === taskId);
+        if (postTranslationTask?.cancelled) {
+          console.log(`🚫 DEBUG: Task ${taskId} was cancelled after translation, stopping processing`);
+          return;
+        }
+        
         // Update the words list with translations
         const translatedWords = translations.flatMap(translation =>
           translation.split(',').map(t => t.trim())
@@ -233,11 +249,11 @@ async function processWordsInBackground(
 
         // Continue processing with Hebrew words
         console.log(`🔄 DEBUG: Processing translated Hebrew words (${translatedWords.length} words)`);
-        await processHebrewWords(taskId, translatedWords, existingWords, apiKey, model, toast, set);
+        await processHebrewWords(taskId, translatedWords, existingWords, apiKey, model, toast, set, get);
       } else {
         // Process Hebrew words directly
         console.log(`🔄 DEBUG: Processing Hebrew words directly (${wordsToTranslate.length} words)`);
-        await processHebrewWords(taskId, wordsToTranslate, existingWords, apiKey, model, toast, set);
+        await processHebrewWords(taskId, wordsToTranslate, existingWords, apiKey, model, toast, set, get);
       }
     }
 
@@ -272,7 +288,8 @@ async function processHebrewWords(
   apiKey: string,
   model: string,
   toast: ToastFn,
-  set: (partial: Partial<WordsStore> | ((state: WordsStore) => Partial<WordsStore>)) => void
+  set: (partial: Partial<WordsStore> | ((state: WordsStore) => Partial<WordsStore>)) => void,
+  get: () => WordsStore
 ) {
   // Filter unique words and track skipped duplicates
   const uniqueWords = hebrewWords.filter(newWord =>
@@ -319,11 +336,19 @@ async function processHebrewWords(
   console.log(`📝 DEBUG: Unique words: ${uniqueWords.length}, Total words: ${hebrewWords.length}`);
 
   for (let i = 0; i < chunks.length; i++) {
+    // Check if task was cancelled before processing each chunk
+    const taskState = get();
+    const currentTask = taskState.backgroundTasks.find((t: BackgroundTask) => t.id === taskId);
+    if (currentTask?.cancelled) {
+      console.log(`🚫 DEBUG: Task ${taskId} was cancelled, stopping chunk processing at chunk ${i + 1}`);
+      return;
+    }
+
     const chunk = chunks[i];
     console.log(`🚀 DEBUG: Processing chunk ${i + 1}/${chunks.length} with ${chunk.length} words:`, chunk);
     try {
       console.log(`⚡ DEBUG: Calling enrichWordsWithLLM for chunk ${i + 1}`);
-      const result = await enrichWordsWithLLM(chunk, apiKey, model);
+      const result = await enrichWordsWithLLM(chunk, apiKey, model, undefined, undefined, currentTask?.abortController);
       console.log(`📥 DEBUG: LLM result for chunk ${i + 1}:`, result);
       
       const valid = validateLLMWordsResponse(result);
@@ -368,6 +393,13 @@ async function processHebrewWords(
 
     } catch (err) {
       console.error(`🚨 DEBUG: Error processing chunk ${i + 1}:`, chunk, err);
+      
+      // Check if this is an abort error
+      if (err instanceof Error && err.name === 'AbortError') {
+        console.log(`🚫 DEBUG: Request aborted for chunk ${i + 1}, task ${taskId}`);
+        return; // Stop processing if request was aborted
+      }
+      
       // Add entire chunk to failed words
       allFailedWords = allFailedWords.concat(chunk);
       processedCount += chunk.length;
@@ -441,6 +473,7 @@ interface WordsStore extends WordsState {
   // Methods
   addWords: (newWords: Word[], toast: ToastFn) => Promise<void>;
   startBackgroundWordProcessing: (inputText: string, toast: ToastFn) => Promise<string>; // returns task id
+  cancelBackgroundTask: (taskId: string) => void;
   getBackgroundTask: (taskId: string) => BackgroundTask | undefined;
   clearCompletedTasks: () => void;
   markAsLearned: (id: string, toast?: ToastFn) => void;
@@ -746,6 +779,7 @@ export const useWordsStore = create<WordsStore>((set, get) => {
       const taskId = `task_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
       
       // Create new task
+      const abortController = new AbortController();
       const newTask: BackgroundTask = {
         id: taskId,
         type: 'addWords',
@@ -758,7 +792,9 @@ export const useWordsStore = create<WordsStore>((set, get) => {
         failed: 0,
         words: [],
         failedWords: [],
-        createdAt: Date.now()
+        createdAt: Date.now(),
+        cancelled: false,
+        abortController: abortController
       };
 
       // Add task to state
@@ -788,6 +824,33 @@ export const useWordsStore = create<WordsStore>((set, get) => {
       });
       
       return taskId;
+    },
+
+    cancelBackgroundTask: (taskId: string) => {
+      set((state: WordsStore) => {
+        const task = state.backgroundTasks.find(t => t.id === taskId);
+        if (!task) return state;
+        
+        // Set cancelled flag
+        if (task.abortController) {
+          task.abortController.abort();
+        }
+        
+        return {
+          ...state,
+          backgroundTasks: state.backgroundTasks.map((t: BackgroundTask) =>
+            t.id === taskId ? {
+              ...t,
+              cancelled: true,
+              status: 'error' as const,
+              error: 'Операция отменена'
+            } : t
+          ),
+          isBackgroundProcessing: state.backgroundTasks.some((t: BackgroundTask) =>
+            t.id !== taskId && (t.status === 'running' || t.status === 'pending')
+          )
+        };
+      });
     },
 
     getBackgroundTask: (taskId: string) => {

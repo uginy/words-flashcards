@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { useWordsStore } from '../store/wordsStore';
 
 const BackgroundTasksIndicator = () => {
-  const { backgroundTasks, isBackgroundProcessing, clearCompletedTasks } = useWordsStore();
+  const { backgroundTasks, isBackgroundProcessing, clearCompletedTasks, cancelBackgroundTask } = useWordsStore();
 
   // Auto-hide completed and error tasks after 3 seconds
   useEffect(() => {
@@ -26,11 +26,11 @@ const BackgroundTasksIndicator = () => {
   const activeTasks = backgroundTasks.filter(task =>
     task.status === 'running' || task.status === 'pending'
   );
-  
+
   const completedTasks = backgroundTasks.filter(task =>
     task.status === 'completed'
   );
-  
+
   const errorTasks = backgroundTasks.filter(task =>
     task.status === 'error'
   );
@@ -43,14 +43,16 @@ const BackgroundTasksIndicator = () => {
             <h4 className="text-sm font-medium text-blue-800">
               Фоновое добавление слов
             </h4>
-            <div className="mx-2 w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
+            <div className="flex items-center gap-2">
+              <div className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
+            </div>
           </div>
-          
+
           <div className="space-y-1">
             <div className="text-xs text-blue-700">
               {task.status === 'running' ? 'Обрабатываем...' : 'В очереди...'}
             </div>
-            
+
             {task.totalItems > 0 && (
               <div className="space-y-1">
                 <div className="text-xs text-blue-600">
@@ -70,12 +72,20 @@ const BackgroundTasksIndicator = () => {
               </div>
             )}
           </div>
+          <button
+            type="button"
+            onClick={() => cancelBackgroundTask(task.id)}
+            className="text-red-600 hover:text-red-800 text-xs underline"
+            title="Отменить задачу"
+          >
+            Отменить
+          </button>
         </div>
       ))}
-      
+
       {completedTasks.map(task => (
         <div key={task.id} className="mb-2 bg-green-100 border border-green-300 rounded-lg p-3 shadow-lg animate-pulse">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between gap-5">
             <div>
               <h4 className="text-sm font-medium text-green-800">
                 ✅ Обработка завершена!
@@ -105,7 +115,7 @@ const BackgroundTasksIndicator = () => {
           </div>
         </div>
       ))}
-      
+
       {errorTasks.map(task => (
         <div key={task.id} className="mb-2 bg-red-100 border border-red-300 rounded-lg p-3 shadow-lg animate-pulse">
           <div className="flex items-center justify-between">

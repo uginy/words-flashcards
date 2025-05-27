@@ -366,7 +366,8 @@ export async function enrichWordsWithLLM(
   apiKey: string,
   modelIdentifier: string,
   toastFn?: ToastFunction,
-  modelSupportsToolsExplicit?: boolean
+  modelSupportsToolsExplicit?: boolean,
+  abortController?: AbortController
 ): Promise<Word[]> {
   if (!apiKey || !modelIdentifier) {
     throw new Error('API key or model not configured.');
@@ -425,6 +426,8 @@ export async function enrichWordsWithLLM(
         tools: [toolDefinition],
         tool_choice: { type: "function", function: { name: "save_hebrew_word_details" } },
         stream: false
+      }, {
+        signal: abortController?.signal
       });
 
       if (!completion.choices || completion.choices.length === 0 || !completion.choices[0].message) {
@@ -458,11 +461,13 @@ export async function enrichWordsWithLLM(
           ],
           // No tools or tool_choice here
           stream: false
+        }, {
+          signal: abortController?.signal
         });
       } catch (e: any) {
-        if(e?.status === 401) {          
-            throw new Error(e.message ?? 'Authentication or Api key error found')
-        }        
+        if (e?.status === 401) {
+          throw new Error(e.message ?? 'Authentication or Api key error found')
+        }
       }
 
       if (!completion?.choices || !completion?.choices?.length || !completion?.choices[0]?.message || !completion.choices[0].message.content) {
@@ -516,6 +521,12 @@ export async function enrichWordsWithLLM(
   } catch (error) {
     console.error('Error enriching words with LLM:', error);
 
+    // Check if this is an abort error
+    if (error instanceof Error && error.name === 'AbortError') {
+      console.log('Request was aborted by user');
+      throw error; // Re-throw abort errors to be handled by the caller
+    }
+
     let errorMessage: string;
     let isCriticalError = false;
 
@@ -565,11 +576,10 @@ export async function enrichWordsWithLLM(
         errorMessage = "Произошла непредвиденная ошибка при обработке слов. Попробуйте позже.";
         isCriticalError = true;
       }
-      throw new Error(error.message) 
-    } else {
-      errorMessage = "Неизвестная ошибка при обработке слов";
-      isCriticalError = true;
+      throw new Error(error.message)
     }
+    errorMessage = "Неизвестная ошибка при обработке слов";
+    isCriticalError = true;
 
     showToast({
       title: isCriticalError ? "Критическая ошибка" : "Ошибка",

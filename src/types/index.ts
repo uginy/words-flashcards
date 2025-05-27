@@ -36,6 +36,8 @@ export interface BackgroundTask {
   failedWords: string[];
   error?: string;
   createdAt: number;
+  cancelled?: boolean;
+  abortController?: AbortController;
 }
 
 export interface WordsState {
