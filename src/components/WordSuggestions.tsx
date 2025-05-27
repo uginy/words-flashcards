@@ -68,13 +68,13 @@ export const WordSuggestions: React.FC<WordSuggestionsProps> = ({
         onWordsReceived(uniqueWords.join('\n'));
         
         // Формируем сообщение с учетом дубликатов
-        let description = `Добавлено ${uniqueWords.length} слов`;
+        let description = `${uniqueWords.length} слов предложено и вставлено в поле для дальнейшей обработки`;
         if (duplicatesCount > 0) {
-          description += `, исключено ${duplicatesCount} дубликатов из ${allSuggestedWords.length} предложенных`;
+          description += `. Исключено ${duplicatesCount} дубликатов из ${allSuggestedWords.length} предложенных`;
         }
         
         toast({
-          title: 'Успех!',
+          title: 'Слова предложены!',
           description,
           variant: 'success',
         });

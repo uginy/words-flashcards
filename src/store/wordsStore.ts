@@ -1,7 +1,7 @@
 // Zustand store for managing words with full business logic and localStorage sync
 
 import { create } from 'zustand';
-import type { Word, WordsState } from '../types';
+import type { Word, WordsState, BackgroundTask } from '../types';
 import { saveToLocalStorage, loadFromLocalStorage } from '../utils/storage';
 import { parseAndTranslateWords } from '../utils/translation';
 import { enrichWordsWithLLM } from '../services/openrouter';
@@ -67,6 +67,8 @@ interface LLMResponseWord {
   category: string;
 }
 
+
+// Validation function for LLM response - moved from WordInput.tsx
 function validateLLMWordsResponse(data: unknown): Word[] {
   if (Array.isArray(data)) {
     return data.filter((w: unknown): w is LLMResponseWord =>
@@ -89,7 +91,7 @@ function validateLLMWordsResponse(data: unknown): Word[] {
   ) as Word[];
 }
 
-// Background processing function
+// Background processing function with enhanced statistics and error handling
 async function processWordsInBackground(
   taskId: string,
   inputText: string,
@@ -97,6 +99,9 @@ async function processWordsInBackground(
   set: (partial: Partial<WordsStore> | ((state: WordsStore) => Partial<WordsStore>)) => void,
   get: () => WordsStore
 ) {
+  console.log(`🚀 DEBUG: Starting processWordsInBackground for task ${taskId}`);
+  console.log(`📝 DEBUG: Input text length: ${inputText.length}`);
+  
   try {
     // Update task status to running
     set((state: WordsStore) => ({
@@ -105,6 +110,8 @@ async function processWordsInBackground(
         task.id === taskId ? { ...task, status: 'running' as const } : task
       )
     }));
+
+    console.log(`✅ DEBUG: Task ${taskId} marked as running`);
 
     const apiKey = localStorage.getItem('openRouterApiKey') || DEFAULT_OPENROUTER_API_KEY;
     const model = localStorage.getItem('openRouterModel') || DEFAULT_OPENROUTER_MODEL;
@@ -120,13 +127,22 @@ async function processWordsInBackground(
       try {
         const structuredWords = parseAndTranslateWords(inputText);
         
+        // Filter out duplicates
+        const uniqueStructuredWords = structuredWords.filter(newWord =>
+          !existingWords.some(existingWord =>
+            existingWord.hebrew === newWord.hebrew && existingWord.russian === newWord.russian
+          )
+        );
+
+        const skippedCount = structuredWords.length - uniqueStructuredWords.length;
+        
         // Add words to store
         set((state: WordsStore) => ({
           ...state,
-          words: [...state.words, ...structuredWords]
+          words: [...state.words, ...uniqueStructuredWords]
         }));
 
-        // Mark task as completed
+        // Mark task as completed with statistics
         set((state: WordsStore) => ({
           ...state,
           backgroundTasks: state.backgroundTasks.map((task: BackgroundTask) =>
@@ -134,14 +150,31 @@ async function processWordsInBackground(
               ...task,
               status: 'completed' as const,
               progress: 100,
-              result: structuredWords
+              added: uniqueStructuredWords.length,
+              skipped: skippedCount,
+              failed: 0,
+              totalItems: structuredWords.length,
+              processedItems: structuredWords.length,
+              result: uniqueStructuredWords,
+              failedWords: []
             } : task
           )
         }));
         
+        // Show detailed completion message
+        const message = uniqueStructuredWords.length > 0
+          ? `Добавлено: ${uniqueStructuredWords.length}, пропущено: ${skippedCount}`
+          : `Все ${structuredWords.length} слов уже существуют в коллекции`;
+          
+        toast({
+          title: 'Фоновая обработка завершена!',
+          description: message,
+          variant: uniqueStructuredWords.length > 0 ? 'success' : 'info',
+        });
+        
         return;
       } catch {
-        throw new Error('Failed to parse the input text');
+        throw new Error('Не удалось обработать структурированный ввод');
       }
     } else {
       // Split and clean input
@@ -180,9 +213,9 @@ async function processWordsInBackground(
         const translations = await translateToHebrew(formattedInput, apiKey, model);
         
         // Update the words list with translations
-        const translatedWords = translations
-          .map(translation => translation.split(',').map(t => t.trim()))
-          .flat();
+        const translatedWords = translations.flatMap(translation =>
+          translation.split(',').map(t => t.trim())
+        );
 
         // Update task progress
         set((state: WordsStore) => ({
@@ -198,33 +231,14 @@ async function processWordsInBackground(
         }));
 
         // Continue processing with Hebrew words
+        console.log(`🔄 DEBUG: Processing translated Hebrew words (${translatedWords.length} words)`);
         await processHebrewWords(taskId, translatedWords, existingWords, apiKey, model, toast, set);
       } else {
         // Process Hebrew words directly
+        console.log(`🔄 DEBUG: Processing Hebrew words directly (${wordsToTranslate.length} words)`);
         await processHebrewWords(taskId, wordsToTranslate, existingWords, apiKey, model, toast, set);
       }
     }
-
-    // Mark task as completed
-    set((state: WordsStore) => ({
-      ...state,
-      backgroundTasks: state.backgroundTasks.map((task: BackgroundTask) =>
-        task.id === taskId ? {
-          ...task,
-          status: 'completed' as const,
-          progress: 100
-        } : task
-      ),
-      isBackgroundProcessing: !state.backgroundTasks.every((task: BackgroundTask) =>
-        task.id === taskId || task.status === 'completed' || task.status === 'error'
-      )
-    }));
-
-    toast({
-      title: 'Фоновая обработка завершена!',
-      description: 'Слова успешно добавлены в коллекцию',
-      variant: 'success',
-    });
 
   } catch (error) {
     // Mark task as failed
@@ -259,71 +273,161 @@ async function processHebrewWords(
   toast: ToastFn,
   set: (partial: Partial<WordsStore> | ((state: WordsStore) => Partial<WordsStore>)) => void
 ) {
-  // Filter unique words
+  // Filter unique words and track skipped duplicates
   const uniqueWords = hebrewWords.filter(newWord =>
     !existingWords.some(existingWord => existingWord.hebrew === newWord)
   );
 
+  const skippedCount = hebrewWords.length - uniqueWords.length;
+
   if (uniqueWords.length === 0) {
-    throw new Error('Все указанные слова уже существуют в вашей коллекции');
+    // Update task with skip statistics
+    set((state: WordsStore) => ({
+      ...state,
+      backgroundTasks: state.backgroundTasks.map((task: BackgroundTask) =>
+        task.id === taskId ? {
+          ...task,
+          status: 'completed' as const,
+          progress: 100,
+          added: 0,
+          skipped: skippedCount,
+          failed: 0,
+          processedItems: hebrewWords.length,
+          failedWords: []
+        } : task
+      )
+    }));
+
+    toast({
+      title: 'Фоновая обработка завершена',
+      description: `Все ${hebrewWords.length} слов уже существуют в коллекции`,
+      variant: 'info',
+    });
+    return;
   }
 
   // Process in chunks
   const chunkSize = 5;
   const chunks = chunkArray(uniqueWords, chunkSize);
   let allValidWords: Word[] = [];
+  let allFailedWords: string[] = [];
   let processedCount = 0;
 
-  for (const chunk of chunks) {
+  console.log(`🔄 DEBUG: Starting chunk processing for task ${taskId}`);
+  console.log(`📊 DEBUG: Total chunks to process: ${chunks.length}`);
+  console.log(`📝 DEBUG: Unique words: ${uniqueWords.length}, Total words: ${hebrewWords.length}`);
+
+  for (let i = 0; i < chunks.length; i++) {
+    const chunk = chunks[i];
+    console.log(`🚀 DEBUG: Processing chunk ${i + 1}/${chunks.length} with ${chunk.length} words:`, chunk);
     try {
+      console.log(`⚡ DEBUG: Calling enrichWordsWithLLM for chunk ${i + 1}`);
       const result = await enrichWordsWithLLM(chunk, apiKey, model);
+      console.log(`📥 DEBUG: LLM result for chunk ${i + 1}:`, result);
+      
       const valid = validateLLMWordsResponse(result);
+      console.log(`✅ DEBUG: Valid words from chunk ${i + 1}: ${valid.length}`, valid.map(w => w.hebrew));
       
       if (valid.length > 0) {
         allValidWords = allValidWords.concat(valid);
+        console.log(`📝 DEBUG: Total valid words so far: ${allValidWords.length}`);
         
         // Add words to store immediately
         set((state: WordsStore) => ({
           ...state,
           words: [...state.words, ...valid]
         }));
+        console.log(`💾 DEBUG: Added ${valid.length} words to store`);
       }
 
+      // Track failed words in this chunk
+      const chunkFailed = chunk.filter(w => !valid.some(v => v.hebrew === w));
+      allFailedWords = allFailedWords.concat(chunkFailed);
+      console.log(`❌ DEBUG: Failed words from chunk ${i + 1}: ${chunkFailed.length}`, chunkFailed);
+
       processedCount += chunk.length;
+      console.log(`📊 DEBUG: Progress - processed: ${processedCount}/${uniqueWords.length}`);
       
-      // Update progress
+      // Update progress with detailed statistics
       set((state: WordsStore) => ({
         ...state,
         backgroundTasks: state.backgroundTasks.map((task: BackgroundTask) =>
           task.id === taskId ? {
             ...task,
             processedItems: processedCount,
-            progress: Math.round((processedCount / uniqueWords.length) * 100),
-            result: allValidWords
+            progress: Math.round((processedCount / uniqueWords.length) * 75) + 25, // Reserve last 25% for completion
+            added: allValidWords.length,
+            skipped: skippedCount,
+            failed: allFailedWords.length,
+            result: allValidWords,
+            failedWords: allFailedWords
           } : task
         )
       }));
 
     } catch (err) {
-      console.error('Ошибка при обработке чанка:', chunk, err);
-      // Continue with next chunk
+      console.error(`🚨 DEBUG: Error processing chunk ${i + 1}:`, chunk, err);
+      // Add entire chunk to failed words
+      allFailedWords = allFailedWords.concat(chunk);
       processedCount += chunk.length;
+      
+      // Update with failure stats
+      set((state: WordsStore) => ({
+        ...state,
+        backgroundTasks: state.backgroundTasks.map((task: BackgroundTask) =>
+          task.id === taskId ? {
+            ...task,
+            processedItems: processedCount,
+            progress: Math.round((processedCount / uniqueWords.length) * 75) + 25,
+            added: allValidWords.length,
+            skipped: skippedCount,
+            failed: allFailedWords.length,
+            result: allValidWords,
+            failedWords: allFailedWords
+          } : task
+        )
+      }));
     }
   }
+
+  console.log(`🏁 DEBUG: Chunk processing completed for task ${taskId}`);
+  console.log(`📊 DEBUG: Final stats - Valid: ${allValidWords.length}, Failed: ${allFailedWords.length}, Skipped: ${skippedCount}`);
+
+  // Final task completion with full statistics
+  set((state: WordsStore) => ({
+    ...state,
+    backgroundTasks: state.backgroundTasks.map((task: BackgroundTask) =>
+      task.id === taskId ? {
+        ...task,
+        status: 'completed' as const,
+        progress: 100,
+        added: allValidWords.length,
+        skipped: skippedCount,
+        failed: allFailedWords.length,
+        processedItems: hebrewWords.length,
+        result: allValidWords,
+        failedWords: allFailedWords
+      } : task
+    ),
+    isBackgroundProcessing: !state.backgroundTasks.every((task: BackgroundTask) =>
+      task.id === taskId || task.status === 'completed' || task.status === 'error'
+    )
+  }));
+
+  console.log(`✅ DEBUG: Task ${taskId} marked as completed`);
+
+  // Show detailed completion message
+  let message = `Добавлено: ${allValidWords.length}`;
+  if (skippedCount > 0) message += `, пропущено: ${skippedCount}`;
+  if (allFailedWords.length > 0) message += `, не удалось: ${allFailedWords.length}`;
+
+  toast({
+    title: 'Фоновая обработка завершена!',
+    description: message,
+    variant: allValidWords.length > 0 ? 'success' : (allFailedWords.length > 0 ? 'warning' : 'info'),
+  });
 }
 
-interface BackgroundTask {
-  id: string;
-  type: 'addWords';
-  status: 'pending' | 'running' | 'completed' | 'error';
-  progress: number;
-  totalItems: number;
-  processedItems: number;
-  words?: string[];
-  result?: Word[];
-  error?: string;
-  createdAt: number;
-}
 
 interface WordsStore extends WordsState {
   // Background tasks state
@@ -642,7 +746,11 @@ export const useWordsStore = create<WordsStore>((set, get) => {
         progress: 0,
         totalItems: 0,
         processedItems: 0,
+        added: 0,
+        skipped: 0,
+        failed: 0,
         words: [],
+        failedWords: [],
         createdAt: Date.now()
       };
 
@@ -654,7 +762,23 @@ export const useWordsStore = create<WordsStore>((set, get) => {
       }));
 
       // Start processing in background
-      processWordsInBackground(taskId, inputText, toast, set, get);
+      processWordsInBackground(taskId, inputText, toast, set, get).catch(error => {
+        console.error('🚨 DEBUG: Unhandled error in processWordsInBackground:', error);
+        // Ensure task is marked as failed if there's an unhandled error
+        set((state: WordsStore) => ({
+          ...state,
+          backgroundTasks: state.backgroundTasks.map((task: BackgroundTask) =>
+            task.id === taskId ? {
+              ...task,
+              status: 'error' as const,
+              error: error instanceof Error ? error.message : String(error)
+            } : task
+          ),
+          isBackgroundProcessing: !state.backgroundTasks.every((task: BackgroundTask) =>
+            task.id === taskId || task.status === 'completed' || task.status === 'error'
+          )
+        }));
+      });
       
       return taskId;
     },

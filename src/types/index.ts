@@ -21,6 +21,23 @@ export interface Word {
   nextReview?: number | null;
 }
 
+export interface BackgroundTask {
+  id: string;
+  type: 'addWords';
+  status: 'pending' | 'running' | 'completed' | 'error';
+  progress: number;
+  totalItems: number;
+  processedItems: number;
+  added: number;
+  skipped: number;
+  failed: number;
+  words?: string[];
+  result?: Word[];
+  failedWords: string[];
+  error?: string;
+  createdAt: number;
+}
+
 export interface WordsState {
   words: Word[];
   currentIndex: number;
