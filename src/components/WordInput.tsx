@@ -28,7 +28,9 @@ const WordInput: React.FC = () => {
     }
     toast({ ...opts, variant: mappedVariant });
   };
-  const [inputText, setInputText] = useState('');
+  const draftInputText = useWordsStore(state => state.draftInputText);
+  const setDraftInputText = useWordsStore(state => state.setDraftInputText);
+  const clearDraftInputText = useWordsStore(state => state.clearDraftInputText);
   const [error, setError] = useState<string | null>(null);
   const [importedWordsText, setImportedWordsText] = useState<string | null>(null);
 
@@ -42,7 +44,7 @@ const WordInput: React.FC = () => {
 
   const handleImportWords = () => {
     if (importedWordsText) {
-      setInputText(importedWordsText);
+      setDraftInputText(importedWordsText);
       localStorage.removeItem('importedWords');
       setImportedWordsText(null);
       toast({
@@ -54,7 +56,7 @@ const WordInput: React.FC = () => {
 
   const handleBackgroundSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!inputText.trim()) return;
+    if (!draftInputText.trim()) return;
 
     const apiKey = localStorage.getItem('openRouterApiKey') || DEFAULT_OPENROUTER_API_KEY;
     const model = localStorage.getItem('openRouterModel') || DEFAULT_OPENROUTER_MODEL;
@@ -65,8 +67,8 @@ const WordInput: React.FC = () => {
     }
 
     try {
-      await startBackgroundWordProcessing(inputText, toastAdapter);
-      setInputText('');
+      await startBackgroundWordProcessing(draftInputText, toastAdapter);
+      clearDraftInputText();
       setError(null);
       toast({
         title: 'Фоновая обработка запущена!',
@@ -82,7 +84,7 @@ const WordInput: React.FC = () => {
   const handlePaste = (e: React.ClipboardEvent) => {
     e.preventDefault(); // Prevent default paste behavior
     const paste = e.clipboardData.getData('text');
-    setInputText(paste);
+    setDraftInputText(paste);
   };
 
   const sampleText = `שלום
@@ -117,12 +119,11 @@ const WordInput: React.FC = () => {
 
         <WordSuggestions
           onWordsReceived={(words) => {
-            setInputText(prevText => {
-              if (prevText.trim()) {
-                return `${prevText}\n${words}`;
-              }
-              return words;
-            });
+            if (draftInputText.trim()) {
+              setDraftInputText(`${draftInputText}\n${words}`);
+            } else {
+              setDraftInputText(words);
+            }
           }}
           apiKey={localStorage.getItem('openRouterApiKey') || DEFAULT_OPENROUTER_API_KEY}
           modelIdentifier={localStorage.getItem('openRouterModel') || DEFAULT_OPENROUTER_MODEL}
@@ -150,8 +151,8 @@ const WordInput: React.FC = () => {
               id="wordInput"
               rows={6}
               className="w-full px-3 py-2 text-gray-700 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              value={inputText}
-              onChange={(e) => setInputText(e.target.value)}
+              value={draftInputText}
+              onChange={(e) => setDraftInputText(e.target.value)}
               onPaste={handlePaste}
               dir="auto" // Changed to auto to better support mixed LTR/RTL for instructions and RTL for Hebrew
               placeholder="Введите слова на русском или иврите, каждое слово на новой строке..."
@@ -163,7 +164,7 @@ const WordInput: React.FC = () => {
               type="button"
               className="text-blue-500 hover:text-blue-700"
               onClick={() => {
-                setInputText(sampleText);
+                setDraftInputText(sampleText);
                 setError(null); // Clear error when using sample
               }}
             >
@@ -174,7 +175,7 @@ const WordInput: React.FC = () => {
               type="button"
               className="text-blue-500 hover:text-blue-700"
               onClick={() => {
-                setInputText('');
+                clearDraftInputText();
                 setError(null); // Clear error when clearing input
               }}
             >
@@ -187,7 +188,7 @@ const WordInput: React.FC = () => {
               type="button"
               onClick={handleBackgroundSubmit}
               className="py-2 px-4 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors disabled:opacity-50"
-              disabled={!inputText.trim()}
+              disabled={!draftInputText.trim()}
             >
               🔄 Добавить слова
             </button>

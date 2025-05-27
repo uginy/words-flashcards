@@ -17,6 +17,7 @@ const initialStoreState = {
   ...initialState,
   backgroundTasks: [] as BackgroundTask[],
   isBackgroundProcessing: false,
+  draftInputText: '',
 };
 
 // Returns statistics for a given array of words
@@ -434,6 +435,9 @@ interface WordsStore extends WordsState {
   backgroundTasks: BackgroundTask[];
   isBackgroundProcessing: boolean;
   
+  // Word input draft state
+  draftInputText: string;
+  
   // Methods
   addWords: (newWords: Word[], toast: ToastFn) => Promise<void>;
   startBackgroundWordProcessing: (inputText: string, toast: ToastFn) => Promise<string>; // returns task id
@@ -450,6 +454,8 @@ interface WordsStore extends WordsState {
   updateWords: (words: Word[] | null) => void;
   replaceAllWords: (newWords: Word[], toast?: ToastFn) => void;
   clearAllWords: (toast?: ToastFn) => void;
+  setDraftInputText: (text: string) => void;
+  clearDraftInputText: () => void;
   // currentWord removed; use getCurrentWord(words, currentIndex) instead
 }
 
@@ -462,6 +468,7 @@ export const useWordsStore = create<WordsStore>((set, get) => {
         currentIndex: savedState.currentIndex || 0,
         backgroundTasks: [] as BackgroundTask[],
         isBackgroundProcessing: false,
+        draftInputText: '',
       }
     : initialStoreState;
 
@@ -797,6 +804,20 @@ export const useWordsStore = create<WordsStore>((set, get) => {
         isBackgroundProcessing: state.backgroundTasks.some(task =>
           task.status === 'running' || task.status === 'pending'
         )
+      }));
+    },
+
+    setDraftInputText: (text: string) => {
+      set(state => ({
+        ...state,
+        draftInputText: text
+      }));
+    },
+
+    clearDraftInputText: () => {
+      set(state => ({
+        ...state,
+        draftInputText: ''
       }));
     },
 
