@@ -346,9 +346,64 @@ async function processHebrewWords(
 
     const chunk = chunks[i];
     console.log(`🚀 DEBUG: Processing chunk ${i + 1}/${chunks.length} with ${chunk.length} words:`, chunk);
+    
+    // Add progressive delay between chunks (2-5 seconds, increasing with chunk number)
+    if (i > 0) {
+      const delaySeconds = Math.min(2 + i * 0.5, 5); // Start at 2s, increase by 0.5s per chunk, max 5s
+      const delayMs = delaySeconds * 1000;
+      console.log(`⏱️ DEBUG: Waiting ${delaySeconds}s before processing chunk ${i + 1}...`);
+      
+      // Check if cancelled during delay
+      await new Promise<void>((resolve) => {
+        const checkInterval = setInterval(() => {
+          const currentTaskState = get().backgroundTasks.find((t: BackgroundTask) => t.id === taskId);
+          if (currentTaskState?.cancelled) {
+            clearInterval(checkInterval);
+            clearTimeout(delayTimeout);
+            console.log(`🚫 DEBUG: Task ${taskId} was cancelled during delay`);
+            return;
+          }
+        }, 100);
+        
+        const delayTimeout = setTimeout(() => {
+          clearInterval(checkInterval);
+          resolve();
+        }, delayMs);
+      });
+      
+      // Final check after delay
+      const finalTaskState = get();
+      const finalCurrentTask = finalTaskState.backgroundTasks.find((t: BackgroundTask) => t.id === taskId);
+      if (finalCurrentTask?.cancelled) {
+        console.log(`🚫 DEBUG: Task ${taskId} was cancelled after delay, stopping chunk processing at chunk ${i + 1}`);
+        return;
+      }
+    }
+    
     try {
       console.log(`⚡ DEBUG: Calling enrichWordsWithLLM for chunk ${i + 1}`);
-      const result = await enrichWordsWithLLM(chunk, apiKey, model, undefined, undefined, currentTask?.abortController);
+      
+      // Enhanced LLM enrichment options for better reliability
+      const llmOptions = {
+        retryConfig: {
+          maxRetries: 3,
+          baseDelay: 1500, // Start with 1.5s delay
+          maxDelay: 15000, // Max 15s delay
+          backoffMultiplier: 2.5
+        },
+        enableDetailedLogging: true,
+        validateJsonResponse: true
+      };
+      
+      const result = await enrichWordsWithLLM(
+        chunk,
+        apiKey,
+        model,
+        undefined,
+        undefined,
+        currentTask?.abortController,
+        llmOptions
+      );
       console.log(`📥 DEBUG: LLM result for chunk ${i + 1}:`, result);
       
       const valid = validateLLMWordsResponse(result);

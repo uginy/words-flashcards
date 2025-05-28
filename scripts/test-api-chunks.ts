@@ -6,7 +6,8 @@ import type { Word } from '../src/types/index.ts';
 
 // Test configuration
 const CHUNK_SIZE = 5;
-const DELAY_BETWEEN_CHUNKS = 2000; // 2 seconds to prevent rate limiting
+const DEFAULT_DELAY_BETWEEN_CHUNKS = 2000; // 2 seconds to prevent rate limiting
+const DEFAULT_PROGRESSIVE_DELAY = true; // Whether to use progressive delays
 
 // Test Hebrew words covering different categories
 const TEST_HEBREW_WORDS = [
@@ -152,12 +153,19 @@ async function testApiChunks(): Promise<void> {
   const apiKey = process.env.OPENROUTER_API_KEY || DEFAULT_OPENROUTER_API_KEY;
   const model = process.env.OPENROUTER_MODEL || DEFAULT_OPENROUTER_MODEL;
   const forceToolSupport = process.env.FORCE_TOOL_SUPPORT === 'true';
+  const delayBetweenChunks = parseInt(process.env.DELAY_BETWEEN_CHUNKS || String(DEFAULT_DELAY_BETWEEN_CHUNKS));
+  const useProgressiveDelay = process.env.PROGRESSIVE_DELAY !== 'false'; // Default to true unless explicitly disabled
+  const maxDelaySeconds = parseInt(process.env.MAX_DELAY_SECONDS || '10'); // Maximum delay in seconds
   
   console.log(`📋 Test Configuration:`);
   console.log(`   🔑 API Key: ${apiKey.substring(0, 12)}...`);
   console.log(`   🤖 Model: ${model}`);
   console.log(`   📦 Chunk size: ${CHUNK_SIZE} words`);
-  console.log(`   ⏰ Delay between chunks: ${DELAY_BETWEEN_CHUNKS}ms`);
+  console.log(`   ⏰ Base delay between chunks: ${delayBetweenChunks}ms`);
+  console.log(`   📈 Progressive delay: ${useProgressiveDelay ? 'Enabled' : 'Disabled'}`);
+  if (useProgressiveDelay) {
+    console.log(`   ⏱️ Max delay per chunk: ${maxDelaySeconds}s`);
+  }
   console.log(`   🛠️ Force tool support: ${forceToolSupport ? 'Yes' : 'Auto-detect'}`);
   console.log(`   📊 Total test words: ${TEST_HEBREW_WORDS.length}`);
   console.log();
@@ -185,13 +193,26 @@ async function testApiChunks(): Promise<void> {
         abortController.abort();
       }, 30000);
       
+      // Enhanced test with new retry and validation options
+      const llmOptions = {
+        retryConfig: {
+          maxRetries: 3,
+          baseDelay: 1500,
+          maxDelay: 15000,
+          backoffMultiplier: 2.5
+        },
+        enableDetailedLogging: true,
+        validateJsonResponse: true
+      };
+
       const wordsResult = await enrichWordsWithLLM(
         chunk,
         apiKey,
         model,
         mockToast,
         forceToolSupport ? true : undefined,
-        abortController
+        abortController,
+        llmOptions
       );
       
       clearTimeout(timeoutId);
@@ -272,8 +293,19 @@ async function testApiChunks(): Promise<void> {
     
     // Add delay between chunks (except for the last one)
     if (i < wordChunks.length - 1) {
-      console.log(`   ⏸️ Waiting ${DELAY_BETWEEN_CHUNKS}ms before next chunk...`);
-      await delay(DELAY_BETWEEN_CHUNKS);
+      let delayMs = delayBetweenChunks;
+      
+      if (useProgressiveDelay) {
+        // Progressive delay: start with base delay, increase by 0.5s per chunk, up to max
+        const progressiveDelaySeconds = Math.min(
+          delayBetweenChunks / 1000 + (i * 0.5),
+          maxDelaySeconds
+        );
+        delayMs = progressiveDelaySeconds * 1000;
+      }
+      
+      console.log(`   ⏸️ Waiting ${delayMs}ms (${(delayMs/1000).toFixed(1)}s) before next chunk...`);
+      await delay(delayMs);
     }
   }
   
@@ -399,11 +431,17 @@ Environment Variables:
   OPENROUTER_API_KEY      OpenRouter API key (default: from config)
   OPENROUTER_MODEL        Model identifier (default: from config)
   FORCE_TOOL_SUPPORT      Force tool support mode (true/false)
+  DELAY_BETWEEN_CHUNKS    Base delay between chunks in ms (default: ${DEFAULT_DELAY_BETWEEN_CHUNKS})
+  PROGRESSIVE_DELAY       Use progressive delays (true/false, default: ${DEFAULT_PROGRESSIVE_DELAY})
+  MAX_DELAY_SECONDS       Maximum delay per chunk in seconds (default: 10)
 
 Examples:
   npx tsx scripts/test-api-chunks.ts
   OPENROUTER_MODEL="anthropic/claude-3-sonnet" npx tsx scripts/test-api-chunks.ts
   FORCE_TOOL_SUPPORT=true npx tsx scripts/test-api-chunks.ts
+  DELAY_BETWEEN_CHUNKS=5000 npx tsx scripts/test-api-chunks.ts
+  PROGRESSIVE_DELAY=false DELAY_BETWEEN_CHUNKS=3000 npx tsx scripts/test-api-chunks.ts
+  MAX_DELAY_SECONDS=15 npx tsx scripts/test-api-chunks.ts
     `);
     process.exit(0);
   }

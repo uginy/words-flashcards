@@ -7,6 +7,29 @@ type ToastFunction = (opts: {
   variant?: 'default' | 'destructive' | 'warning'
 }) => void;
 
+// Enhanced retry configuration interface
+interface RetryConfig {
+  maxRetries: number;
+  baseDelay: number;
+  maxDelay: number;
+  backoffMultiplier: number;
+}
+
+// Default retry configuration
+const DEFAULT_RETRY_CONFIG: RetryConfig = {
+  maxRetries: 3,
+  baseDelay: 1000, // 1 second
+  maxDelay: 10000, // 10 seconds
+  backoffMultiplier: 2
+};
+
+// Enhanced options interface for enrichWordsWithLLM
+interface LLMEnrichmentOptions {
+  retryConfig?: Partial<RetryConfig>;
+  enableDetailedLogging?: boolean;
+  validateJsonResponse?: boolean;
+}
+
 // Interface for the expected structure of a single item from the LLM batch response
 interface LLMBatchResponseItem {
   category: WordCategory;
@@ -360,6 +383,138 @@ function processWordsArray(llmItems: LLMBatchResponseItem[], originalWords: stri
   return finalWords;
 }
 
+// Enhanced JSON validation function with detailed analysis
+function validateJsonString(jsonString: string): { isValid: boolean; issues: string[]; canAttemptFix: boolean } {
+  const issues: string[] = [];
+  const trimmed = jsonString.trim();
+  
+  // Check for empty or minimal responses
+  if (trimmed === '' || trimmed === '{' || trimmed === '[') {
+    issues.push(`Response is incomplete: "${trimmed}"`);
+    return { isValid: false, issues, canAttemptFix: false };
+  }
+  
+  // Check for unmatched brackets
+  const openBraces = (trimmed.match(/\{/g) || []).length;
+  const closeBraces = (trimmed.match(/\}/g) || []).length;
+  const openBrackets = (trimmed.match(/\[/g) || []).length;
+  const closeBrackets = (trimmed.match(/\]/g) || []).length;
+  
+  if (openBraces !== closeBraces) {
+    issues.push(`Unmatched braces: ${openBraces} opening, ${closeBraces} closing`);
+  }
+  
+  if (openBrackets !== closeBrackets) {
+    issues.push(`Unmatched brackets: ${openBrackets} opening, ${closeBrackets} closing`);
+  }
+  
+  // Check for truncated JSON (common with streaming responses)
+  if (trimmed.endsWith(',') || trimmed.endsWith(':') || trimmed.match(/[{,]\s*$/)) {
+    issues.push('Response appears to be truncated');
+  }
+  
+  // Check for common incomplete patterns
+  if (trimmed.includes('"processed_words":') && !trimmed.includes(']')) {
+    issues.push('processed_words array appears incomplete');
+  }
+  
+  // Try to parse
+  try {
+    JSON.parse(trimmed);
+    return { isValid: true, issues: [], canAttemptFix: false };
+  } catch (parseError) {
+    issues.push(`JSON parse error: ${parseError instanceof Error ? parseError.message : String(parseError)}`);
+    
+    // Determine if we can attempt to fix simple issues
+    const canAttemptFix = (
+      openBraces > closeBraces && openBraces - closeBraces <= 2
+    ) || (
+      openBrackets > closeBrackets && openBrackets - closeBrackets <= 2
+    );
+    
+    return { isValid: false, issues, canAttemptFix };
+  }
+}
+
+// Attempt to fix common JSON issues
+function attemptJsonFix(jsonString: string): string {
+  let fixed = jsonString.trim();
+  
+  // Count brackets and braces
+  const openBraces = (fixed.match(/\{/g) || []).length;
+  const closeBraces = (fixed.match(/\}/g) || []).length;
+  const openBrackets = (fixed.match(/\[/g) || []).length;
+  const closeBrackets = (fixed.match(/\]/g) || []).length;
+  
+  // Add missing closing braces
+  if (openBraces > closeBraces) {
+    const missingBraces = openBraces - closeBraces;
+    fixed += '}' .repeat(missingBraces);
+  }
+  
+  // Add missing closing brackets
+  if (openBrackets > closeBrackets) {
+    const missingBrackets = openBrackets - closeBrackets;
+    fixed += ']' .repeat(missingBrackets);
+  }
+  
+  // Remove trailing commas
+  fixed = fixed.replace(/,(\s*[}\]])/g, '$1');
+  
+  return fixed;
+}
+
+// Exponential backoff retry mechanism
+async function retryWithBackoff<T>(
+  operation: () => Promise<T>,
+  config: RetryConfig,
+  logger?: (message: string) => void
+): Promise<T> {
+  let lastError: Error | null = null;
+  
+  for (let attempt = 0; attempt <= config.maxRetries; attempt++) {
+    try {
+      if (attempt > 0 && logger) {
+        logger(`Retry attempt ${attempt}/${config.maxRetries}`);
+      }
+      
+      return await operation();
+    } catch (error) {
+      lastError = error instanceof Error ? error : new Error(String(error));
+      
+      if (logger) {
+        logger(`Attempt ${attempt + 1} failed: ${lastError.message}`);
+      }
+      
+      // Don't retry on abort errors
+      if (lastError.name === 'AbortError') {
+        throw lastError;
+      }
+      
+      // Don't retry on certain critical errors
+      if (lastError.message.includes('Authentication') ||
+          lastError.message.includes('API key') ||
+          lastError.message.includes('401')) {
+        throw lastError;
+      }
+      
+      if (attempt < config.maxRetries) {
+        const delay = Math.min(
+          config.baseDelay * Math.pow(config.backoffMultiplier, attempt),
+          config.maxDelay
+        );
+        
+        if (logger) {
+          logger(`Waiting ${delay}ms before retry...`);
+        }
+        
+        await new Promise(resolve => setTimeout(resolve, delay));
+      }
+    }
+  }
+  
+  throw lastError || new Error('All retry attempts failed');
+}
 
 export async function enrichWordsWithLLM(
   hebrewWords: string[],
@@ -367,7 +522,8 @@ export async function enrichWordsWithLLM(
   modelIdentifier: string,
   toastFn?: ToastFunction,
   modelSupportsToolsExplicit?: boolean,
-  abortController?: AbortController
+  abortController?: AbortController,
+  options?: LLMEnrichmentOptions
 ): Promise<Word[]> {
   if (!apiKey || !modelIdentifier) {
     throw new Error('API key or model not configured.');
@@ -376,11 +532,25 @@ export async function enrichWordsWithLLM(
     return [];
   }
 
+  // Merge default options with provided options
+  const retryConfig: RetryConfig = { ...DEFAULT_RETRY_CONFIG, ...options?.retryConfig };
+  const enableLogging = options?.enableDetailedLogging ?? false;
+  const validateJson = options?.validateJsonResponse ?? true;
+
   const showToast = (opts: Parameters<ToastFunction>[0]) => {
     if (toastFn) {
       toastFn(opts);
     }
   };
+
+  const logger = (message: string) => {
+    if (enableLogging) {
+      console.log(`[LLM Enrichment] ${message}`);
+    }
+  };
+
+  logger(`Starting enrichment for ${hebrewWords.length} words`);
+  logger(`Retry config: ${JSON.stringify(retryConfig)}`);
 
   showToast({
     title: "Обработка",
@@ -403,32 +573,42 @@ export async function enrichWordsWithLLM(
     console.log(`Model "${modelIdentifier}" determined to ${effectiveModelSupportsTools ? 'support' : 'not support'} tools based on heuristic.`);
   }
 
-  const openai = new OpenAI({
-    baseURL: "https://openrouter.ai/api/v1",
-    apiKey: apiKey,
-    dangerouslyAllowBrowser: true,
-  });
-
   const userContent = `Process the following Hebrew words/phrases: ${hebrewWords.join(', ')}`;
 
   try {
     let parsedArgs: { processed_words: LLMBatchResponseItem[] };
 
+    // Create a new OpenAI client for each function call to avoid potential state issues
+    const createOpenAIClient = () => {
+      logger("Creating new OpenAI client instance");
+      return new OpenAI({
+        baseURL: "https://openrouter.ai/api/v1",
+        apiKey: apiKey,
+        dangerouslyAllowBrowser: true,
+      });
+    };
+
     if (effectiveModelSupportsTools) {
       // --- Logic for models supporting tools ---
-      console.log("Using TOOL-BASED approach for model:", modelIdentifier);
-      const completion = await openai.chat.completions.create({
-        model: modelIdentifier,
-        messages: [
-          { role: 'system', content: systemPrompt },
-          { role: 'user', content: userContent }
-        ],
-        tools: [toolDefinition],
-        tool_choice: { type: "function", function: { name: "save_hebrew_word_details" } },
-        stream: false
-      }, {
-        signal: abortController?.signal
-      });
+      logger("Using TOOL-BASED approach for model: " + modelIdentifier);
+      
+      const completion = await retryWithBackoff(async () => {
+        const openai = createOpenAIClient();
+        
+        logger("Making API call with tools...");
+        return await openai.chat.completions.create({
+          model: modelIdentifier,
+          messages: [
+            { role: 'system', content: systemPrompt },
+            { role: 'user', content: userContent }
+          ],
+          tools: [toolDefinition],
+          tool_choice: { type: "function", function: { name: "save_hebrew_word_details" } },
+          stream: false
+        }, {
+          signal: abortController?.signal
+        });
+      }, retryConfig, logger);
 
       if (!completion.choices || completion.choices.length === 0 || !completion.choices[0].message) {
         throw new Error('Invalid LLM response structure: No content or choices from the model (tool mode).');
@@ -442,52 +622,133 @@ export async function enrichWordsWithLLM(
       if (functionCall.name !== "save_hebrew_word_details") {
         throw new Error(`Invalid LLM response: Expected function call to "save_hebrew_word_details", but got "${functionCall.name}".`);
       }
-      try {
-        parsedArgs = JSON.parse(functionCall.arguments);
-      } catch (e) {
-        console.error('Failed to parse function call arguments as JSON (tool mode):', functionCall.arguments, e);
-        throw new Error('Failed to parse LLM function call arguments. The response may not be valid JSON (tool mode).');
+      
+      logger(`Received function call arguments: ${functionCall.arguments.substring(0, 200)}...`);
+      
+      // Enhanced JSON validation before parsing
+      if (validateJson) {
+        const validation = validateJsonString(functionCall.arguments);
+        if (!validation.isValid) {
+          logger(`JSON validation failed for function arguments: ${validation.issues.join(', ')}`);
+          logger(`Function arguments preview: ${functionCall.arguments.substring(0, 500)}...`);
+          
+          // Attempt to fix if possible
+          if (validation.canAttemptFix) {
+            logger("Attempting to fix function arguments JSON structure...");
+            const fixedJson = attemptJsonFix(functionCall.arguments);
+            const revalidation = validateJsonString(fixedJson);
+            
+            if (revalidation.isValid) {
+              logger("Successfully fixed function arguments JSON structure");
+              parsedArgs = JSON.parse(fixedJson);
+            } else {
+              logger(`Function arguments JSON fix failed: ${revalidation.issues.join(', ')}`);
+              throw new Error(`Invalid JSON structure in function call arguments. Issues: ${validation.issues.join(', ')}`);
+            }
+          } else {
+            throw new Error(`Invalid JSON structure in function call arguments. Issues: ${validation.issues.join(', ')}`);
+          }
+        } else {
+          parsedArgs = JSON.parse(functionCall.arguments);
+          logger("Successfully parsed function call arguments");
+        }
+      } else {
+        try {
+          parsedArgs = JSON.parse(functionCall.arguments);
+          logger("Successfully parsed function call arguments (validation disabled)");
+        } catch (e) {
+          logger(`Failed to parse function call arguments: ${e}`);
+          console.error('Failed to parse function call arguments as JSON (tool mode):', functionCall.arguments, e);
+          throw new Error('Failed to parse LLM function call arguments. The response may not be valid JSON (tool mode).');
+        }
       }
     } else {
       // --- Logic for models NOT supporting tools (direct JSON response) ---
-      console.log("Using DIRECT JSON approach for model:", modelIdentifier);
-      let completion: any = {}
-      try {
-        completion = await openai.chat.completions.create({
-          model: modelIdentifier,
-          messages: [
-            { role: 'system', content: systemPromptForDirectJson },
-            { role: 'user', content: userContent }
-          ],
-          // No tools or tool_choice here
-          stream: false
-        }, {
-          signal: abortController?.signal
-        });
-      } catch (e: any) {
-        if (e?.status === 401) {
-          throw new Error(e.message ?? 'Authentication or Api key error found')
+      logger("Using DIRECT JSON approach for model: " + modelIdentifier);
+      
+      const completion = await retryWithBackoff(async () => {
+        const openai = createOpenAIClient();
+        
+        logger("Making API call without tools...");
+        try {
+          return await openai.chat.completions.create({
+            model: modelIdentifier,
+            messages: [
+              { role: 'system', content: systemPromptForDirectJson },
+              { role: 'user', content: userContent }
+            ],
+            // No tools or tool_choice here
+            stream: false
+          }, {
+            signal: abortController?.signal
+          });
+        } catch (e: unknown) {
+          if (e && typeof e === 'object' && 'status' in e && (e as { status: number }).status === 401) {
+            const errorMessage = e && typeof e === 'object' && 'message' in e && typeof (e as { message: string }).message === 'string'
+              ? (e as { message: string }).message
+              : 'Authentication or Api key error found';
+            throw new Error(errorMessage);
+          }
+          throw e;
         }
-      }
+      }, retryConfig, logger);
 
       if (!completion?.choices || !completion?.choices?.length || !completion?.choices[0]?.message || !completion.choices[0].message.content) {
         throw new Error('Invalid LLM response structure: No content in message from the model (direct JSON mode).');
       }
       const responseContent = completion?.choices[0].message.content;
+      
+      logger(`Received response content: ${responseContent.substring(0, 200)}...`);
+      
       try {
         // Attempt to clean up potential markdown backticks
         const cleanedResponseContent = responseContent.replace(/^```json\s*|\s*```$/g, '');
-        parsedArgs = JSON.parse(cleanedResponseContent);
+        
+        // Enhanced JSON validation before parsing
+        if (validateJson) {
+          const validation = validateJsonString(cleanedResponseContent);
+          if (!validation.isValid) {
+            logger(`JSON validation failed: ${validation.issues.join(', ')}`);
+            logger(`Response content preview: ${cleanedResponseContent.substring(0, 500)}...`);
+            
+            // Attempt to fix if possible
+            if (validation.canAttemptFix) {
+              logger("Attempting to fix JSON structure...");
+              const fixedJson = attemptJsonFix(cleanedResponseContent);
+              const revalidation = validateJsonString(fixedJson);
+              
+              if (revalidation.isValid) {
+                logger("Successfully fixed JSON structure");
+                parsedArgs = JSON.parse(fixedJson);
+              } else {
+                logger(`JSON fix failed: ${revalidation.issues.join(', ')}`);
+                throw new Error(`Invalid JSON structure in response content. Issues: ${validation.issues.join(', ')}`);
+              }
+            } else {
+              throw new Error(`Invalid JSON structure in response content. Issues: ${validation.issues.join(', ')}`);
+            }
+          } else {
+            parsedArgs = JSON.parse(cleanedResponseContent);
+            logger("Successfully parsed response content");
+          }
+        } else {
+          parsedArgs = JSON.parse(cleanedResponseContent);
+          logger("Successfully parsed response content (validation disabled)");
+        }
       } catch (e) {
+        logger(`Failed to parse response content: ${e}`);
         console.error('Failed to parse message content as JSON (direct JSON mode):', responseContent, e);
         throw new Error('Failed to parse LLM response content as JSON. The model may not have returned valid JSON (direct JSON mode).');
       }
     }
 
     if (!parsedArgs || !Array.isArray(parsedArgs.processed_words)) {
+      logger("Invalid parsed args structure");
       throw new Error('Invalid LLM response: "processed_words" array is missing or not an array in the parsed arguments.');
     }
 
+    logger(`Found ${parsedArgs.processed_words.length} processed words in response`);
+    
     const processedWordsResult = processWordsArray(parsedArgs.processed_words, hebrewWords);
 
     const successfullyProcessed = processedWordsResult.filter(w =>
@@ -496,6 +757,8 @@ export async function enrichWordsWithLLM(
     const failedWords = processedWordsResult.filter(w =>
       !w.transcription || !w.russian || w.category === 'אחר'
     );
+
+    logger(`Processing complete: ${successfullyProcessed.length} successful, ${failedWords.length} failed`);
 
     if (failedWords.length > 0) {
       showToast({
@@ -519,10 +782,12 @@ export async function enrichWordsWithLLM(
     return processedWordsResult;
 
   } catch (error) {
+    logger(`Error occurred: ${error instanceof Error ? error.message : String(error)}`);
     console.error('Error enriching words with LLM:', error);
 
     // Check if this is an abort error
     if (error instanceof Error && error.name === 'AbortError') {
+      logger('Request was aborted by user');
       console.log('Request was aborted by user');
       throw error; // Re-throw abort errors to be handled by the caller
     }
