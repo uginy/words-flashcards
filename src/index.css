@@ -37,6 +37,7 @@ body {
 /* Card fade styles */
 .card-container {
   position: relative;
+  overflow: hidden; /* Предотвращаем выход скрытого контента за границы */
 }
 
 .card {
@@ -46,34 +47,47 @@ body {
 .card-front,
 .card-back {
   width: 100%;
-  position: absolute;
-  top: 0;
-  left: 0;
-  transition: opacity 0.5s ease-in-out, transform 0.5s ease-in-out;
+  transition: opacity 0.4s ease-in-out, visibility 0.4s ease-in-out;
 }
 
+/* Front side states */
 .card-front {
+  position: relative;
   opacity: 1;
-  transform: scale(1);
   z-index: 2;
+  visibility: visible;
 }
 
 .card.flipped .card-front {
+  position: absolute;
+  top: 0;
+  left: 0;
   opacity: 0;
-  transform: scale(0.95);
   z-index: 1;
+  pointer-events: none;
+  visibility: hidden;
+  transition-delay: 0s; /* Сразу начинаем угасание */
 }
 
+/* Back side states */
 .card-back {
+  position: absolute;
+  top: 0;
+  left: 0;
   opacity: 0;
-  transform: scale(0.95);
   z-index: 1;
+  pointer-events: none;
+  visibility: hidden;
+  transition-delay: 0s;
 }
 
 .card.flipped .card-back {
+  position: relative;
   opacity: 1;
-  transform: scale(1);
   z-index: 2;
+  pointer-events: auto;
+  visibility: visible;
+  transition-delay: 0.2s; /* Задержка перед появлением */
 }
 
 @layer base {
