@@ -331,7 +331,7 @@ function getOptimalToolsConfig(modelIdentifier: string, options?: LLMEnrichmentO
   
   // Force tool choice only when explicitly requested or for models known to work well with it
   const shouldUseToolChoice = options?.forceToolChoice === true ||
-    (options?.forceToolChoice !== false && isGPTModel);
+    (options?.forceToolChoice !== false && (isGPTModel || lowerModel.includes('llama-4')));
   
   return {
     toolDefinition: useSimpleSchema ? simpleToolDefinition : toolDefinition,
@@ -744,8 +744,22 @@ export async function enrichWordsWithLLM(
         logger("No tool_calls found, attempting to parse JSON from message content...");
         
         try {
-          // Attempt to clean up potential markdown backticks
-          const cleanedContent = message.content.replace(/^```json\s*|\s*```$/g, '');
+          // Attempt to clean up potential markdown backticks and surrounding text
+          let cleanedContent = message.content;
+          
+          // Try to extract JSON from markdown code block
+          const jsonBlockMatch = cleanedContent.match(/```json\s*([\s\S]*?)\s*```/);
+          if (jsonBlockMatch && jsonBlockMatch[1]) {
+            cleanedContent = jsonBlockMatch[1].trim();
+            logger(`Extracted JSON from markdown block: ${cleanedContent.substring(0, 100)}...`);
+          } else {
+            // Fallback: remove markdown backticks from start/end
+            cleanedContent = cleanedContent.replace(/^```json\s*|\s*```$/g, '').trim();
+            logger(`Cleaned content using fallback: ${cleanedContent.substring(0, 100)}...`);
+          }
+          
+          // Additional cleanup: remove any leading explanatory text
+          cleanedContent = cleanedContent.replace(/^[^{]*({[\s\S]*}).*$/s, '$1');
           
           if (validateJson) {
             const validation = validateJsonString(cleanedContent);
@@ -821,8 +835,22 @@ export async function enrichWordsWithLLM(
       logger(`Received response content: ${responseContent.substring(0, 200)}...`);
       
       try {
-        // Attempt to clean up potential markdown backticks
-        const cleanedResponseContent = responseContent.replace(/^```json\s*|\s*```$/g, '');
+        // Attempt to clean up potential markdown backticks and surrounding text
+        let cleanedResponseContent = responseContent;
+        
+        // Try to extract JSON from markdown code block
+        const jsonBlockMatch = cleanedResponseContent.match(/```json\s*([\s\S]*?)\s*```/);
+        if (jsonBlockMatch && jsonBlockMatch[1]) {
+          cleanedResponseContent = jsonBlockMatch[1].trim();
+          logger(`Extracted JSON from markdown block: ${cleanedResponseContent.substring(0, 100)}...`);
+        } else {
+          // Fallback: remove markdown backticks from start/end
+          cleanedResponseContent = cleanedResponseContent.replace(/^```json\s*|\s*```$/g, '').trim();
+          logger(`Cleaned content using fallback: ${cleanedResponseContent.substring(0, 100)}...`);
+        }
+        
+        // Additional cleanup: remove any leading explanatory text
+        cleanedResponseContent = cleanedResponseContent.replace(/^[^{]*({[\s\S]*}).*$/s, '$1');
         
         // Enhanced JSON validation before parsing
         if (validateJson) {
