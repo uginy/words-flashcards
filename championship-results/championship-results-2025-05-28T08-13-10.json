@@ -1,0 +1,1862 @@
+{
+  "timestamp": "2025-05-28T08-13-10",
+  "testConfiguration": {
+    "chunkSize": 5,
+    "totalWords": 20,
+    "totalModels": 65,
+    "testedModels": 65,
+    "delayBetweenModels": 3000
+  },
+  "results": [
+    {
+      "modelName": "meta-llama/llama-4-scout:free",
+      "successRate": 100,
+      "wordSuccessRate": 100,
+      "averageResponseTime": 8162.75,
+      "jsonParseErrors": 0,
+      "qualityScore": 81.25,
+      "errors": [],
+      "rawResults": {
+        "totalChunks": 4,
+        "successfulChunks": 4,
+        "failedChunks": 0,
+        "totalWords": 20,
+        "successfulWords": 20,
+        "failedWords": 0,
+        "totalProcessingTime": 42377,
+        "averageChunkTime": 8162.75,
+        "jsonParseErrors": 0,
+        "networkErrors": 0,
+        "apiErrors": 0,
+        "validationErrors": 0
+      },
+      "testDuration": 42377,
+      "isAvailable": true,
+      "totalScore": 87.15
+    },
+    {
+      "modelName": "meta-llama/llama-3.3-8b-instruct:free",
+      "successRate": 75,
+      "wordSuccessRate": 75,
+      "averageResponseTime": 7336.75,
+      "jsonParseErrors": 0,
+      "qualityScore": 83.33333333333334,
+      "errors": [
+        "Chunk 4: Failed to process words: מה שלומך, בוקר טוב, תודה רבה, סליחה, שלום"
+      ],
+      "rawResults": {
+        "totalChunks": 4,
+        "successfulChunks": 3,
+        "failedChunks": 1,
+        "totalWords": 20,
+        "successfulWords": 15,
+        "failedWords": 5,
+        "totalProcessingTime": 37249,
+        "averageChunkTime": 7336.75,
+        "jsonParseErrors": 0,
+        "networkErrors": 0,
+        "apiErrors": 1,
+        "validationErrors": 0
+      },
+      "testDuration": 37249,
+      "isAvailable": true,
+      "totalScore": 74.75
+    },
+    {
+      "modelName": "qwen/qwen-2.5-7b-instruct:free",
+      "successRate": 75,
+      "wordSuccessRate": 75,
+      "averageResponseTime": 5404,
+      "jsonParseErrors": 0,
+      "qualityScore": 71.66666666666667,
+      "errors": [
+        "Chunk 1: Failed to process words: ללכת"
+      ],
+      "rawResults": {
+        "totalChunks": 4,
+        "successfulChunks": 3,
+        "failedChunks": 1,
+        "totalWords": 20,
+        "successfulWords": 15,
+        "failedWords": 5,
+        "totalProcessingTime": 28023,
+        "averageChunkTime": 5404,
+        "jsonParseErrors": 0,
+        "networkErrors": 0,
+        "apiErrors": 1,
+        "validationErrors": 0
+      },
+      "testDuration": 28023,
+      "isAvailable": true,
+      "totalScore": 73.76
+    },
+    {
+      "modelName": "opengvlab/internvl3-14b:free",
+      "successRate": 75,
+      "wordSuccessRate": 75,
+      "averageResponseTime": 7342,
+      "jsonParseErrors": 0,
+      "qualityScore": 75,
+      "errors": [
+        "Chunk 1: Failed to process words: לקרוא"
+      ],
+      "rawResults": {
+        "totalChunks": 4,
+        "successfulChunks": 3,
+        "failedChunks": 1,
+        "totalWords": 20,
+        "successfulWords": 15,
+        "failedWords": 5,
+        "totalProcessingTime": 37615,
+        "averageChunkTime": 7342,
+        "jsonParseErrors": 0,
+        "networkErrors": 0,
+        "apiErrors": 1,
+        "validationErrors": 0
+      },
+      "testDuration": 37615,
+      "isAvailable": true,
+      "totalScore": 72.66
+    },
+    {
+      "modelName": "tngtech/deepseek-r1t-chimera:free",
+      "successRate": 75,
+      "wordSuccessRate": 75,
+      "averageResponseTime": 16353.25,
+      "jsonParseErrors": 0,
+      "qualityScore": 75,
+      "errors": [
+        "Chunk 1: The user aborted a request."
+      ],
+      "rawResults": {
+        "totalChunks": 4,
+        "successfulChunks": 3,
+        "failedChunks": 1,
+        "totalWords": 20,
+        "successfulWords": 15,
+        "failedWords": 5,
+        "totalProcessingTime": 79806,
+        "averageChunkTime": 16353.25,
+        "jsonParseErrors": 0,
+        "networkErrors": 0,
+        "apiErrors": 1,
+        "validationErrors": 0
+      },
+      "testDuration": 79806,
+      "isAvailable": true,
+      "totalScore": 70
+    },
+    {
+      "modelName": "mistralai/mistral-7b-instruct:free",
+      "successRate": 75,
+      "wordSuccessRate": 75,
+      "averageResponseTime": 13431.5,
+      "jsonParseErrors": 1,
+      "qualityScore": 76.66666666666667,
+      "errors": [
+        "Chunk 1: Failed to parse LLM response content as JSON. The model may not have returned valid JSON (direct JSON mode)."
+      ],
+      "rawResults": {
+        "totalChunks": 4,
+        "successfulChunks": 3,
+        "failedChunks": 1,
+        "totalWords": 20,
+        "successfulWords": 15,
+        "failedWords": 5,
+        "totalProcessingTime": 63301,
+        "averageChunkTime": 13431.5,
+        "jsonParseErrors": 1,
+        "networkErrors": 0,
+        "apiErrors": 0,
+        "validationErrors": 0
+      },
+      "testDuration": 63301,
+      "isAvailable": true,
+      "totalScore": 68.42
+    },
+    {
+      "modelName": "meta-llama/llama-3.3-70b-instruct:free",
+      "successRate": 75,
+      "wordSuccessRate": 75,
+      "averageResponseTime": 22197.75,
+      "jsonParseErrors": 1,
+      "qualityScore": 75,
+      "errors": [
+        "Chunk 1: Failed to parse LLM response content as JSON. The model may not have returned valid JSON (direct JSON mode)."
+      ],
+      "rawResults": {
+        "totalChunks": 4,
+        "successfulChunks": 3,
+        "failedChunks": 1,
+        "totalWords": 20,
+        "successfulWords": 15,
+        "failedWords": 5,
+        "totalProcessingTime": 100031,
+        "averageChunkTime": 22197.75,
+        "jsonParseErrors": 1,
+        "networkErrors": 0,
+        "apiErrors": 0,
+        "validationErrors": 0
+      },
+      "testDuration": 100031,
+      "isAvailable": true,
+      "totalScore": 68
+    },
+    {
+      "modelName": "opengvlab/internvl3-2b:free",
+      "successRate": 50,
+      "wordSuccessRate": 50,
+      "averageResponseTime": 3527,
+      "jsonParseErrors": 0,
+      "qualityScore": 75,
+      "errors": [
+        "Chunk 1: Failed to process words: ללכת, לכתוב, לקרוא",
+        "Chunk 4: Failed to process words: בוקר טוב"
+      ],
+      "rawResults": {
+        "totalChunks": 4,
+        "successfulChunks": 2,
+        "failedChunks": 2,
+        "totalWords": 20,
+        "successfulWords": 10,
+        "failedWords": 10,
+        "totalProcessingTime": 18888,
+        "averageChunkTime": 3527,
+        "jsonParseErrors": 0,
+        "networkErrors": 0,
+        "apiErrors": 2,
+        "validationErrors": 0
+      },
+      "testDuration": 18888,
+      "isAvailable": true,
+      "totalScore": 62.72
+    },
+    {
+      "modelName": "meta-llama/llama-3.2-3b-instruct:free",
+      "successRate": 50,
+      "wordSuccessRate": 50,
+      "averageResponseTime": 6250.75,
+      "jsonParseErrors": 1,
+      "qualityScore": 90,
+      "errors": [
+        "Chunk 3: Failed to process words: יפה, טוב, רע",
+        "Chunk 4: Failed to parse LLM response content as JSON. The model may not have returned valid JSON (direct JSON mode)."
+      ],
+      "rawResults": {
+        "totalChunks": 4,
+        "successfulChunks": 2,
+        "failedChunks": 2,
+        "totalWords": 20,
+        "successfulWords": 10,
+        "failedWords": 10,
+        "totalProcessingTime": 31327,
+        "averageChunkTime": 6250.75,
+        "jsonParseErrors": 1,
+        "networkErrors": 0,
+        "apiErrors": 1,
+        "validationErrors": 0
+      },
+      "testDuration": 31327,
+      "isAvailable": true,
+      "totalScore": 61.75
+    },
+    {
+      "modelName": "nousresearch/deephermes-3-mistral-24b-preview:free",
+      "successRate": 50,
+      "wordSuccessRate": 50,
+      "averageResponseTime": 6811,
+      "jsonParseErrors": 0,
+      "qualityScore": 75,
+      "errors": [
+        "Chunk 1: Failed to process words: לדבר, לכתוב",
+        "Chunk 4: Failed to process words: מה שלומך, בוקר טוב, תודה רבה, סליחה, שלום"
+      ],
+      "rawResults": {
+        "totalChunks": 4,
+        "successfulChunks": 2,
+        "failedChunks": 2,
+        "totalWords": 20,
+        "successfulWords": 10,
+        "failedWords": 10,
+        "totalProcessingTime": 34336,
+        "averageChunkTime": 6811,
+        "jsonParseErrors": 0,
+        "networkErrors": 0,
+        "apiErrors": 2,
+        "validationErrors": 0
+      },
+      "testDuration": 34336,
+      "isAvailable": true,
+      "totalScore": 59.44
+    },
+    {
+      "modelName": "mistralai/mistral-small-3.1-24b-instruct:free",
+      "successRate": 50,
+      "wordSuccessRate": 50,
+      "averageResponseTime": 18430.75,
+      "jsonParseErrors": 1,
+      "qualityScore": 77.5,
+      "errors": [
+        "Chunk 1: The user aborted a request.",
+        "Chunk 3: Failed to parse LLM response content as JSON. The model may not have returned valid JSON (direct JSON mode)."
+      ],
+      "rawResults": {
+        "totalChunks": 4,
+        "successfulChunks": 2,
+        "failedChunks": 2,
+        "totalWords": 20,
+        "successfulWords": 10,
+        "failedWords": 10,
+        "totalProcessingTime": 86570,
+        "averageChunkTime": 18430.75,
+        "jsonParseErrors": 1,
+        "networkErrors": 0,
+        "apiErrors": 1,
+        "validationErrors": 0
+      },
+      "testDuration": 86570,
+      "isAvailable": true,
+      "totalScore": 54.88
+    },
+    {
+      "modelName": "mistralai/devstral-small:free",
+      "successRate": 50,
+      "wordSuccessRate": 50,
+      "averageResponseTime": 13067.75,
+      "jsonParseErrors": 1,
+      "qualityScore": 75,
+      "errors": [
+        "Chunk 1: Failed to process words: לכתוב",
+        "Chunk 3: Failed to parse LLM response content as JSON. The model may not have returned valid JSON (direct JSON mode)."
+      ],
+      "rawResults": {
+        "totalChunks": 4,
+        "successfulChunks": 2,
+        "failedChunks": 2,
+        "totalWords": 20,
+        "successfulWords": 10,
+        "failedWords": 10,
+        "totalProcessingTime": 62322,
+        "averageChunkTime": 13067.75,
+        "jsonParseErrors": 1,
+        "networkErrors": 0,
+        "apiErrors": 1,
+        "validationErrors": 0
+      },
+      "testDuration": 62322,
+      "isAvailable": true,
+      "totalScore": 54.25
+    },
+    {
+      "modelName": "nousresearch/deephermes-3-llama-3-8b-preview:free",
+      "successRate": 50,
+      "wordSuccessRate": 50,
+      "averageResponseTime": 10023,
+      "jsonParseErrors": 1,
+      "qualityScore": 75,
+      "errors": [
+        "Chunk 1: Failed to parse LLM response content as JSON. The model may not have returned valid JSON (direct JSON mode).",
+        "Chunk 4: Failed to process words: מה שלומך"
+      ],
+      "rawResults": {
+        "totalChunks": 4,
+        "successfulChunks": 2,
+        "failedChunks": 2,
+        "totalWords": 20,
+        "successfulWords": 10,
+        "failedWords": 10,
+        "totalProcessingTime": 49298,
+        "averageChunkTime": 10023,
+        "jsonParseErrors": 1,
+        "networkErrors": 0,
+        "apiErrors": 1,
+        "validationErrors": 0
+      },
+      "testDuration": 49298,
+      "isAvailable": true,
+      "totalScore": 54.25
+    },
+    {
+      "modelName": "deepseek/deepseek-r1-distill-qwen-14b:free",
+      "successRate": 25,
+      "wordSuccessRate": 25,
+      "averageResponseTime": 13653.75,
+      "jsonParseErrors": 2,
+      "qualityScore": 75,
+      "errors": [
+        "Chunk 1: The user aborted a request.",
+        "Chunk 2: Failed to parse LLM response content as JSON. The model may not have returned valid JSON (direct JSON mode).",
+        "Chunk 4: Failed to parse LLM response content as JSON. The model may not have returned valid JSON (direct JSON mode)."
+      ],
+      "rawResults": {
+        "totalChunks": 4,
+        "successfulChunks": 1,
+        "failedChunks": 3,
+        "totalWords": 20,
+        "successfulWords": 5,
+        "failedWords": 15,
+        "totalProcessingTime": 67662,
+        "averageChunkTime": 13653.75,
+        "jsonParseErrors": 2,
+        "networkErrors": 0,
+        "apiErrors": 1,
+        "validationErrors": 0
+      },
+      "testDuration": 67662,
+      "isAvailable": true,
+      "totalScore": 38.5
+    },
+    {
+      "modelName": "meta-llama/llama-3.2-11b-vision-instruct:free",
+      "successRate": 25,
+      "wordSuccessRate": 25,
+      "averageResponseTime": 17583,
+      "jsonParseErrors": 3,
+      "qualityScore": 75,
+      "errors": [
+        "Chunk 1: Failed to parse LLM response content as JSON. The model may not have returned valid JSON (direct JSON mode).",
+        "Chunk 2: Failed to parse LLM response content as JSON. The model may not have returned valid JSON (direct JSON mode).",
+        "Chunk 4: Failed to parse LLM response content as JSON. The model may not have returned valid JSON (direct JSON mode)."
+      ],
+      "rawResults": {
+        "totalChunks": 4,
+        "successfulChunks": 1,
+        "failedChunks": 3,
+        "totalWords": 20,
+        "successfulWords": 5,
+        "failedWords": 15,
+        "totalProcessingTime": 81884,
+        "averageChunkTime": 17583,
+        "jsonParseErrors": 3,
+        "networkErrors": 0,
+        "apiErrors": 0,
+        "validationErrors": 0
+      },
+      "testDuration": 81884,
+      "isAvailable": true,
+      "totalScore": 36.5
+    },
+    {
+      "modelName": "google/gemma-3n-e4b-it:free",
+      "successRate": 0,
+      "wordSuccessRate": 0,
+      "averageResponseTime": 0,
+      "jsonParseErrors": 0,
+      "qualityScore": 0,
+      "totalScore": 0,
+      "errors": [
+        "Model unavailable: 400 Provider returned error"
+      ],
+      "rawResults": {
+        "totalChunks": 0,
+        "successfulChunks": 0,
+        "failedChunks": 0,
+        "totalWords": 0,
+        "successfulWords": 0,
+        "failedWords": 0,
+        "totalProcessingTime": 3234,
+        "averageChunkTime": 0,
+        "jsonParseErrors": 0,
+        "networkErrors": 1,
+        "apiErrors": 0,
+        "validationErrors": 0
+      },
+      "testDuration": 3234,
+      "isAvailable": false
+    },
+    {
+      "modelName": "microsoft/phi-4-reasoning-plus:free",
+      "successRate": 0,
+      "wordSuccessRate": 0,
+      "averageResponseTime": 0,
+      "jsonParseErrors": 0,
+      "qualityScore": 0,
+      "totalScore": 0,
+      "errors": [
+        "Model unavailable: The user aborted a request."
+      ],
+      "rawResults": {
+        "totalChunks": 0,
+        "successfulChunks": 0,
+        "failedChunks": 0,
+        "totalWords": 0,
+        "successfulWords": 0,
+        "failedWords": 0,
+        "totalProcessingTime": 15005,
+        "averageChunkTime": 0,
+        "jsonParseErrors": 0,
+        "networkErrors": 1,
+        "apiErrors": 0,
+        "validationErrors": 0
+      },
+      "testDuration": 15005,
+      "isAvailable": false
+    },
+    {
+      "modelName": "microsoft/phi-4-reasoning:free",
+      "successRate": 0,
+      "wordSuccessRate": 0,
+      "averageResponseTime": 0,
+      "jsonParseErrors": 0,
+      "qualityScore": 0,
+      "totalScore": 0,
+      "errors": [
+        "Model unavailable: The user aborted a request."
+      ],
+      "rawResults": {
+        "totalChunks": 0,
+        "successfulChunks": 0,
+        "failedChunks": 0,
+        "totalWords": 0,
+        "successfulWords": 0,
+        "failedWords": 0,
+        "totalProcessingTime": 15002,
+        "averageChunkTime": 0,
+        "jsonParseErrors": 0,
+        "networkErrors": 1,
+        "apiErrors": 0,
+        "validationErrors": 0
+      },
+      "testDuration": 15002,
+      "isAvailable": false
+    },
+    {
+      "modelName": "deepseek/deepseek-prover-v2:free",
+      "successRate": 0,
+      "wordSuccessRate": 0,
+      "averageResponseTime": 0,
+      "jsonParseErrors": 0,
+      "qualityScore": 0,
+      "totalScore": 0,
+      "errors": [
+        "Model unavailable: The user aborted a request."
+      ],
+      "rawResults": {
+        "totalChunks": 0,
+        "successfulChunks": 0,
+        "failedChunks": 0,
+        "totalWords": 0,
+        "successfulWords": 0,
+        "failedWords": 0,
+        "totalProcessingTime": 15003,
+        "averageChunkTime": 0,
+        "jsonParseErrors": 0,
+        "networkErrors": 1,
+        "apiErrors": 0,
+        "validationErrors": 0
+      },
+      "testDuration": 15003,
+      "isAvailable": false
+    },
+    {
+      "modelName": "qwen/qwen3-30b-a3b:free",
+      "successRate": 0,
+      "wordSuccessRate": 0,
+      "averageResponseTime": 0,
+      "jsonParseErrors": 0,
+      "qualityScore": 0,
+      "totalScore": 0,
+      "errors": [
+        "Model unavailable: The user aborted a request."
+      ],
+      "rawResults": {
+        "totalChunks": 0,
+        "successfulChunks": 0,
+        "failedChunks": 0,
+        "totalWords": 0,
+        "successfulWords": 0,
+        "failedWords": 0,
+        "totalProcessingTime": 15003,
+        "averageChunkTime": 0,
+        "jsonParseErrors": 0,
+        "networkErrors": 1,
+        "apiErrors": 0,
+        "validationErrors": 0
+      },
+      "testDuration": 15003,
+      "isAvailable": false
+    },
+    {
+      "modelName": "qwen/qwen3-8b:free",
+      "successRate": 0,
+      "wordSuccessRate": 0,
+      "averageResponseTime": 0,
+      "jsonParseErrors": 0,
+      "qualityScore": 0,
+      "totalScore": 0,
+      "errors": [
+        "Model unavailable: The user aborted a request."
+      ],
+      "rawResults": {
+        "totalChunks": 0,
+        "successfulChunks": 0,
+        "failedChunks": 0,
+        "totalWords": 0,
+        "successfulWords": 0,
+        "failedWords": 0,
+        "totalProcessingTime": 15002,
+        "averageChunkTime": 0,
+        "jsonParseErrors": 0,
+        "networkErrors": 1,
+        "apiErrors": 0,
+        "validationErrors": 0
+      },
+      "testDuration": 15002,
+      "isAvailable": false
+    },
+    {
+      "modelName": "qwen/qwen3-14b:free",
+      "successRate": 0,
+      "wordSuccessRate": 0,
+      "averageResponseTime": 0,
+      "jsonParseErrors": 0,
+      "qualityScore": 0,
+      "totalScore": 0,
+      "errors": [
+        "Model unavailable: The user aborted a request."
+      ],
+      "rawResults": {
+        "totalChunks": 0,
+        "successfulChunks": 0,
+        "failedChunks": 0,
+        "totalWords": 0,
+        "successfulWords": 0,
+        "failedWords": 0,
+        "totalProcessingTime": 15002,
+        "averageChunkTime": 0,
+        "jsonParseErrors": 0,
+        "networkErrors": 1,
+        "apiErrors": 0,
+        "validationErrors": 0
+      },
+      "testDuration": 15002,
+      "isAvailable": false
+    },
+    {
+      "modelName": "qwen/qwen3-32b:free",
+      "successRate": 0,
+      "wordSuccessRate": 0,
+      "averageResponseTime": 0,
+      "jsonParseErrors": 0,
+      "qualityScore": 0,
+      "totalScore": 0,
+      "errors": [
+        "Model unavailable: The user aborted a request."
+      ],
+      "rawResults": {
+        "totalChunks": 0,
+        "successfulChunks": 0,
+        "failedChunks": 0,
+        "totalWords": 0,
+        "successfulWords": 0,
+        "failedWords": 0,
+        "totalProcessingTime": 15003,
+        "averageChunkTime": 0,
+        "jsonParseErrors": 0,
+        "networkErrors": 1,
+        "apiErrors": 0,
+        "validationErrors": 0
+      },
+      "testDuration": 15003,
+      "isAvailable": false
+    },
+    {
+      "modelName": "qwen/qwen3-235b-a22b:free",
+      "successRate": 0,
+      "wordSuccessRate": 0,
+      "averageResponseTime": 0,
+      "jsonParseErrors": 0,
+      "qualityScore": 0,
+      "totalScore": 0,
+      "errors": [
+        "Model unavailable: The user aborted a request."
+      ],
+      "rawResults": {
+        "totalChunks": 0,
+        "successfulChunks": 0,
+        "failedChunks": 0,
+        "totalWords": 0,
+        "successfulWords": 0,
+        "failedWords": 0,
+        "totalProcessingTime": 15002,
+        "averageChunkTime": 0,
+        "jsonParseErrors": 0,
+        "networkErrors": 1,
+        "apiErrors": 0,
+        "validationErrors": 0
+      },
+      "testDuration": 15002,
+      "isAvailable": false
+    },
+    {
+      "modelName": "microsoft/mai-ds-r1:free",
+      "successRate": 0,
+      "wordSuccessRate": 0,
+      "averageResponseTime": 0,
+      "jsonParseErrors": 0,
+      "qualityScore": 0,
+      "totalScore": 0,
+      "errors": [
+        "Model unavailable: The user aborted a request."
+      ],
+      "rawResults": {
+        "totalChunks": 0,
+        "successfulChunks": 0,
+        "failedChunks": 0,
+        "totalWords": 0,
+        "successfulWords": 0,
+        "failedWords": 0,
+        "totalProcessingTime": 15003,
+        "averageChunkTime": 0,
+        "jsonParseErrors": 0,
+        "networkErrors": 1,
+        "apiErrors": 0,
+        "validationErrors": 0
+      },
+      "testDuration": 15003,
+      "isAvailable": false
+    },
+    {
+      "modelName": "thudm/glm-z1-32b:free",
+      "successRate": 0,
+      "wordSuccessRate": 0,
+      "averageResponseTime": 0,
+      "jsonParseErrors": 0,
+      "qualityScore": 0,
+      "totalScore": 0,
+      "errors": [
+        "Model unavailable: The user aborted a request."
+      ],
+      "rawResults": {
+        "totalChunks": 0,
+        "successfulChunks": 0,
+        "failedChunks": 0,
+        "totalWords": 0,
+        "successfulWords": 0,
+        "failedWords": 0,
+        "totalProcessingTime": 15003,
+        "averageChunkTime": 0,
+        "jsonParseErrors": 0,
+        "networkErrors": 1,
+        "apiErrors": 0,
+        "validationErrors": 0
+      },
+      "testDuration": 15003,
+      "isAvailable": false
+    },
+    {
+      "modelName": "thudm/glm-4-32b:free",
+      "successRate": 0,
+      "wordSuccessRate": 0,
+      "averageResponseTime": 0,
+      "jsonParseErrors": 0,
+      "qualityScore": 0,
+      "totalScore": 0,
+      "errors": [
+        "Model unavailable: The user aborted a request."
+      ],
+      "rawResults": {
+        "totalChunks": 0,
+        "successfulChunks": 0,
+        "failedChunks": 0,
+        "totalWords": 0,
+        "successfulWords": 0,
+        "failedWords": 0,
+        "totalProcessingTime": 15003,
+        "averageChunkTime": 0,
+        "jsonParseErrors": 0,
+        "networkErrors": 1,
+        "apiErrors": 0,
+        "validationErrors": 0
+      },
+      "testDuration": 15003,
+      "isAvailable": false
+    },
+    {
+      "modelName": "shisa-ai/shisa-v2-llama3.3-70b:free",
+      "successRate": 0,
+      "wordSuccessRate": 0,
+      "averageResponseTime": 0,
+      "jsonParseErrors": 0,
+      "qualityScore": 0,
+      "totalScore": 0,
+      "errors": [
+        "Model unavailable: The user aborted a request."
+      ],
+      "rawResults": {
+        "totalChunks": 0,
+        "successfulChunks": 0,
+        "failedChunks": 0,
+        "totalWords": 0,
+        "successfulWords": 0,
+        "failedWords": 0,
+        "totalProcessingTime": 15003,
+        "averageChunkTime": 0,
+        "jsonParseErrors": 0,
+        "networkErrors": 1,
+        "apiErrors": 0,
+        "validationErrors": 0
+      },
+      "testDuration": 15003,
+      "isAvailable": false
+    },
+    {
+      "modelName": "arliai/qwq-32b-arliai-rpr-v1:free",
+      "successRate": 0,
+      "wordSuccessRate": 0,
+      "averageResponseTime": 0,
+      "jsonParseErrors": 0,
+      "qualityScore": 0,
+      "totalScore": 0,
+      "errors": [
+        "Model unavailable: The user aborted a request."
+      ],
+      "rawResults": {
+        "totalChunks": 0,
+        "successfulChunks": 0,
+        "failedChunks": 0,
+        "totalWords": 0,
+        "successfulWords": 0,
+        "failedWords": 0,
+        "totalProcessingTime": 15003,
+        "averageChunkTime": 0,
+        "jsonParseErrors": 0,
+        "networkErrors": 1,
+        "apiErrors": 0,
+        "validationErrors": 0
+      },
+      "testDuration": 15003,
+      "isAvailable": false
+    },
+    {
+      "modelName": "agentica-org/deepcoder-14b-preview:free",
+      "successRate": 0,
+      "wordSuccessRate": 0,
+      "averageResponseTime": 0,
+      "jsonParseErrors": 0,
+      "qualityScore": 0,
+      "totalScore": 0,
+      "errors": [
+        "Model unavailable: The user aborted a request."
+      ],
+      "rawResults": {
+        "totalChunks": 0,
+        "successfulChunks": 0,
+        "failedChunks": 0,
+        "totalWords": 0,
+        "successfulWords": 0,
+        "failedWords": 0,
+        "totalProcessingTime": 15003,
+        "averageChunkTime": 0,
+        "jsonParseErrors": 0,
+        "networkErrors": 1,
+        "apiErrors": 0,
+        "validationErrors": 0
+      },
+      "testDuration": 15003,
+      "isAvailable": false
+    },
+    {
+      "modelName": "moonshotai/kimi-vl-a3b-thinking:free",
+      "successRate": 0,
+      "wordSuccessRate": 0,
+      "averageResponseTime": 0,
+      "jsonParseErrors": 0,
+      "qualityScore": 0,
+      "totalScore": 0,
+      "errors": [
+        "Model unavailable: The user aborted a request."
+      ],
+      "rawResults": {
+        "totalChunks": 0,
+        "successfulChunks": 0,
+        "failedChunks": 0,
+        "totalWords": 0,
+        "successfulWords": 0,
+        "failedWords": 0,
+        "totalProcessingTime": 15003,
+        "averageChunkTime": 0,
+        "jsonParseErrors": 0,
+        "networkErrors": 1,
+        "apiErrors": 0,
+        "validationErrors": 0
+      },
+      "testDuration": 15003,
+      "isAvailable": false
+    },
+    {
+      "modelName": "nvidia/llama-3.3-nemotron-super-49b-v1:free",
+      "successRate": 0,
+      "wordSuccessRate": 0,
+      "averageResponseTime": 0,
+      "jsonParseErrors": 0,
+      "qualityScore": 0,
+      "totalScore": 0,
+      "errors": [
+        "Model unavailable: Failed to parse LLM response content as JSON. The model may not have returned valid JSON (direct JSON mode)."
+      ],
+      "rawResults": {
+        "totalChunks": 0,
+        "successfulChunks": 0,
+        "failedChunks": 0,
+        "totalWords": 0,
+        "successfulWords": 0,
+        "failedWords": 0,
+        "totalProcessingTime": 4144,
+        "averageChunkTime": 0,
+        "jsonParseErrors": 0,
+        "networkErrors": 1,
+        "apiErrors": 0,
+        "validationErrors": 0
+      },
+      "testDuration": 4144,
+      "isAvailable": false
+    },
+    {
+      "modelName": "nvidia/llama-3.1-nemotron-ultra-253b-v1:free",
+      "successRate": 0,
+      "wordSuccessRate": 0,
+      "averageResponseTime": 0,
+      "jsonParseErrors": 0,
+      "qualityScore": 0,
+      "totalScore": 0,
+      "errors": [
+        "Model unavailable: The user aborted a request."
+      ],
+      "rawResults": {
+        "totalChunks": 0,
+        "successfulChunks": 0,
+        "failedChunks": 0,
+        "totalWords": 0,
+        "successfulWords": 0,
+        "failedWords": 0,
+        "totalProcessingTime": 15003,
+        "averageChunkTime": 0,
+        "jsonParseErrors": 0,
+        "networkErrors": 1,
+        "apiErrors": 0,
+        "validationErrors": 0
+      },
+      "testDuration": 15003,
+      "isAvailable": false
+    },
+    {
+      "modelName": "meta-llama/llama-4-maverick:free",
+      "successRate": 0,
+      "wordSuccessRate": 0,
+      "averageResponseTime": 0,
+      "jsonParseErrors": 0,
+      "qualityScore": 0,
+      "totalScore": 0,
+      "errors": [
+        "Model unavailable: Failed to parse LLM response content as JSON. The model may not have returned valid JSON (direct JSON mode)."
+      ],
+      "rawResults": {
+        "totalChunks": 0,
+        "successfulChunks": 0,
+        "failedChunks": 0,
+        "totalWords": 0,
+        "successfulWords": 0,
+        "failedWords": 0,
+        "totalProcessingTime": 3369,
+        "averageChunkTime": 0,
+        "jsonParseErrors": 0,
+        "networkErrors": 1,
+        "apiErrors": 0,
+        "validationErrors": 0
+      },
+      "testDuration": 3369,
+      "isAvailable": false
+    },
+    {
+      "modelName": "deepseek/deepseek-v3-base:free",
+      "successRate": 0,
+      "wordSuccessRate": 0,
+      "averageResponseTime": 0,
+      "jsonParseErrors": 0,
+      "qualityScore": 0,
+      "totalScore": 0,
+      "errors": [
+        "Model unavailable: Failed to parse LLM response content as JSON. The model may not have returned valid JSON (direct JSON mode)."
+      ],
+      "rawResults": {
+        "totalChunks": 0,
+        "successfulChunks": 0,
+        "failedChunks": 0,
+        "totalWords": 0,
+        "successfulWords": 0,
+        "failedWords": 0,
+        "totalProcessingTime": 2365,
+        "averageChunkTime": 0,
+        "jsonParseErrors": 0,
+        "networkErrors": 1,
+        "apiErrors": 0,
+        "validationErrors": 0
+      },
+      "testDuration": 2365,
+      "isAvailable": false
+    },
+    {
+      "modelName": "qwen/qwen2.5-vl-3b-instruct:free",
+      "successRate": 0,
+      "wordSuccessRate": 0,
+      "averageResponseTime": 0,
+      "jsonParseErrors": 0,
+      "qualityScore": 0,
+      "totalScore": 0,
+      "errors": [
+        "Model unavailable: Failed to parse LLM response content as JSON. The model may not have returned valid JSON (direct JSON mode)."
+      ],
+      "rawResults": {
+        "totalChunks": 0,
+        "successfulChunks": 0,
+        "failedChunks": 0,
+        "totalWords": 0,
+        "successfulWords": 0,
+        "failedWords": 0,
+        "totalProcessingTime": 3338,
+        "averageChunkTime": 0,
+        "jsonParseErrors": 0,
+        "networkErrors": 1,
+        "apiErrors": 0,
+        "validationErrors": 0
+      },
+      "testDuration": 3338,
+      "isAvailable": false
+    },
+    {
+      "modelName": "qwen/qwen2.5-vl-32b-instruct:free",
+      "successRate": 0,
+      "wordSuccessRate": 0,
+      "averageResponseTime": 0,
+      "jsonParseErrors": 0,
+      "qualityScore": 0,
+      "totalScore": 0,
+      "errors": [
+        "Model unavailable: The user aborted a request."
+      ],
+      "rawResults": {
+        "totalChunks": 0,
+        "successfulChunks": 0,
+        "failedChunks": 0,
+        "totalWords": 0,
+        "successfulWords": 0,
+        "failedWords": 0,
+        "totalProcessingTime": 15003,
+        "averageChunkTime": 0,
+        "jsonParseErrors": 0,
+        "networkErrors": 1,
+        "apiErrors": 0,
+        "validationErrors": 0
+      },
+      "testDuration": 15003,
+      "isAvailable": false
+    },
+    {
+      "modelName": "deepseek/deepseek-chat-v3-0324:free",
+      "successRate": 0,
+      "wordSuccessRate": 0,
+      "averageResponseTime": 0,
+      "jsonParseErrors": 0,
+      "qualityScore": 0,
+      "totalScore": 0,
+      "errors": [
+        "Model unavailable: Invalid LLM response structure: No content in message from the model (direct JSON mode)."
+      ],
+      "rawResults": {
+        "totalChunks": 0,
+        "successfulChunks": 0,
+        "failedChunks": 0,
+        "totalWords": 0,
+        "successfulWords": 0,
+        "failedWords": 0,
+        "totalProcessingTime": 2785,
+        "averageChunkTime": 0,
+        "jsonParseErrors": 0,
+        "networkErrors": 1,
+        "apiErrors": 0,
+        "validationErrors": 0
+      },
+      "testDuration": 2785,
+      "isAvailable": false
+    },
+    {
+      "modelName": "featherless/qwerky-72b:free",
+      "successRate": 0,
+      "wordSuccessRate": 0,
+      "averageResponseTime": 0,
+      "jsonParseErrors": 0,
+      "qualityScore": 0,
+      "totalScore": 0,
+      "errors": [
+        "Model unavailable: Failed to parse LLM response content as JSON. The model may not have returned valid JSON (direct JSON mode)."
+      ],
+      "rawResults": {
+        "totalChunks": 0,
+        "successfulChunks": 0,
+        "failedChunks": 0,
+        "totalWords": 0,
+        "successfulWords": 0,
+        "failedWords": 0,
+        "totalProcessingTime": 12122,
+        "averageChunkTime": 0,
+        "jsonParseErrors": 0,
+        "networkErrors": 1,
+        "apiErrors": 0,
+        "validationErrors": 0
+      },
+      "testDuration": 12122,
+      "isAvailable": false
+    },
+    {
+      "modelName": "open-r1/olympiccoder-32b:free",
+      "successRate": 0,
+      "wordSuccessRate": 0,
+      "averageResponseTime": 0,
+      "jsonParseErrors": 0,
+      "qualityScore": 0,
+      "totalScore": 0,
+      "errors": [
+        "Model unavailable: The user aborted a request."
+      ],
+      "rawResults": {
+        "totalChunks": 0,
+        "successfulChunks": 0,
+        "failedChunks": 0,
+        "totalWords": 0,
+        "successfulWords": 0,
+        "failedWords": 0,
+        "totalProcessingTime": 15002,
+        "averageChunkTime": 0,
+        "jsonParseErrors": 0,
+        "networkErrors": 1,
+        "apiErrors": 0,
+        "validationErrors": 0
+      },
+      "testDuration": 15002,
+      "isAvailable": false
+    },
+    {
+      "modelName": "google/gemma-3-1b-it:free",
+      "successRate": 0,
+      "wordSuccessRate": 0,
+      "averageResponseTime": 0,
+      "jsonParseErrors": 0,
+      "qualityScore": 0,
+      "totalScore": 0,
+      "errors": [
+        "Model unavailable: The user aborted a request."
+      ],
+      "rawResults": {
+        "totalChunks": 0,
+        "successfulChunks": 0,
+        "failedChunks": 0,
+        "totalWords": 0,
+        "successfulWords": 0,
+        "failedWords": 0,
+        "totalProcessingTime": 15003,
+        "averageChunkTime": 0,
+        "jsonParseErrors": 0,
+        "networkErrors": 1,
+        "apiErrors": 0,
+        "validationErrors": 0
+      },
+      "testDuration": 15003,
+      "isAvailable": false
+    },
+    {
+      "modelName": "google/gemma-3-4b-it:free",
+      "successRate": 0,
+      "wordSuccessRate": 0,
+      "averageResponseTime": 0,
+      "jsonParseErrors": 0,
+      "qualityScore": 0,
+      "totalScore": 0,
+      "errors": [
+        "Model unavailable: The user aborted a request."
+      ],
+      "rawResults": {
+        "totalChunks": 0,
+        "successfulChunks": 0,
+        "failedChunks": 0,
+        "totalWords": 0,
+        "successfulWords": 0,
+        "failedWords": 0,
+        "totalProcessingTime": 15003,
+        "averageChunkTime": 0,
+        "jsonParseErrors": 0,
+        "networkErrors": 1,
+        "apiErrors": 0,
+        "validationErrors": 0
+      },
+      "testDuration": 15003,
+      "isAvailable": false
+    },
+    {
+      "modelName": "google/gemma-3-12b-it:free",
+      "successRate": 0,
+      "wordSuccessRate": 0,
+      "averageResponseTime": 0,
+      "jsonParseErrors": 0,
+      "qualityScore": 0,
+      "totalScore": 0,
+      "errors": [
+        "Model unavailable: The user aborted a request."
+      ],
+      "rawResults": {
+        "totalChunks": 0,
+        "successfulChunks": 0,
+        "failedChunks": 0,
+        "totalWords": 0,
+        "successfulWords": 0,
+        "failedWords": 0,
+        "totalProcessingTime": 15002,
+        "averageChunkTime": 0,
+        "jsonParseErrors": 0,
+        "networkErrors": 1,
+        "apiErrors": 0,
+        "validationErrors": 0
+      },
+      "testDuration": 15002,
+      "isAvailable": false
+    },
+    {
+      "modelName": "rekaai/reka-flash-3:free",
+      "successRate": 0,
+      "wordSuccessRate": 0,
+      "averageResponseTime": 0,
+      "jsonParseErrors": 0,
+      "qualityScore": 0,
+      "totalScore": 0,
+      "errors": [
+        "Model unavailable: The user aborted a request."
+      ],
+      "rawResults": {
+        "totalChunks": 0,
+        "successfulChunks": 0,
+        "failedChunks": 0,
+        "totalWords": 0,
+        "successfulWords": 0,
+        "failedWords": 0,
+        "totalProcessingTime": 15003,
+        "averageChunkTime": 0,
+        "jsonParseErrors": 0,
+        "networkErrors": 1,
+        "apiErrors": 0,
+        "validationErrors": 0
+      },
+      "testDuration": 15003,
+      "isAvailable": false
+    },
+    {
+      "modelName": "google/gemma-3-27b-it:free",
+      "successRate": 0,
+      "wordSuccessRate": 0,
+      "averageResponseTime": 0,
+      "jsonParseErrors": 0,
+      "qualityScore": 0,
+      "totalScore": 0,
+      "errors": [
+        "Model unavailable: Failed to parse LLM response content as JSON. The model may not have returned valid JSON (direct JSON mode)."
+      ],
+      "rawResults": {
+        "totalChunks": 0,
+        "successfulChunks": 0,
+        "failedChunks": 0,
+        "totalWords": 0,
+        "successfulWords": 0,
+        "failedWords": 0,
+        "totalProcessingTime": 11194,
+        "averageChunkTime": 0,
+        "jsonParseErrors": 0,
+        "networkErrors": 1,
+        "apiErrors": 0,
+        "validationErrors": 0
+      },
+      "testDuration": 11194,
+      "isAvailable": false
+    },
+    {
+      "modelName": "deepseek/deepseek-r1-zero:free",
+      "successRate": 0,
+      "wordSuccessRate": 0,
+      "averageResponseTime": 0,
+      "jsonParseErrors": 0,
+      "qualityScore": 0,
+      "totalScore": 0,
+      "errors": [
+        "Model unavailable: The user aborted a request."
+      ],
+      "rawResults": {
+        "totalChunks": 0,
+        "successfulChunks": 0,
+        "failedChunks": 0,
+        "totalWords": 0,
+        "successfulWords": 0,
+        "failedWords": 0,
+        "totalProcessingTime": 15003,
+        "averageChunkTime": 0,
+        "jsonParseErrors": 0,
+        "networkErrors": 1,
+        "apiErrors": 0,
+        "validationErrors": 0
+      },
+      "testDuration": 15003,
+      "isAvailable": false
+    },
+    {
+      "modelName": "qwen/qwq-32b:free",
+      "successRate": 0,
+      "wordSuccessRate": 0,
+      "averageResponseTime": 0,
+      "jsonParseErrors": 0,
+      "qualityScore": 0,
+      "totalScore": 0,
+      "errors": [
+        "Model unavailable: The user aborted a request."
+      ],
+      "rawResults": {
+        "totalChunks": 0,
+        "successfulChunks": 0,
+        "failedChunks": 0,
+        "totalWords": 0,
+        "successfulWords": 0,
+        "failedWords": 0,
+        "totalProcessingTime": 15002,
+        "averageChunkTime": 0,
+        "jsonParseErrors": 0,
+        "networkErrors": 1,
+        "apiErrors": 0,
+        "validationErrors": 0
+      },
+      "testDuration": 15002,
+      "isAvailable": false
+    },
+    {
+      "modelName": "moonshotai/moonlight-16b-a3b-instruct:free",
+      "successRate": 0,
+      "wordSuccessRate": 0,
+      "averageResponseTime": 0,
+      "jsonParseErrors": 0,
+      "qualityScore": 0,
+      "totalScore": 0,
+      "errors": [
+        "Model unavailable: The user aborted a request."
+      ],
+      "rawResults": {
+        "totalChunks": 0,
+        "successfulChunks": 0,
+        "failedChunks": 0,
+        "totalWords": 0,
+        "successfulWords": 0,
+        "failedWords": 0,
+        "totalProcessingTime": 15004,
+        "averageChunkTime": 0,
+        "jsonParseErrors": 0,
+        "networkErrors": 1,
+        "apiErrors": 0,
+        "validationErrors": 0
+      },
+      "testDuration": 15004,
+      "isAvailable": false
+    },
+    {
+      "modelName": "cognitivecomputations/dolphin3.0-r1-mistral-24b:free",
+      "successRate": 0,
+      "wordSuccessRate": 0,
+      "averageResponseTime": 0,
+      "jsonParseErrors": 0,
+      "qualityScore": 0,
+      "totalScore": 0,
+      "errors": [
+        "Model unavailable: The user aborted a request."
+      ],
+      "rawResults": {
+        "totalChunks": 0,
+        "successfulChunks": 0,
+        "failedChunks": 0,
+        "totalWords": 0,
+        "successfulWords": 0,
+        "failedWords": 0,
+        "totalProcessingTime": 15003,
+        "averageChunkTime": 0,
+        "jsonParseErrors": 0,
+        "networkErrors": 1,
+        "apiErrors": 0,
+        "validationErrors": 0
+      },
+      "testDuration": 15003,
+      "isAvailable": false
+    },
+    {
+      "modelName": "cognitivecomputations/dolphin3.0-mistral-24b:free",
+      "successRate": 0,
+      "wordSuccessRate": 0,
+      "averageResponseTime": 0,
+      "jsonParseErrors": 0,
+      "qualityScore": 0,
+      "totalScore": 0,
+      "errors": [
+        "Model unavailable: Failed to process words: לאכול"
+      ],
+      "rawResults": {
+        "totalChunks": 0,
+        "successfulChunks": 0,
+        "failedChunks": 0,
+        "totalWords": 0,
+        "successfulWords": 0,
+        "failedWords": 0,
+        "totalProcessingTime": 13495,
+        "averageChunkTime": 0,
+        "jsonParseErrors": 0,
+        "networkErrors": 1,
+        "apiErrors": 0,
+        "validationErrors": 0
+      },
+      "testDuration": 13495,
+      "isAvailable": false
+    },
+    {
+      "modelName": "qwen/qwen2.5-vl-72b-instruct:free",
+      "successRate": 0,
+      "wordSuccessRate": 0,
+      "averageResponseTime": 0,
+      "jsonParseErrors": 0,
+      "qualityScore": 0,
+      "totalScore": 0,
+      "errors": [
+        "Model unavailable: Failed to parse LLM response content as JSON. The model may not have returned valid JSON (direct JSON mode)."
+      ],
+      "rawResults": {
+        "totalChunks": 0,
+        "successfulChunks": 0,
+        "failedChunks": 0,
+        "totalWords": 0,
+        "successfulWords": 0,
+        "failedWords": 0,
+        "totalProcessingTime": 3263,
+        "averageChunkTime": 0,
+        "jsonParseErrors": 0,
+        "networkErrors": 1,
+        "apiErrors": 0,
+        "validationErrors": 0
+      },
+      "testDuration": 3263,
+      "isAvailable": false
+    },
+    {
+      "modelName": "mistralai/mistral-small-24b-instruct-2501:free",
+      "successRate": 0,
+      "wordSuccessRate": 0,
+      "averageResponseTime": 0,
+      "jsonParseErrors": 0,
+      "qualityScore": 0,
+      "totalScore": 0,
+      "errors": [
+        "Model unavailable: Failed to parse LLM response content as JSON. The model may not have returned valid JSON (direct JSON mode)."
+      ],
+      "rawResults": {
+        "totalChunks": 0,
+        "successfulChunks": 0,
+        "failedChunks": 0,
+        "totalWords": 0,
+        "successfulWords": 0,
+        "failedWords": 0,
+        "totalProcessingTime": 2378,
+        "averageChunkTime": 0,
+        "jsonParseErrors": 0,
+        "networkErrors": 1,
+        "apiErrors": 0,
+        "validationErrors": 0
+      },
+      "testDuration": 2378,
+      "isAvailable": false
+    },
+    {
+      "modelName": "deepseek/deepseek-r1-distill-qwen-32b:free",
+      "successRate": 0,
+      "wordSuccessRate": 0,
+      "averageResponseTime": 0,
+      "jsonParseErrors": 0,
+      "qualityScore": 0,
+      "totalScore": 0,
+      "errors": [
+        "Model unavailable: Failed to process words: לאכול"
+      ],
+      "rawResults": {
+        "totalChunks": 0,
+        "successfulChunks": 0,
+        "failedChunks": 0,
+        "totalWords": 0,
+        "successfulWords": 0,
+        "failedWords": 0,
+        "totalProcessingTime": 11869,
+        "averageChunkTime": 0,
+        "jsonParseErrors": 0,
+        "networkErrors": 1,
+        "apiErrors": 0,
+        "validationErrors": 0
+      },
+      "testDuration": 11869,
+      "isAvailable": false
+    },
+    {
+      "modelName": "deepseek/deepseek-r1-distill-llama-70b:free",
+      "successRate": 0,
+      "wordSuccessRate": 0,
+      "averageResponseTime": 0,
+      "jsonParseErrors": 0,
+      "qualityScore": 0,
+      "totalScore": 0,
+      "errors": [
+        "Model unavailable: The user aborted a request."
+      ],
+      "rawResults": {
+        "totalChunks": 0,
+        "successfulChunks": 0,
+        "failedChunks": 0,
+        "totalWords": 0,
+        "successfulWords": 0,
+        "failedWords": 0,
+        "totalProcessingTime": 15004,
+        "averageChunkTime": 0,
+        "jsonParseErrors": 0,
+        "networkErrors": 1,
+        "apiErrors": 0,
+        "validationErrors": 0
+      },
+      "testDuration": 15004,
+      "isAvailable": false
+    },
+    {
+      "modelName": "deepseek/deepseek-r1:free",
+      "successRate": 0,
+      "wordSuccessRate": 0,
+      "averageResponseTime": 0,
+      "jsonParseErrors": 0,
+      "qualityScore": 0,
+      "totalScore": 0,
+      "errors": [
+        "Model unavailable: The user aborted a request."
+      ],
+      "rawResults": {
+        "totalChunks": 0,
+        "successfulChunks": 0,
+        "failedChunks": 0,
+        "totalWords": 0,
+        "successfulWords": 0,
+        "failedWords": 0,
+        "totalProcessingTime": 15003,
+        "averageChunkTime": 0,
+        "jsonParseErrors": 0,
+        "networkErrors": 1,
+        "apiErrors": 0,
+        "validationErrors": 0
+      },
+      "testDuration": 15003,
+      "isAvailable": false
+    },
+    {
+      "modelName": "deepseek/deepseek-chat:free",
+      "successRate": 0,
+      "wordSuccessRate": 0,
+      "averageResponseTime": 0,
+      "jsonParseErrors": 0,
+      "qualityScore": 0,
+      "totalScore": 0,
+      "errors": [
+        "Model unavailable: Invalid LLM response structure: No content in message from the model (direct JSON mode)."
+      ],
+      "rawResults": {
+        "totalChunks": 0,
+        "successfulChunks": 0,
+        "failedChunks": 0,
+        "totalWords": 0,
+        "successfulWords": 0,
+        "failedWords": 0,
+        "totalProcessingTime": 2769,
+        "averageChunkTime": 0,
+        "jsonParseErrors": 0,
+        "networkErrors": 1,
+        "apiErrors": 0,
+        "validationErrors": 0
+      },
+      "testDuration": 2769,
+      "isAvailable": false
+    },
+    {
+      "modelName": "google/gemini-2.0-flash-exp:free",
+      "successRate": 0,
+      "wordSuccessRate": 0,
+      "averageResponseTime": 0,
+      "jsonParseErrors": 0,
+      "qualityScore": 0,
+      "totalScore": 0,
+      "errors": [
+        "Model unavailable: 404 No endpoints found that support tool use. To learn more about provider routing, visit: https://openrouter.ai/docs/provider-routing"
+      ],
+      "rawResults": {
+        "totalChunks": 0,
+        "successfulChunks": 0,
+        "failedChunks": 0,
+        "totalWords": 0,
+        "successfulWords": 0,
+        "failedWords": 0,
+        "totalProcessingTime": 1977,
+        "averageChunkTime": 0,
+        "jsonParseErrors": 0,
+        "networkErrors": 1,
+        "apiErrors": 0,
+        "validationErrors": 0
+      },
+      "testDuration": 1977,
+      "isAvailable": false
+    },
+    {
+      "modelName": "qwen/qwen-2.5-coder-32b-instruct:free",
+      "successRate": 0,
+      "wordSuccessRate": 0,
+      "averageResponseTime": 0,
+      "jsonParseErrors": 0,
+      "qualityScore": 0,
+      "totalScore": 0,
+      "errors": [
+        "Model unavailable: Failed to process words: לאכול"
+      ],
+      "rawResults": {
+        "totalChunks": 0,
+        "successfulChunks": 0,
+        "failedChunks": 0,
+        "totalWords": 0,
+        "successfulWords": 0,
+        "failedWords": 0,
+        "totalProcessingTime": 12018,
+        "averageChunkTime": 0,
+        "jsonParseErrors": 0,
+        "networkErrors": 1,
+        "apiErrors": 0,
+        "validationErrors": 0
+      },
+      "testDuration": 12018,
+      "isAvailable": false
+    },
+    {
+      "modelName": "meta-llama/llama-3.2-1b-instruct:free",
+      "successRate": 0,
+      "wordSuccessRate": 0,
+      "averageResponseTime": 0,
+      "jsonParseErrors": 0,
+      "qualityScore": 0,
+      "totalScore": 0,
+      "errors": [
+        "Model unavailable: Failed to parse LLM response content as JSON. The model may not have returned valid JSON (direct JSON mode)."
+      ],
+      "rawResults": {
+        "totalChunks": 0,
+        "successfulChunks": 0,
+        "failedChunks": 0,
+        "totalWords": 0,
+        "successfulWords": 0,
+        "failedWords": 0,
+        "totalProcessingTime": 13668,
+        "averageChunkTime": 0,
+        "jsonParseErrors": 0,
+        "networkErrors": 1,
+        "apiErrors": 0,
+        "validationErrors": 0
+      },
+      "testDuration": 13668,
+      "isAvailable": false
+    },
+    {
+      "modelName": "qwen/qwen-2.5-72b-instruct:free",
+      "successRate": 0,
+      "wordSuccessRate": 0,
+      "averageResponseTime": 0,
+      "jsonParseErrors": 0,
+      "qualityScore": 0,
+      "totalScore": 0,
+      "errors": [
+        "Model unavailable: Failed to parse LLM response content as JSON. The model may not have returned valid JSON (direct JSON mode)."
+      ],
+      "rawResults": {
+        "totalChunks": 0,
+        "successfulChunks": 0,
+        "failedChunks": 0,
+        "totalWords": 0,
+        "successfulWords": 0,
+        "failedWords": 0,
+        "totalProcessingTime": 11545,
+        "averageChunkTime": 0,
+        "jsonParseErrors": 0,
+        "networkErrors": 1,
+        "apiErrors": 0,
+        "validationErrors": 0
+      },
+      "testDuration": 11545,
+      "isAvailable": false
+    },
+    {
+      "modelName": "qwen/qwen-2.5-vl-7b-instruct:free",
+      "successRate": 0,
+      "wordSuccessRate": 0,
+      "averageResponseTime": 0,
+      "jsonParseErrors": 0,
+      "qualityScore": 0,
+      "totalScore": 0,
+      "errors": [
+        "Model unavailable: Failed to parse LLM response content as JSON. The model may not have returned valid JSON (direct JSON mode)."
+      ],
+      "rawResults": {
+        "totalChunks": 0,
+        "successfulChunks": 0,
+        "failedChunks": 0,
+        "totalWords": 0,
+        "successfulWords": 0,
+        "failedWords": 0,
+        "totalProcessingTime": 8846,
+        "averageChunkTime": 0,
+        "jsonParseErrors": 0,
+        "networkErrors": 1,
+        "apiErrors": 0,
+        "validationErrors": 0
+      },
+      "testDuration": 8846,
+      "isAvailable": false
+    },
+    {
+      "modelName": "meta-llama/llama-3.1-405b:free",
+      "successRate": 0,
+      "wordSuccessRate": 0,
+      "averageResponseTime": 0,
+      "jsonParseErrors": 0,
+      "qualityScore": 0,
+      "totalScore": 0,
+      "errors": [
+        "Model unavailable: 503 Provider returned error"
+      ],
+      "rawResults": {
+        "totalChunks": 0,
+        "successfulChunks": 0,
+        "failedChunks": 0,
+        "totalWords": 0,
+        "successfulWords": 0,
+        "failedWords": 0,
+        "totalProcessingTime": 12757,
+        "averageChunkTime": 0,
+        "jsonParseErrors": 0,
+        "networkErrors": 1,
+        "apiErrors": 0,
+        "validationErrors": 0
+      },
+      "testDuration": 12757,
+      "isAvailable": false
+    },
+    {
+      "modelName": "meta-llama/llama-3.1-8b-instruct:free",
+      "successRate": 0,
+      "wordSuccessRate": 0,
+      "averageResponseTime": 0,
+      "jsonParseErrors": 0,
+      "qualityScore": 0,
+      "totalScore": 0,
+      "errors": [
+        "Model unavailable: Failed to process words: לאכול"
+      ],
+      "rawResults": {
+        "totalChunks": 0,
+        "successfulChunks": 0,
+        "failedChunks": 0,
+        "totalWords": 0,
+        "successfulWords": 0,
+        "failedWords": 0,
+        "totalProcessingTime": 3266,
+        "averageChunkTime": 0,
+        "jsonParseErrors": 0,
+        "networkErrors": 1,
+        "apiErrors": 0,
+        "validationErrors": 0
+      },
+      "testDuration": 3266,
+      "isAvailable": false
+    },
+    {
+      "modelName": "mistralai/mistral-nemo:free",
+      "successRate": 0,
+      "wordSuccessRate": 0,
+      "averageResponseTime": 0,
+      "jsonParseErrors": 0,
+      "qualityScore": 0,
+      "totalScore": 0,
+      "errors": [
+        "Model unavailable: Failed to process words: לאכול"
+      ],
+      "rawResults": {
+        "totalChunks": 0,
+        "successfulChunks": 0,
+        "failedChunks": 0,
+        "totalWords": 0,
+        "successfulWords": 0,
+        "failedWords": 0,
+        "totalProcessingTime": 8175,
+        "averageChunkTime": 0,
+        "jsonParseErrors": 0,
+        "networkErrors": 1,
+        "apiErrors": 0,
+        "validationErrors": 0
+      },
+      "testDuration": 8175,
+      "isAvailable": false
+    },
+    {
+      "modelName": "google/gemma-2-9b-it:free",
+      "successRate": 0,
+      "wordSuccessRate": 0,
+      "averageResponseTime": 0,
+      "jsonParseErrors": 0,
+      "qualityScore": 0,
+      "totalScore": 0,
+      "errors": [
+        "Model unavailable: Invalid LLM response structure: No content in message from the model (direct JSON mode)."
+      ],
+      "rawResults": {
+        "totalChunks": 0,
+        "successfulChunks": 0,
+        "failedChunks": 0,
+        "totalWords": 0,
+        "successfulWords": 0,
+        "failedWords": 0,
+        "totalProcessingTime": 3028,
+        "averageChunkTime": 0,
+        "jsonParseErrors": 0,
+        "networkErrors": 1,
+        "apiErrors": 0,
+        "validationErrors": 0
+      },
+      "testDuration": 3028,
+      "isAvailable": false
+    }
+  ],
+  "testWords": [
+    "לאכול",
+    "ללכת",
+    "לדבר",
+    "לכתוב",
+    "לקרוא",
+    "ספר",
+    "בית",
+    "מים",
+    "אוכל",
+    "חבר",
+    "גדול",
+    "קטן",
+    "יפה",
+    "טוב",
+    "רע",
+    "מה שלומך",
+    "בוקר טוב",
+    "תודה רבה",
+    "סליחה",
+    "שלום"
+  ]
+}
