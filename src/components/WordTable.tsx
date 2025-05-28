@@ -31,6 +31,8 @@ const WordTable: FC<WordTableProps> = ({ onEditWord }) => {
   const markAsLearned = useWordsStore(state => state.markAsLearned);
   const markAsNotLearned = useWordsStore(state => state.markAsNotLearned);
   const deleteWord = useWordsStore(state => state.deleteWord);
+  const refineWord = useWordsStore(state => state.refineWord);
+  const refiningWords = useWordsStore(state => state.refiningWords);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
   const [editingWord, setEditingWord] = useState<Word | null>(null);
@@ -41,7 +43,23 @@ const WordTable: FC<WordTableProps> = ({ onEditWord }) => {
     setFilteredWordCount(allWords.length);
   }, [allWords]);
 
-  const columns = getColumns(setEditingWord, markAsLearned, markAsNotLearned, deleteWord);
+  // Create a wrapper for toast with correct types
+  const toastWrapper = (opts: { title: string; description: string; variant?: string }) => {
+    toast({
+      title: opts.title,
+      description: opts.description,
+      variant: opts.variant as "default" | "destructive" | undefined
+    });
+  };
+
+  const columns = getColumns(
+    setEditingWord,
+    markAsLearned,
+    markAsNotLearned,
+    deleteWord,
+    (id: string) => refineWord(id, toastWrapper),
+    refiningWords
+  );
 
   // Function to handle saving edited word
   const handleSaveEdit = (editedWord: Word) => {

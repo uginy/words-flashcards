@@ -4,7 +4,7 @@ import { create } from 'zustand';
 import type { Word, WordsState, BackgroundTask } from '../types';
 import { saveToLocalStorage, loadFromLocalStorage } from '../utils/storage';
 import { parseAndTranslateWords } from '../utils/translation';
-import { enrichWordsWithLLM } from '../services/openrouter';
+import { enrichWordsWithLLM, refineWordWithLLM } from '../services/openrouter';
 import { translateToHebrew } from '../services/translation';
 import { DEFAULT_OPENROUTER_API_KEY, DEFAULT_OPENROUTER_MODEL } from '../config/openrouter';
 
@@ -18,6 +18,7 @@ const initialStoreState = {
   backgroundTasks: [] as BackgroundTask[],
   isBackgroundProcessing: false,
   draftInputText: '',
+  refiningWords: new Set<string>(),
 };
 
 // Returns statistics for a given array of words
@@ -525,6 +526,9 @@ interface WordsStore extends WordsState {
   // Word input draft state
   draftInputText: string;
   
+  // Refinement state
+  refiningWords: Set<string>; // Track which words are being refined
+  
   // Methods
   addWords: (newWords: Word[], toast: ToastFn) => Promise<void>;
   startBackgroundWordProcessing: (inputText: string, toast: ToastFn) => Promise<string>; // returns task id
@@ -544,6 +548,7 @@ interface WordsStore extends WordsState {
   clearAllWords: (toast?: ToastFn) => void;
   setDraftInputText: (text: string) => void;
   clearDraftInputText: () => void;
+  refineWord: (wordId: string, toast?: ToastFn) => Promise<void>; // New method for word refinement
   // currentWord removed; use getCurrentWord(words, currentIndex) instead
 }
 
@@ -557,6 +562,7 @@ export const useWordsStore = create<WordsStore>((set, get) => {
         backgroundTasks: [] as BackgroundTask[],
         isBackgroundProcessing: false,
         draftInputText: '',
+        refiningWords: new Set<string>(),
       }
     : initialStoreState;
 
@@ -937,6 +943,87 @@ export const useWordsStore = create<WordsStore>((set, get) => {
         ...state,
         draftInputText: ''
       }));
+    },
+
+    // Refine word function
+    refineWord: async (wordId: string, toast?: ToastFn) => {
+      const state = get();
+      const word = state.words.find(w => w.id === wordId);
+      
+      if (!word) {
+        toast?.({
+          title: 'Ошибка',
+          description: 'Слово не найдено',
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      // Check if word is already being refined
+      if (state.refiningWords.has(wordId)) {
+        toast?.({
+          title: 'Информация',
+          description: 'Слово уже обрабатывается',
+        });
+        return;
+      }
+
+      const apiKey = localStorage.getItem('openRouterApiKey') || DEFAULT_OPENROUTER_API_KEY;
+      const model = localStorage.getItem('openRouterModel') || DEFAULT_OPENROUTER_MODEL;
+      
+      if (!apiKey || !model || apiKey === "YOUR_DEFAULT_API_KEY_HERE" || model === "YOUR_DEFAULT_MODEL_ID_HERE") {
+        toast?.({
+          title: 'Ошибка',
+          description: 'OpenRouter API key или модель не настроены',
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      // Add word to refining set
+      set(state => ({
+        ...state,
+        refiningWords: new Set([...state.refiningWords, wordId])
+      }));
+
+      toast?.({
+        title: 'Обработка',
+        description: `Уточняем перевод для "${word.hebrew}"...`,
+      });
+
+      try {
+        const refinedWord = await refineWordWithLLM(word, apiKey, model, toast, {
+          enableDetailedLogging: true,
+          validateJsonResponse: true
+        });
+
+        // Update word in store
+        set(state => ({
+          ...state,
+          words: state.words.map(w => w.id === wordId ? refinedWord : w),
+          refiningWords: new Set([...state.refiningWords].filter(id => id !== wordId))
+        }));
+
+        toast?.({
+          title: 'Готово!',
+          description: `Слово "${word.hebrew}" успешно уточнено`,
+        });
+
+      } catch (error) {
+        // Remove word from refining set on error
+        set(state => ({
+          ...state,
+          refiningWords: new Set([...state.refiningWords].filter(id => id !== wordId))
+        }));
+
+        console.error('Error refining word:', error);
+        
+        toast?.({
+          title: 'Ошибка уточнения',
+          description: error instanceof Error ? error.message : 'Неизвестная ошибка',
+          variant: 'destructive',
+        });
+      }
     },
 
     // stats getter removed; use getStats(words) instead

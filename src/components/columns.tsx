@@ -7,7 +7,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { Pen, RotateCcw, Check, ArrowUpDown, BookOpen, Languages } from "lucide-react";
+import { Pen, RotateCcw, Check, ArrowUpDown, BookOpen, Languages, RefreshCw } from "lucide-react";
 import { DeleteButton } from './DeleteButton';
 import {
   Popover,
@@ -22,6 +22,8 @@ export const getColumns = (
   markAsLearned: (id: string) => void,
   markAsNotLearned: (id: string) => void,
   deleteWord: (id: string) => void,
+  refineWord: (id: string) => void,
+  refiningWords: Set<string>,
 ): ColumnDef<Word>[] => [
     {
       accessorKey: "hebrew",
@@ -291,6 +293,8 @@ export const getColumns = (
       id: "actions",
       header: "Действия", cell: ({ row }) => {
         const word = row.original;
+        const isRefining = refiningWords.has(word.id);
+        
         return (
           <div className="flex justify-end gap-2">
             <TooltipProvider>
@@ -307,6 +311,23 @@ export const getColumns = (
                 </TooltipTrigger>
                 <TooltipContent>
                   <p>Изменить</p>
+                </TooltipContent>
+              </Tooltip>
+
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className={`h-8 w-8 ${isRefining ? 'text-orange-600 animate-spin' : 'text-purple-600 hover:text-purple-700'}`}
+                    onClick={() => refineWord(word.id)}
+                    disabled={isRefining}
+                  >
+                    <RefreshCw className="h-4 w-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>{isRefining ? 'Уточняем перевод...' : 'Уточнить перевод'}</p>
                 </TooltipContent>
               </Tooltip>
 
