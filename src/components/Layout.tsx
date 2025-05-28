@@ -1,4 +1,4 @@
-import React, { ReactNode } from 'react';
+import React, { type ReactNode } from 'react';
 
 interface TabProps {
   id: string;
@@ -13,15 +13,15 @@ interface LayoutProps {
   onTabChange: (tabId: string) => void;
 }
 
-const Layout: React.FC<LayoutProps> = ({ 
-  children, 
-  tabs, 
-  activeTab, 
-  onTabChange 
+const Layout: React.FC<LayoutProps> = ({
+  children,
+  tabs,
+  activeTab,
+  onTabChange
 }) => {
   return (
-    <div className="min-h-screen bg-gray-50">
-      <header className="bg-white shadow-sm">
+    <div className="h-screen bg-gray-50 flex flex-col">
+      <header className="bg-white shadow-sm flex-shrink-0">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16 items-center">
             <div className="flex items-center">
@@ -39,24 +39,24 @@ const Layout: React.FC<LayoutProps> = ({
           </div>
         </div>
       </header>
-      
-      <main className="w-full px-4 sm:px-6 lg:px-8 py-6 pb-24">
-        <div className="mb-6">
+
+      <main className="flex-1 overflow-y-auto px-4 sm:px-6 lg:px-8 py-6">
+        <div className="max-w-7xl mx-auto">
           {children}
         </div>
       </main>
-      
-      <nav className="fixed bottom-0 inset-x-0 bg-white border-t border-gray-200">
+
+      <nav className="bg-white border-t border-gray-200 flex-shrink-0">
         <div className="max-w-7xl mx-auto px-2 sm:px-4">
           <div className="flex justify-around">
             {tabs.map((tab) => (
               <button
                 key={tab.id}
-                className={`flex flex-col items-center py-3 px-2 text-xs font-medium ${
-                  activeTab === tab.id
+                type="button"
+                className={`flex flex-col items-center py-3 px-2 text-xs font-medium ${activeTab === tab.id
                     ? 'text-blue-600 border-t-2 border-blue-500'
                     : 'text-gray-500 hover:text-gray-700'
-                }`}
+                  }`}
                 onClick={() => onTabChange(tab.id)}
               >
                 {tab.icon}
