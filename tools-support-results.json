@@ -1,0 +1,49 @@
+[
+  {
+    "modelName": "meta-llama/llama-4-maverick:free",
+    "toolsSupport": "full",
+    "forcedToolChoiceSuccess": true,
+    "adaptiveToolChoiceSuccess": true,
+    "directJsonSuccess": true,
+    "forcedToolChoiceResponseTime": 5874,
+    "adaptiveToolChoiceResponseTime": 5522,
+    "directJsonResponseTime": 4863,
+    "recommendedMode": "adaptive"
+  },
+  {
+    "modelName": "meta-llama/llama-4-scout:free",
+    "toolsSupport": "full",
+    "forcedToolChoiceSuccess": true,
+    "adaptiveToolChoiceSuccess": true,
+    "directJsonSuccess": true,
+    "forcedToolChoiceResponseTime": 4800,
+    "adaptiveToolChoiceResponseTime": 5062,
+    "directJsonResponseTime": 4882,
+    "recommendedMode": "adaptive"
+  },
+  {
+    "modelName": "meta-llama/llama-3.3-8b-instruct:free",
+    "toolsSupport": "partial",
+    "forcedToolChoiceSuccess": false,
+    "adaptiveToolChoiceSuccess": false,
+    "directJsonSuccess": true,
+    "forcedToolChoiceError": "Failed to parse JSON from message content. The model may not have returned valid JSON.",
+    "adaptiveToolChoiceError": "Failed to parse JSON from message content. The model may not have returned valid JSON.",
+    "forcedToolChoiceResponseTime": 5594,
+    "adaptiveToolChoiceResponseTime": 5647,
+    "directJsonResponseTime": 4944,
+    "recommendedMode": "direct"
+  },
+  {
+    "modelName": "meta-llama/llama-3.3-70b-instruct:free",
+    "toolsSupport": "full",
+    "forcedToolChoiceSuccess": true,
+    "adaptiveToolChoiceSuccess": true,
+    "directJsonSuccess": false,
+    "directJsonError": "Timeout",
+    "forcedToolChoiceResponseTime": 7263,
+    "adaptiveToolChoiceResponseTime": 7087,
+    "directJsonResponseTime": 30002,
+    "recommendedMode": "adaptive"
+  }
+]

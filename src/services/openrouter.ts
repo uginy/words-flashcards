@@ -28,6 +28,8 @@ interface LLMEnrichmentOptions {
   retryConfig?: Partial<RetryConfig>;
   enableDetailedLogging?: boolean;
   validateJsonResponse?: boolean;
+  forceToolChoice?: boolean; // NEW: Force tool_choice usage
+  preferSimpleToolSchema?: boolean; // NEW: Use simplified tool definitions
 }
 
 // Interface for the expected structure of a single item from the LLM batch response
@@ -216,6 +218,7 @@ Example of the full JSON object you should return for two words "לכתוב" (ve
 Ensure your entire response is ONLY this single JSON object. Do not include any other text, explanations, or markdown formatting (like \\\`\\\`\\\`json) around the JSON.
 `;
 
+// Full tool definition for complex models
 const toolDefinition = {
   type: "function" as const,
   function: {
@@ -278,6 +281,64 @@ const toolDefinition = {
     }
   }
 };
+
+// Simplified tool definition for better compatibility
+const simpleToolDefinition = {
+  type: "function" as const,
+  function: {
+    name: "save_hebrew_word_details",
+    description: "Saves the translations, transcriptions, categories, conjugations, and examples for a list of Hebrew words.",
+    parameters: {
+      type: "object" as const,
+      properties: {
+        processed_words: {
+          type: "array" as const,
+          description: "An array of objects with Hebrew word details.",
+          items: {
+            type: "object" as const,
+            properties: {
+              hebrew: { type: "string" as const, description: "The original Hebrew word/phrase." },
+              transcription: { type: "string" as const, description: "Romanized transcription." },
+              russian: { type: "string" as const, description: "Russian translation." },
+              category: { type: "string" as const, description: "Word category." },
+              conjugations: { type: "object" as const, description: "Hebrew conjugations for verbs." },
+              examples: { type: "array" as const, description: "Usage examples." }
+            },
+            required: ["hebrew", "transcription", "russian", "category"]
+          }
+        }
+      },
+      required: ["processed_words"]
+    }
+  }
+};
+
+// Function to get optimal tools configuration based on model
+function getOptimalToolsConfig(modelIdentifier: string, options?: LLMEnrichmentOptions) {
+  const lowerModel = modelIdentifier.toLowerCase();
+  
+  // Claude models work better without tool_choice
+  const isClaudeModel = lowerModel.includes('claude');
+  
+  // GPT models support tool_choice well
+  const isGPTModel = lowerModel.includes('gpt');
+  
+  // Gemini models have mixed support
+  const isGeminiModel = lowerModel.includes('gemini');
+  
+  // Use simple schema for better compatibility unless explicitly disabled
+  const useSimpleSchema = options?.preferSimpleToolSchema !== false;
+  
+  // Force tool choice only when explicitly requested or for models known to work well with it
+  const shouldUseToolChoice = options?.forceToolChoice === true ||
+    (options?.forceToolChoice !== false && isGPTModel);
+  
+  return {
+    toolDefinition: useSimpleSchema ? simpleToolDefinition : toolDefinition,
+    useToolChoice: shouldUseToolChoice,
+    modelType: isClaudeModel ? 'claude' : isGPTModel ? 'gpt' : isGeminiModel ? 'gemini' : 'other'
+  };
+}
 
 // Helper function to process the array of words from LLM and map to Word[]
 function processWordsArray(llmItems: LLMBatchResponseItem[], originalWords: string[]): Word[] {
@@ -536,6 +597,9 @@ export async function enrichWordsWithLLM(
   const retryConfig: RetryConfig = { ...DEFAULT_RETRY_CONFIG, ...options?.retryConfig };
   const enableLogging = options?.enableDetailedLogging ?? false;
   const validateJson = options?.validateJsonResponse ?? true;
+  
+  // Get optimal tools configuration for this model
+  const toolsConfig = getOptimalToolsConfig(modelIdentifier, options);
 
   const showToast = (opts: Parameters<ToastFunction>[0]) => {
     if (toastFn) {
@@ -567,6 +631,10 @@ export async function enrichWordsWithLLM(
       "gpt-4", "gpt-3.5", // OpenAI
       "claude-3-opus", "claude-3-sonnet", "claude-3-haiku", // Anthropic
       "gemini", // Google
+      "llama-4-maverick", "llama-4-scout", // Meta LLaMA 4 specific models
+      "llama-4", // Meta LLaMA 4 series (general pattern)
+      "llama-3.3", // Meta LLaMA 3.3 series
+      "devstral", // Mistral Devstral series
       // Add other patterns if known, e.g. specific OpenRouter model IDs that are known to be tool-capable
     ];
     effectiveModelSupportsTools = knownToolSupportingModelPatterns.some(name => modelIdentifier.toLowerCase().includes(name));
@@ -595,17 +663,24 @@ export async function enrichWordsWithLLM(
       const completion = await retryWithBackoff(async () => {
         const openai = createOpenAIClient();
         
-        logger("Making API call with tools...");
-        return await openai.chat.completions.create({
+        logger(`Making API call with tools (${toolsConfig.modelType} model, tool_choice: ${toolsConfig.useToolChoice})...`);
+        
+        const baseParams = {
           model: modelIdentifier,
           messages: [
-            { role: 'system', content: systemPrompt },
-            { role: 'user', content: userContent }
+            { role: 'system' as const, content: systemPrompt },
+            { role: 'user' as const, content: userContent }
           ],
-          tools: [toolDefinition],
-          tool_choice: { type: "function", function: { name: "save_hebrew_word_details" } },
-          stream: false
-        }, {
+          tools: [toolsConfig.toolDefinition],
+          stream: false as const
+        };
+        
+        // Add tool_choice only when configured to do so
+        const requestParams = toolsConfig.useToolChoice
+          ? { ...baseParams, tool_choice: { type: "function" as const, function: { name: "save_hebrew_word_details" } } }
+          : baseParams;
+        
+        return await openai.chat.completions.create(requestParams, {
           signal: abortController?.signal
         });
       }, retryConfig, logger);
@@ -613,54 +688,99 @@ export async function enrichWordsWithLLM(
       if (!completion.choices || completion.choices.length === 0 || !completion.choices[0].message) {
         throw new Error('Invalid LLM response structure: No content or choices from the model (tool mode).');
       }
+      
       const message = completion.choices[0].message;
-      if (!message.tool_calls || !message.tool_calls[0] || message.tool_calls[0].type !== 'function') {
-        // This can happen if the model decides not to use the tool, or if it doesn't support it well despite our heuristic.
-        throw new Error('Invalid LLM response: Expected a function call, but model did not use tools as expected. Try a different model or verify tool support.');
-      }
-      const functionCall = message.tool_calls[0].function;
-      if (functionCall.name !== "save_hebrew_word_details") {
-        throw new Error(`Invalid LLM response: Expected function call to "save_hebrew_word_details", but got "${functionCall.name}".`);
-      }
+      logger(`Received message with tool_calls: ${!!message.tool_calls}, content: ${!!message.content}`);
       
-      logger(`Received function call arguments: ${functionCall.arguments.substring(0, 200)}...`);
-      
-      // Enhanced JSON validation before parsing
-      if (validateJson) {
-        const validation = validateJsonString(functionCall.arguments);
-        if (!validation.isValid) {
-          logger(`JSON validation failed for function arguments: ${validation.issues.join(', ')}`);
-          logger(`Function arguments preview: ${functionCall.arguments.substring(0, 500)}...`);
-          
-          // Attempt to fix if possible
-          if (validation.canAttemptFix) {
-            logger("Attempting to fix function arguments JSON structure...");
-            const fixedJson = attemptJsonFix(functionCall.arguments);
-            const revalidation = validateJsonString(fixedJson);
+      // Flexible response handling: try tool_calls first, then fallback to content
+      if (message.tool_calls && message.tool_calls[0] && message.tool_calls[0].type === 'function') {
+        // Standard tool_calls response
+        const functionCall = message.tool_calls[0].function;
+        if (functionCall.name !== "save_hebrew_word_details") {
+          throw new Error(`Invalid LLM response: Expected function call to "save_hebrew_word_details", but got "${functionCall.name}".`);
+        }
+        
+        logger(`Received function call arguments: ${functionCall.arguments.substring(0, 200)}...`);
+        
+        // Enhanced JSON validation before parsing
+        if (validateJson) {
+          const validation = validateJsonString(functionCall.arguments);
+          if (!validation.isValid) {
+            logger(`JSON validation failed for function arguments: ${validation.issues.join(', ')}`);
+            logger(`Function arguments preview: ${functionCall.arguments.substring(0, 500)}...`);
             
-            if (revalidation.isValid) {
-              logger("Successfully fixed function arguments JSON structure");
-              parsedArgs = JSON.parse(fixedJson);
+            // Attempt to fix if possible
+            if (validation.canAttemptFix) {
+              logger("Attempting to fix function arguments JSON structure...");
+              const fixedJson = attemptJsonFix(functionCall.arguments);
+              const revalidation = validateJsonString(fixedJson);
+              
+              if (revalidation.isValid) {
+                logger("Successfully fixed function arguments JSON structure");
+                parsedArgs = JSON.parse(fixedJson);
+              } else {
+                logger(`Function arguments JSON fix failed: ${revalidation.issues.join(', ')}`);
+                throw new Error(`Invalid JSON structure in function call arguments. Issues: ${validation.issues.join(', ')}`);
+              }
             } else {
-              logger(`Function arguments JSON fix failed: ${revalidation.issues.join(', ')}`);
               throw new Error(`Invalid JSON structure in function call arguments. Issues: ${validation.issues.join(', ')}`);
             }
           } else {
-            throw new Error(`Invalid JSON structure in function call arguments. Issues: ${validation.issues.join(', ')}`);
+            parsedArgs = JSON.parse(functionCall.arguments);
+            logger("Successfully parsed function call arguments");
           }
         } else {
-          parsedArgs = JSON.parse(functionCall.arguments);
-          logger("Successfully parsed function call arguments");
+          try {
+            parsedArgs = JSON.parse(functionCall.arguments);
+            logger("Successfully parsed function call arguments (validation disabled)");
+          } catch (e) {
+            logger(`Failed to parse function call arguments: ${e}`);
+            console.error('Failed to parse function call arguments as JSON (tool mode):', functionCall.arguments, e);
+            throw new Error('Failed to parse LLM function call arguments. The response may not be valid JSON (tool mode).');
+          }
+        }
+      } else if (message.content) {
+        // Fallback: try to parse JSON from content (some models return JSON in content instead of tool_calls)
+        logger("No tool_calls found, attempting to parse JSON from message content...");
+        
+        try {
+          // Attempt to clean up potential markdown backticks
+          const cleanedContent = message.content.replace(/^```json\s*|\s*```$/g, '');
+          
+          if (validateJson) {
+            const validation = validateJsonString(cleanedContent);
+            if (!validation.isValid) {
+              logger(`JSON validation failed for content: ${validation.issues.join(', ')}`);
+              
+              if (validation.canAttemptFix) {
+                logger("Attempting to fix content JSON structure...");
+                const fixedJson = attemptJsonFix(cleanedContent);
+                const revalidation = validateJsonString(fixedJson);
+                
+                if (revalidation.isValid) {
+                  logger("Successfully fixed content JSON structure");
+                  parsedArgs = JSON.parse(fixedJson);
+                } else {
+                  throw new Error(`Invalid JSON structure in content. Issues: ${validation.issues.join(', ')}`);
+                }
+              } else {
+                throw new Error(`Invalid JSON structure in content. Issues: ${validation.issues.join(', ')}`);
+              }
+            } else {
+              parsedArgs = JSON.parse(cleanedContent);
+              logger("Successfully parsed JSON from message content");
+            }
+          } else {
+            parsedArgs = JSON.parse(cleanedContent);
+            logger("Successfully parsed JSON from message content (validation disabled)");
+          }
+        } catch (e) {
+          logger(`Failed to parse JSON from content: ${e}`);
+          throw new Error('Failed to parse JSON from message content. The model may not have returned valid JSON.');
         }
       } else {
-        try {
-          parsedArgs = JSON.parse(functionCall.arguments);
-          logger("Successfully parsed function call arguments (validation disabled)");
-        } catch (e) {
-          logger(`Failed to parse function call arguments: ${e}`);
-          console.error('Failed to parse function call arguments as JSON (tool mode):', functionCall.arguments, e);
-          throw new Error('Failed to parse LLM function call arguments. The response may not be valid JSON (tool mode).');
-        }
+        // No tool_calls and no content - this is an error
+        throw new Error('Invalid LLM response: No tool_calls or content found in the message.');
       }
     } else {
       // --- Logic for models NOT supporting tools (direct JSON response) ---

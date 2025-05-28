@@ -13,7 +13,8 @@
     "release:minor": "sh ./scripts/publish.sh minor",
     "release:major": "sh ./scripts/publish.sh major",
     "test:api-chunks": "npx tsx scripts/test-api-chunks.ts",
-    "test:model-championship": "npx tsx scripts/test-api-chunks-best-model.ts"
+    "test:model-championship": "npx tsx scripts/test-api-chunks-best-model.ts",
+    "test:tools-support": "npx tsx scripts/test-tools-support.ts"
   },
   "dependencies": {
     "@radix-ui/react-alert-dialog": "^1.1.13",
