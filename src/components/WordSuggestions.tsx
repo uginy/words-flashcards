@@ -108,60 +108,70 @@ export const WordSuggestions: React.FC<WordSuggestionsProps> = ({
   };
 
   return (
-    <div className="flex flex-row gap-4 mb-4">
-      <div className="flex gap-4">
-        <Select value={category} onValueChange={setCategory}>
-          <SelectTrigger className="w-[200px]">
-            <SelectValue placeholder="Выберите категорию" />
-          </SelectTrigger>
-          <SelectContent>
-            {CATEGORIES.map(({ value, label }) => (
-              <SelectItem key={value} value={value}>
-                {label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+    <div className="space-y-4 mb-4">
+      {/* Main selects - responsive layout */}
+      <div className="flex flex-col sm:flex-row gap-4">
+        <div className="flex-1">
+          <Select value={category} onValueChange={setCategory}>
+            <SelectTrigger className="w-full sm:w-[200px]">
+              <SelectValue placeholder="Выберите категорию" />
+            </SelectTrigger>
+            <SelectContent>
+              {CATEGORIES.map(({ value, label }) => (
+                <SelectItem key={value} value={value}>
+                  {label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
 
-        <Select value={level} onValueChange={setLevel}>
-          <SelectTrigger className="w-[200px]">
-            <SelectValue placeholder="Выберите уровень" />
-          </SelectTrigger>
-          <SelectContent>
-            {LEVELS.map(({ value, label }) => (
-              <SelectItem key={value} value={value}>
-                {label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <div className="flex-1">
+          <Select value={level} onValueChange={setLevel}>
+            <SelectTrigger className="w-full sm:w-[200px]">
+              <SelectValue placeholder="Выберите уровень" />
+            </SelectTrigger>
+            <SelectContent>
+              {LEVELS.map(({ value, label }) => (
+                <SelectItem key={value} value={value}>
+                  {label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
-      <div className="flex gap-4 items-center">
-        <span className="text-sm text-gray-700">Cлов:</span>
-        <Input
-          type="number"
-          min="1"
-          max="40"
-          value={wordCount}
-          onChange={(e) => {
-            const value = Number.parseInt(e.target.value, 10);
-            if (Number.isInteger(value) && value >= 1 && value <= 40) {
-              setWordCount(value);
-            }
-          }}
-          className="w-24"
-        />
-      </div>
+      {/* Word count and button - responsive layout */}
+      <div className="flex flex-col sm:flex-row gap-4 sm:items-center">
+        <div className="flex items-center gap-2">
+          <span className="text-sm text-gray-700 whitespace-nowrap">Слов:</span>
+          <Input
+            type="number"
+            min="1"
+            max="40"
+            value={wordCount}
+            onChange={(e) => {
+              const value = Number.parseInt(e.target.value, 10);
+              if (Number.isInteger(value) && value >= 1 && value <= 40) {
+                setWordCount(value);
+              }
+            }}
+            className="w-20 sm:w-24"
+          />
+        </div>
 
-      <Button
-        onClick={handleSuggestWords}
-        disabled={isLoading}
-        className="w-full"
-        variant="outline"
-      >
-        {isLoading ? 'Загрузка...' : 'Предложить новые слова'}
-      </Button>
+        <div className="flex-1">
+          <Button
+            onClick={handleSuggestWords}
+            disabled={isLoading}
+            className="w-full sm:w-auto sm:min-w-[200px]"
+            variant="outline"
+          >
+            {isLoading ? 'Загрузка...' : 'Предложить новые слова'}
+          </Button>
+        </div>
+      </div>
     </div>
   );
 };

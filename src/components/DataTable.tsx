@@ -96,9 +96,10 @@ export function DataTable<TData, TValue>({
 
   return (
     <div className="w-full">
-      <div className="flex items-center gap-4 py-4">
+      <div className="space-y-4 py-4">
+        {/* Search fields - responsive layout */}
         {searchable && searchColumns && searchColumns.length > 0 && (
-          <div className="flex gap-2">
+          <div className="flex flex-col sm:flex-row gap-2">
             {searchColumns.map((column) => (
               <Input
                 key={column.id}
@@ -107,39 +108,45 @@ export function DataTable<TData, TValue>({
                 onChange={(event) =>
                   table.getColumn(column.id)?.setFilterValue(event.target.value)
                 }
-                className="max-w-[200px]"
+                className="w-full sm:max-w-[200px]"
               />
             ))}
           </div>
         )}
-        {filters?.map((filter) => (
-          <div key={filter.id} className="flex items-center gap-2">
-            <Select
-              value={(table.getColumn(filter.id)?.getFilterValue() as string)?.toString() || undefined}
-              onValueChange={(value) => {
-                if (value === "all") {
-                  table.getColumn(filter.id)?.setFilterValue(undefined);
-                } else {
-                  table.getColumn(filter.id)?.setFilterValue(
-                    filter.options[0]?.value === true ? value === "true" : value
-                  );
-                }
-              }}
-            >
-              <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder={filter.label} />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Все {filter.label.toLowerCase()}</SelectItem>
-                {filter.options.map((option) => (
-                  <SelectItem key={option.value.toString()} value={option.value.toString()}>
-                    {option.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+        
+        {/* Filters - responsive layout */}
+        {filters && filters.length > 0 && (
+          <div className="flex flex-col sm:flex-row sm:flex-wrap gap-2">
+            {filters.map((filter) => (
+              <div key={filter.id} className="flex-1 sm:flex-none min-w-0">
+                <Select
+                  value={(table.getColumn(filter.id)?.getFilterValue() as string)?.toString() || undefined}
+                  onValueChange={(value) => {
+                    if (value === "all") {
+                      table.getColumn(filter.id)?.setFilterValue(undefined);
+                    } else {
+                      table.getColumn(filter.id)?.setFilterValue(
+                        filter.options[0]?.value === true ? value === "true" : value
+                      );
+                    }
+                  }}
+                >
+                  <SelectTrigger className="w-full sm:w-[180px]">
+                    <SelectValue placeholder={filter.label} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Все {filter.label.toLowerCase()}</SelectItem>
+                    {filter.options.map((option) => (
+                      <SelectItem key={option.value.toString()} value={option.value.toString()}>
+                        {option.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            ))}
           </div>
-        ))}
+        )}
       </div>
       <div className="rounded-md border w-full overflow-auto">
         <Table className="w-full">
@@ -192,39 +199,42 @@ export function DataTable<TData, TValue>({
         </Table>
       </div>
       {paginated && (
-        <div className="flex items-center justify-between py-4">
-          <div className="flex items-center gap-2">
-            <span className="text-sm text-gray-700">Записей на странице</span>
-            <Select
-              value={table.getState().pagination.pageSize.toString()}
-              onValueChange={(value) => {
-                const newPageSize = Number.parseInt(value);
-                table.setPageSize(newPageSize);
-                saveTableSettings({ pageSize: newPageSize });
-              }}
-            >
-              <SelectTrigger className="w-[70px]">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {[5, 10, 20, 30, 50].map((pageSize) => (
-                  <SelectItem key={pageSize} value={pageSize.toString()}>
-                    {pageSize}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <span className="text-sm text-gray-700">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 py-4">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-2 text-sm">
+            <div className="flex items-center gap-2">
+              <span className="text-gray-700 whitespace-nowrap">Записей на странице</span>
+              <Select
+                value={table.getState().pagination.pageSize.toString()}
+                onValueChange={(value) => {
+                  const newPageSize = Number.parseInt(value);
+                  table.setPageSize(newPageSize);
+                  saveTableSettings({ pageSize: newPageSize });
+                }}
+              >
+                <SelectTrigger className="w-[70px]">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {[5, 10, 20, 30, 50].map((pageSize) => (
+                    <SelectItem key={pageSize} value={pageSize.toString()}>
+                      {pageSize}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <span className="text-gray-700 whitespace-nowrap">
               Страница {table.getState().pagination.pageIndex + 1} из{" "}
               {table.getPageCount()}
             </span>
           </div>
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center justify-center sm:justify-end space-x-2">
             <Button
               variant="outline"
               size="sm"
               onClick={() => table.previousPage()}
               disabled={!table.getCanPreviousPage()}
+              className="flex-1 sm:flex-none"
             >
               Назад
             </Button>
@@ -233,6 +243,7 @@ export function DataTable<TData, TValue>({
               size="sm"
               onClick={() => table.nextPage()}
               disabled={!table.getCanNextPage()}
+              className="flex-1 sm:flex-none"
             >
               Вперед
             </Button>

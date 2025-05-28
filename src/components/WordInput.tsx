@@ -154,39 +154,41 @@ const WordInput: React.FC = () => {
             />
           </div>
 
-          <div className="flex items-center space-x-2 rtl:space-x-reverse text-sm mb-3">
-            <button
-              type="button"
-              className="text-blue-500 hover:text-blue-700"
-              onClick={() => {
-                setDraftInputText(sampleText);
-                setError(null); // Clear error when using sample
-              }}
-            >
-              Использовать пример
-            </button>
-            <span className="text-gray-400">|</span>
-            <button
-              type="button"
-              className="text-blue-500 hover:text-blue-700"
-              onClick={() => {
-                clearDraftInputText();
-                setError(null); // Clear error when clearing input
-              }}
-            >
-              Очистить
-            </button>
-          </div>
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-3">
+            <div className="flex items-center gap-2 text-sm">
+              <button
+                type="button"
+                className="text-blue-500 hover:text-blue-700 whitespace-nowrap"
+                onClick={() => {
+                  setDraftInputText(sampleText);
+                  setError(null); // Clear error when using sample
+                }}
+              >
+                Использовать пример
+              </button>
+              <span className="text-gray-400">|</span>
+              <button
+                type="button"
+                className="text-blue-500 hover:text-blue-700 whitespace-nowrap"
+                onClick={() => {
+                  clearDraftInputText();
+                  setError(null); // Clear error when clearing input
+                }}
+              >
+                Очистить
+              </button>
+            </div>
 
-          <div className="flex justify-end">
-            <button
-              type="button"
-              onClick={handleBackgroundSubmit}
-              className="py-2 px-4 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors disabled:opacity-50"
-              disabled={!draftInputText.trim()}
-            >
-              🔄 Добавить слова
-            </button>
+            <div className="w-full sm:w-auto">
+              <button
+                type="button"
+                onClick={handleBackgroundSubmit}
+                className="w-full sm:w-auto py-2 px-4 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors disabled:opacity-50"
+                disabled={!draftInputText.trim()}
+              >
+                🔄 Добавить слова
+              </button>
+            </div>
           </div>
         </div>
       </div>

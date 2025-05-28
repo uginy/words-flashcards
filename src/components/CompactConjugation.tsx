@@ -15,27 +15,27 @@ const CompactConjugation: React.FC<CompactConjugationProps> = ({ conjugations })
   };
 
   return (
-    <div className="text-sm grid grid-cols-4 gap-x-8">
+    <div className="text-sm grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-x-8">
       {(Object.entries(conjugations) as [string, Record<string, string>][])
         .filter(([, forms]) => forms && Object.keys(forms).length > 0)
         .map(([tense, forms]) => (
-          <div key={tense}>
-            <div className="font-medium bg-slate-300 px-3 py-1 rounded-sm text-center">
+          <div key={tense} className="min-w-0">
+            <div className="font-medium bg-slate-300 px-3 py-1 rounded-sm text-center mb-2">
               {sections[tense]}
             </div>
-            <div className="grid grid-cols-1 gap-x-8">
+            <div className="space-y-1">
               {Object.entries(forms).map(([person, form]) => (
-                <div key={person} className="flex justify-between items-center text-sm">
-                  <span className="flex-1 text-muted-foreground font-medium px-2">
+                <div key={person} className="flex justify-between items-center text-sm gap-2">
+                  <span className="flex-1 text-muted-foreground font-medium text-left min-w-0 truncate">
                     {person}
                   </span>
-                  <span>
+                  <span className="text-center font-medium min-w-0 truncate" dir="rtl">
                     {form}
                   </span>
-                  <span className="font-medium" dir="rtl">
+                  <span className="flex-shrink-0">
                     <SpeakerIcon
                       text={`${person} ${form}`}
-                      className="ml-6 hover:text-blue-600"
+                      className="hover:text-blue-600"
                     />
                   </span>
                 </div>

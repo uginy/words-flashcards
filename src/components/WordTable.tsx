@@ -159,8 +159,10 @@ const WordTable: FC<WordTableProps> = ({ onEditWord }) => {
       <div className="bg-white rounded-lg shadow-md overflow-hidden w-full">
         <div className="p-4 space-y-4 w-full">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-            <h3 className="text-lg font-medium text-gray-800">Список слов ({filteredWordCount})</h3>
-            <div className="flex flex-wrap gap-2">
+            <h3 className="text-base sm:text-lg font-medium text-gray-800 truncate max-w-full">
+              Список слов ({filteredWordCount})
+            </h3>
+            <div className="flex flex-wrap gap-2 w-full sm:w-auto justify-start sm:justify-end">
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
