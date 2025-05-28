@@ -49,8 +49,6 @@ body {
   position: absolute;
   top: 0;
   left: 0;
-  overflow: auto;
-  max-height: calc(70vh);
   transition: opacity 0.5s ease-in-out, transform 0.5s ease-in-out;
 }
 

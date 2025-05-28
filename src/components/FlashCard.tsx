@@ -197,7 +197,7 @@ const FlashCard: React.FC<FlashCardProps> = ({ word: propWord, reverse, onMarkAs
             Далее
           </button>
         </div>
-        <div className="card-container min-h-[340px] sm:min-h-[400px] relative">
+        <div className="card-container relative">
           <div className="absolute top-3 right-4 z-10">
             {word.isLearned ? (
               <span
