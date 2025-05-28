@@ -1,4 +1,4 @@
 // OpenRouter config: default values for API key and model
 
-export const DEFAULT_OPENROUTER_API_KEY = "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";
-export const DEFAULT_OPENROUTER_MODEL = "openai/gpt-4.1-nano";
+export const DEFAULT_OPENROUTER_API_KEY = "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";
+export const DEFAULT_OPENROUTER_MODEL = "meta-llama/llama-4-maverick:free";

@@ -34,7 +34,7 @@ export const fetchSuggestedWords = async ({
       return 'высокий уровень - сложные академические и специализированные термины';
     }
     if (level.includes('Вав') || level.includes('ו')) {
-      return 'профессиональный уровень - очень сложные слова, литературная лексика, архаизмы';
+      return 'профессиональный уровень - очень сложные слова, литературная лексика, архаизмы, высокий иврит';
     }
     return 'средний уровень';
   };
@@ -67,7 +67,7 @@ export const fetchSuggestedWords = async ({
 Ответ дай ТОЛЬКО в виде списка слов на иврите, разделенных запятыми, без нумерации и пояснений.`;
 
   try {
-    const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+    const response = await fetch(, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

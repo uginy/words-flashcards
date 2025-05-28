@@ -28,9 +28,11 @@ Example input:
 идти
 
 Example output:
-חתול, חתלתול
+חתול
+חתלתול
 כלב
-ללכת, להלך
+ללכת
+להלך
 
 Important:
 - For each word, provide all relevant translations separated by commas without niqqud
