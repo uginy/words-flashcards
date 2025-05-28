@@ -1,3 +1,5 @@
+import { DEFAULT_OPENROUTER_API_URL } from "@/config/openrouter";
+
 interface SuggestWordsParams {
   category: string;
   level: string;
@@ -67,7 +69,7 @@ export const fetchSuggestedWords = async ({
 Ответ дай ТОЛЬКО в виде списка слов на иврите, разделенных запятыми, без нумерации и пояснений.`;
 
   try {
-    const response = await fetch(, {
+    const response = await fetch(DEFAULT_OPENROUTER_API_URL, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

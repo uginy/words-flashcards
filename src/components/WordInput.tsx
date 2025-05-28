@@ -70,11 +70,6 @@ const WordInput: React.FC = () => {
       await startBackgroundWordProcessing(draftInputText, toastAdapter);
       clearDraftInputText();
       setError(null);
-      toast({
-        title: 'Фоновая обработка запущена!',
-        description: 'Слова будут добавлены в фоновом режиме. Вы можете продолжать использовать приложение.',
-        variant: 'success',
-      });
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Ошибка запуска фоновой обработки');
     }

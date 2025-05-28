@@ -76,19 +76,22 @@ export const WordSuggestions: React.FC<WordSuggestionsProps> = ({
         toast({
           title: 'Слова предложены!',
           description,
-          variant: 'success',
+          variant: 'info',
+          duration: 2000
         });
       } else if (duplicatesCount > 0) {
         toast({
           title: 'Внимание',
           description: `Все ${allSuggestedWords.length} предложенных слов уже есть в вашей коллекции`,
           variant: 'warning',
+          duration: 2000
         });
       } else {
         toast({
           title: 'Внимание',
           description: 'Не удалось получить слова',
           variant: 'warning',
+          duration: 2000
         });
       }
     } catch (error) {
@@ -97,6 +100,7 @@ export const WordSuggestions: React.FC<WordSuggestionsProps> = ({
         title: 'Ошибка',
         description: error instanceof Error ? error.message : 'Не удалось получить слова',
         variant: 'error',
+        duration: 2000
       });
     } finally {
       setIsLoading(false);
