@@ -16,16 +16,16 @@ interface ConjugationEditorProps {
 }
 
 const pronouns = [
-  { key: 'ani', hebrew: 'אני', name: 'я' },
-  { key: 'ata', hebrew: 'אתה', name: 'ты (м.р.)' },
-  { key: 'at', hebrew: 'את', name: 'ты (ж.р.)' },
-  { key: 'hu', hebrew: 'הוא', name: 'он' },
-  { key: 'hi', hebrew: 'היא', name: 'она' },
-  { key: 'anachnu', hebrew: 'אנחנו', name: 'мы' },
-  { key: 'atem', hebrew: 'אתם', name: 'вы (м.р.)' },
-  { key: 'aten', hebrew: 'אתן', name: 'вы (ж.р.)' },
-  { key: 'hem', hebrew: 'הם', name: 'они (м.р.)' },
-  { key: 'hen', hebrew: 'הן', name: 'они (ж.р.)' },
+  { key: 'אני', hebrew: 'אני', name: 'я' },
+  { key: 'אתה', hebrew: 'אתה', name: 'ты (м.р.)' },
+  { key: 'את', hebrew: 'את', name: 'ты (ж.р.)' },
+  { key: 'הוא', hebrew: 'הוא', name: 'он' },
+  { key: 'היא', hebrew: 'היא', name: 'она' },
+  { key: 'אנחנו', hebrew: 'אנחנו', name: 'мы' },
+  { key: 'אתם', hebrew: 'אתם', name: 'вы (м.р.)' },
+  { key: 'אתן', hebrew: 'אתן', name: 'вы (ж.р.)' },
+  { key: 'הם', hebrew: 'הם', name: 'они (м.р.)' },
+  { key: 'הן', hebrew: 'הן', name: 'они (ж.р.)' },
 ];
 
 const tenses = [
@@ -83,6 +83,12 @@ const ConjugationEditor: React.FC<ConjugationEditorProps> = ({
   };
 
   const getConjugationValue = (tense: string, pronounKey: string): string => {
+    console.log(`🔍 DEBUG getConjugationValue - tense: ${tense}, pronounKey: ${pronounKey}`, {
+      localConjugations,
+      tenseConjugations: localConjugations?.[tense as keyof typeof localConjugations],
+      value: localConjugations?.[tense as keyof typeof localConjugations]?.[pronounKey]
+    });
+    
     if (!localConjugations || !localConjugations[tense as keyof typeof localConjugations]) {
       return '';
     }
