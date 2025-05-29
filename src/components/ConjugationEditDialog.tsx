@@ -23,7 +23,7 @@ const ConjugationEditDialog: React.FC<ConjugationEditDialogProps> = ({
   onClose,
   onSave,
 }) => {
-  console.log('🔍 DEBUG ConjugationEditDialog - word.conjugations:', word.conjugations);
+  // console.log('🔍 DEBUG ConjugationEditDialog - word.conjugations:', word.conjugations);
 
   const [editedConjugations, setEditedConjugations] = useState<{
     past?: { [pronoun: string]: string } | null;
@@ -33,17 +33,17 @@ const ConjugationEditDialog: React.FC<ConjugationEditDialogProps> = ({
   } | null>(word.conjugations || null);
 
   useEffect(() => {
-    console.log('🔍 DEBUG ConjugationEditDialog - useEffect triggered, word.conjugations:', word.conjugations);
+    // console.log('🔍 DEBUG ConjugationEditDialog - useEffect triggered, word.conjugations:', word.conjugations);
     setEditedConjugations(word.conjugations || null);
   }, [word]);
 
   const handleSave = () => {
-    console.log('🔍 DEBUG handleSave - editedConjugations:', editedConjugations);
+    // console.log('🔍 DEBUG handleSave - editedConjugations:', editedConjugations);
     const updatedWord = {
       ...word,
       conjugations: editedConjugations,
     };
-    console.log('🔍 DEBUG handleSave - updatedWord:', updatedWord);
+    // console.log('🔍 DEBUG handleSave - updatedWord:', updatedWord);
     onSave(updatedWord);
     onClose();
   };

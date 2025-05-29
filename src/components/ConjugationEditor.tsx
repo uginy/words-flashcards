@@ -43,7 +43,7 @@ const ConjugationEditor: React.FC<ConjugationEditorProps> = ({
 
   // Update local state when conjugations prop changes
   useEffect(() => {
-    console.log('🔍 DEBUG ConjugationEditor - useEffect triggered, setting conjugations:', conjugations);
+    // console.log('🔍 DEBUG ConjugationEditor - useEffect triggered, setting conjugations:', conjugations);
     setLocalConjugations(conjugations);
   }, [conjugations]);
   const handleConjugationChange = (
@@ -83,11 +83,11 @@ const ConjugationEditor: React.FC<ConjugationEditorProps> = ({
   };
 
   const getConjugationValue = (tense: string, pronounKey: string): string => {
-    console.log(`🔍 DEBUG getConjugationValue - tense: ${tense}, pronounKey: ${pronounKey}`, {
-      localConjugations,
-      tenseConjugations: localConjugations?.[tense as keyof typeof localConjugations],
-      value: localConjugations?.[tense as keyof typeof localConjugations]?.[pronounKey]
-    });
+    // console.log(`🔍 DEBUG getConjugationValue - tense: ${tense}, pronounKey: ${pronounKey}`, {
+    //   localConjugations,
+    //   tenseConjugations: localConjugations?.[tense as keyof typeof localConjugations],
+    //   value: localConjugations?.[tense as keyof typeof localConjugations]?.[pronounKey]
+    // });
     
     if (!localConjugations || !localConjugations[tense as keyof typeof localConjugations]) {
       return '';
