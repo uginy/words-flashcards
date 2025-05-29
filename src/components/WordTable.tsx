@@ -254,7 +254,7 @@ const WordTable: FC<WordTableProps> = ({ onEditWord }) => {
             </div>
           </div>
 
-          <div className="h-[70vh] min-h-[400px]">
+          <div className="h-[78vh] min-h-[400px]">
             <DataTable
               columns={columns}
               data={allWords}

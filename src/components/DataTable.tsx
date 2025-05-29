@@ -97,7 +97,7 @@ export function DataTable<TData, TValue>({
   return (
     <div className="w-full h-full flex flex-col">
       {/* Sticky header with search and filters */}
-      <div className="sticky top-0 z-10 bg-white border-b space-y-4 py-4">
+      <div className="sticky top-0 z-10 bg-white space-y-4 py-4">
         {/* Search fields - responsive layout */}
         {searchable && searchColumns && searchColumns.length > 0 && (
           <div className="flex flex-col sm:flex-row gap-2">
@@ -153,7 +153,7 @@ export function DataTable<TData, TValue>({
       {/* Scrollable table content */}
       <div className="flex-1 min-h-0 rounded-md border w-full overflow-hidden flex flex-col">
         {/* Sticky table header */}
-        <div className="sticky top-0 z-20 bg-white border-b">
+        <div className="sticky top-0 z-20 bg-white">
           <Table className="w-full">
             <TableHeader>
               {table.getHeaderGroups().map((headerGroup) => (
@@ -214,7 +214,7 @@ export function DataTable<TData, TValue>({
 
       {/* Sticky footer with pagination */}
       {paginated && (
-        <div className="sticky bottom-0 z-10 bg-white border-t flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 py-4">
+        <div className="sticky bottom-0 z-10 bg-white flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 py-4">
           <div className="flex flex-col sm:flex-row sm:items-center gap-2 text-sm">
             <div className="flex items-center gap-2">
               <span className="text-gray-700 whitespace-nowrap">Записей на странице</span>
