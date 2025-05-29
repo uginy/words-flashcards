@@ -7,7 +7,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { Pen, RotateCcw, Check, ArrowUpDown, BookOpen, Languages, RefreshCw } from "lucide-react";
+import { Pen, RotateCcw, Check, ArrowUpDown, BookOpen, Languages, RefreshCw, Edit3 } from "lucide-react";
 import { DeleteButton } from './DeleteButton';
 import {
   Popover,
@@ -24,6 +24,7 @@ export const getColumns = (
   deleteWord: (id: string) => void,
   refineWord: (id: string) => void,
   refiningWords: Set<string>,
+  setEditingConjugations?: (word: Word) => void,
 ): ColumnDef<Word>[] => [
     {
       accessorKey: "hebrew",
@@ -313,6 +314,24 @@ export const getColumns = (
                   <p>Изменить</p>
                 </TooltipContent>
               </Tooltip>
+
+              {word.category === "פועל" && setEditingConjugations && (
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 text-blue-600 hover:text-blue-700"
+                      onClick={() => setEditingConjugations(word)}
+                    >
+                      <Edit3 className="h-4 w-4" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Редактировать спряжения</p>
+                  </TooltipContent>
+                </Tooltip>
+              )}
 
               <Tooltip>
                 <TooltipTrigger asChild>

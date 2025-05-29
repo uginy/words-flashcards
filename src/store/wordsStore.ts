@@ -790,6 +790,8 @@ export const useWordsStore = create<WordsStore>((set, get) => {
     },
 
     updateWord: updatedWord => {
+      console.log('🔍 DEBUG wordsStore updateWord - updatedWord:', updatedWord);
+      console.log('🔍 DEBUG wordsStore updateWord - updatedWord.conjugations:', updatedWord.conjugations);
       set(state => ({
         ...state,
         words: state.words.map(word => (word.id === updatedWord.id ? updatedWord : word)),
@@ -808,6 +810,8 @@ export const useWordsStore = create<WordsStore>((set, get) => {
     },
 
     replaceAllWords: (newWords, toast) => {
+      console.log('🔍 DEBUG wordsStore replaceAllWords - newWords:', newWords);
+      console.log('🔍 DEBUG wordsStore replaceAllWords - word with conjugations:', newWords.find(w => w.conjugations));
       set(() => {
         const newCurrentIndex = newWords.length > 0 ? 0 : 0;
         if (newWords.length === 0) {
@@ -1042,7 +1046,10 @@ export function getCurrentWord(words: Word[], currentIndex: number): Word | unde
 
 // Auto-save to localStorage on every change
 useWordsStore.subscribe(state => {
+  console.log('🔍 DEBUG localStorage subscribe - saving state to localStorage');
+  console.log('🔍 DEBUG localStorage subscribe - words with conjugations:', state.words.filter(w => w.conjugations));
   if (state.words.length > 0 || state.currentIndex !== 0) {
     saveToLocalStorage({ words: state.words, currentIndex: state.currentIndex });
+    console.log('🔍 DEBUG localStorage subscribe - saved to localStorage');
   }
 });

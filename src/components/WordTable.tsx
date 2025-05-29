@@ -4,6 +4,7 @@ import { useToast } from '@/hooks/use-toast';
 import type { Word } from '../types';
 import { useWordsStore } from '../store/wordsStore';
 import EditWordDialog from './EditWordDialog';
+import ConjugationEditDialog from './ConjugationEditDialog';
 import { DataTable } from './DataTable';
 import { getColumns } from './columns';
 import { Download, Upload } from 'lucide-react';
@@ -36,6 +37,7 @@ const WordTable: FC<WordTableProps> = ({ onEditWord }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
   const [editingWord, setEditingWord] = useState<Word | null>(null);
+  const [editingConjugations, setEditingConjugations] = useState<Word | null>(null);
   const [filteredWordCount, setFilteredWordCount] = useState<number>(allWords.length);
 
   // Update filteredWordCount when allWords changes
@@ -58,14 +60,18 @@ const WordTable: FC<WordTableProps> = ({ onEditWord }) => {
     markAsNotLearned,
     deleteWord,
     (id: string) => refineWord(id, toastWrapper),
-    refiningWords
+    refiningWords,
+    setEditingConjugations
   );
 
   // Function to handle saving edited word
   const handleSaveEdit = (editedWord: Word) => {
-    const updatedWords = allWords.map(word => 
+    console.log('🔍 DEBUG WordTable handleSaveEdit - editedWord:', editedWord);
+    console.log('🔍 DEBUG WordTable handleSaveEdit - editedWord.conjugations:', editedWord.conjugations);
+    const updatedWords = allWords.map(word =>
       word.id === editedWord.id ? editedWord : word
     );
+    console.log('🔍 DEBUG WordTable handleSaveEdit - calling replaceAllWords with:', updatedWords.find(w => w.id === editedWord.id));
     replaceAllWords(updatedWords);
     if (onEditWord) {
       onEditWord(editedWord);
@@ -152,6 +158,15 @@ const WordTable: FC<WordTableProps> = ({ onEditWord }) => {
           word={editingWord}
           isOpen={true}
           onClose={() => setEditingWord(null)}
+          onSave={handleSaveEdit}
+        />
+      )}
+
+      {editingConjugations && (
+        <ConjugationEditDialog
+          word={editingConjugations}
+          isOpen={true}
+          onClose={() => setEditingConjugations(null)}
           onSave={handleSaveEdit}
         />
       )}
