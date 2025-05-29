@@ -88,6 +88,11 @@ export const fetchSuggestedWords = async ({
     });
 
     if (!response.ok) {
+      if (response.status === 401) {
+        throw new Error(
+          'Authentication failed. Please check your OpenRouter API key. It might be invalid, missing, or your credits might have run out.'
+        );
+      }
       throw new Error(`API request failed with status ${response.status}`);
     }
 

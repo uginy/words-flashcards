@@ -27,14 +27,22 @@ export async function retryWithBackoff<T>(
       if (lastError.name === 'AbortError') {
         throw lastError;
       }
-      
+
       // Don't retry on certain critical errors
-      if (lastError.message.includes('Authentication') ||
-          lastError.message.includes('API key') ||
-          lastError.message.includes('401')) {
-        throw lastError;
+      if (
+        lastError.message.includes('Authentication') ||
+        lastError.message.includes('API key') ||
+        /401/.test(lastError.message) // Check for 401 status code in the message
+      ) {
+        // Check if the error message indicates a 401 error specifically
+        if (/401/.test(lastError.message) || (lastError instanceof OpenAI.APIError && lastError.status === 401)) {
+          throw new Error(
+            'Authentication failed. Please check your OpenRouter API key. It might be invalid, missing, or your credits might have run out.'
+          );
+        }
+        throw lastError; // Re-throw other critical errors as is
       }
-      
+
       if (attempt < config.maxRetries) {
         const delay = Math.min(
           config.baseDelay * (config.backoffMultiplier ** attempt),

@@ -62,7 +62,7 @@ const WordInput: React.FC = () => {
     const model = localStorage.getItem('openRouterModel') || DEFAULT_OPENROUTER_MODEL;
     
     if (!apiKey || !model || apiKey === "YOUR_DEFAULT_API_KEY_HERE" || model === "YOUR_DEFAULT_MODEL_ID_HERE") {
-      setError('OpenRouter API key or model не настроены. Укажите их в Settings или пропишите значения по умолчанию.');
+      setError('OpenRouter API key or model не настроены. Укажите их в Settings.');
       return;
     }
 

@@ -66,6 +66,11 @@ Important:
       );
   } catch (error) {
     console.error('Translation error:', error);
+    if (error instanceof OpenAI.APIError && error.status === 401) {
+      throw new Error(
+        'Authentication failed. Please check your OpenRouter API key. It might be invalid, missing, or your credits might have run out.'
+      );
+    }
     throw error;
   }
 }
