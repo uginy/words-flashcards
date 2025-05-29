@@ -1,5 +1,5 @@
 import type { FC } from 'react';
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useMemo, useCallback } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import type { Word } from '../types';
 import { useWordsStore } from '../store/wordsStore';
@@ -48,27 +48,33 @@ const WordTable: FC<WordTableProps> = ({ onEditWord }) => {
   }, [allWords]);
 
   // Create a wrapper for toast with correct types
-  const toastWrapper = (opts: { title: string; description: string; variant?: string }) => {
+  const toastWrapper = useCallback((opts: { title: string; description: string; variant?: string }) => {
     toast({
       title: opts.title,
       description: opts.description,
       variant: opts.variant as "default" | "destructive" | undefined
     });
-  };
+  }, [toast]);
 
-  const columns = getColumns(
+  // Memoize refine function to prevent recreating on each render
+  const handleRefineWord = useCallback((id: string) => {
+    refineWord(id, toastWrapper);
+  }, [refineWord, toastWrapper]);
+
+  // Memoize columns to prevent table flickering
+  const columns = useMemo(() => getColumns(
     setEditingWord,
     markAsLearned,
     markAsNotLearned,
     deleteWord,
-    (id: string) => refineWord(id, toastWrapper),
+    handleRefineWord,
     refiningWords,
     setEditingConjugations,
     setEditingExamples
-  );
+  ), [markAsLearned, markAsNotLearned, deleteWord, handleRefineWord, refiningWords]);
 
   // Function to handle saving edited word
-  const handleSaveEdit = (editedWord: Word) => {
+  const handleSaveEdit = useCallback((editedWord: Word) => {
     console.log('🔍 DEBUG WordTable handleSaveEdit - editedWord:', editedWord);
     console.log('🔍 DEBUG WordTable handleSaveEdit - editedWord.conjugations:', editedWord.conjugations);
     const updatedWords = allWords.map(word =>
@@ -80,10 +86,10 @@ const WordTable: FC<WordTableProps> = ({ onEditWord }) => {
       onEditWord(editedWord);
     }
     toast({ title: "Успех", description: 'Слово успешно обновлено.' });
-  };
+  }, [allWords, replaceAllWords, onEditWord, toast]);
 
   // Function to handle word export
-  const handleExportWords = () => {
+  const handleExportWords = useCallback(() => {
     if (!allWords || allWords.length === 0) {
       toast({ title: "Информация", description: 'Нет слов для экспорта.' });
       return;
@@ -99,10 +105,10 @@ const WordTable: FC<WordTableProps> = ({ onEditWord }) => {
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
-  };
+  }, [allWords, toast]);
 
   // Function to handle word import
-  const handleImportWords = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImportWords = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
@@ -146,14 +152,13 @@ const WordTable: FC<WordTableProps> = ({ onEditWord }) => {
     };
 
     reader.readAsText(file);
-  };
+  }, [replaceAllWords, toast]);
 
-  const performClearAllWords = () => {
+  const performClearAllWords = useCallback(() => {
     clearAllWords();
     localStorage.removeItem('hebrew-flashcards-data');
     toast({ title: "Успех", description: 'Все слова удалены.' });
-  };
-console.log(new Date());
+  }, [clearAllWords, toast]);
 
   return (
     <div className="w-full min-w-0">

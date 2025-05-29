@@ -293,9 +293,17 @@ export const getColumns = (
     // },
     {
       id: "actions",
-      header: "Действия", cell: ({ row }) => {
+      header: "Действия",
+      cell: ({ row }) => {
         const word = row.original;
         const isRefining = refiningWords.has(word.id);
+        
+        const handleEditWord = () => setEditingWord(word);
+        const handleEditConjugations = setEditingConjugations ? () => setEditingConjugations(word) : undefined;
+        const handleEditExamples = setEditingExamples ? () => setEditingExamples(word) : undefined;
+        const handleRefineWord = () => refineWord(word.id);
+        const handleToggleLearned = () => word.isLearned ? markAsNotLearned(word.id) : markAsLearned(word.id);
+        const handleDeleteWord = () => deleteWord(word.id);
         
         return (
           <div className="flex justify-end gap-2">
@@ -306,7 +314,7 @@ export const getColumns = (
                     variant="ghost"
                     size="icon"
                     className="h-8 w-8"
-                    onClick={() => setEditingWord(word)}
+                    onClick={handleEditWord}
                   >
                     <Pen className="h-4 w-4" />
                   </Button>
@@ -316,14 +324,14 @@ export const getColumns = (
                 </TooltipContent>
               </Tooltip>
 
-              {word.category === "פועל" && setEditingConjugations && (
+              {word.category === "פועל" && handleEditConjugations && (
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <Button
                       variant="ghost"
                       size="icon"
                       className="h-8 w-8 text-blue-600 hover:text-blue-700"
-                      onClick={() => setEditingConjugations(word)}
+                      onClick={handleEditConjugations}
                     >
                       <Edit3 className="h-4 w-4" />
                     </Button>
@@ -334,14 +342,14 @@ export const getColumns = (
                 </Tooltip>
               )}
 
-              {setEditingExamples && (
+              {handleEditExamples && (
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <Button
                       variant="ghost"
                       size="icon"
                       className="h-8 w-8 text-green-600 hover:text-green-700"
-                      onClick={() => setEditingExamples(word)}
+                      onClick={handleEditExamples}
                     >
                       <FileText className="h-4 w-4" />
                     </Button>
@@ -358,7 +366,7 @@ export const getColumns = (
                     variant="ghost"
                     size="icon"
                     className={`h-8 w-8 ${isRefining ? 'text-orange-600 animate-spin' : 'text-purple-600 hover:text-purple-700'}`}
-                    onClick={() => refineWord(word.id)}
+                    onClick={handleRefineWord}
                     disabled={isRefining}
                   >
                     <RefreshCw className="h-4 w-4" />
@@ -375,7 +383,7 @@ export const getColumns = (
                     variant="ghost"
                     size="icon"
                     className={`h-8 w-8 ${word.isLearned ? 'text-blue-600' : 'text-green-600'}`}
-                    onClick={() => word.isLearned ? markAsNotLearned(word.id) : markAsLearned(word.id)}
+                    onClick={handleToggleLearned}
                   >
                     {word.isLearned ? <RotateCcw className="h-4 w-4" /> : <Check className="h-4 w-4" />}
                   </Button>
@@ -386,7 +394,7 @@ export const getColumns = (
               </Tooltip>
 
               <DeleteButton
-                onDelete={() => deleteWord(word.id)}
+                onDelete={handleDeleteWord}
                 tooltipText="Удалить"
                 dialogTitle="Удалить это слово?"
                 dialogDescription="Это действие нельзя отменить. Слово будет удалено из вашей коллекции."
