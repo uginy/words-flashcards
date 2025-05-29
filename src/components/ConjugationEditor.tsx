@@ -53,7 +53,7 @@ const ConjugationEditor = ({
   // Update local state when conjugations prop changes (but not from internal updates)
   useEffect(() => {
     if (!isInternalUpdate.current) {
-      console.log('🔍 DEBUG ConjugationEditor - External update, setting conjugations:', conjugations);
+      // console.log('🔍 DEBUG ConjugationEditor - External update, setting conjugations:', conjugations);
       setLocalConjugations(conjugations);
     }
     isInternalUpdate.current = false;

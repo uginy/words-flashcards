@@ -25,19 +25,19 @@ const ExamplesEditDialog = ({
   onSave,
 }: ExamplesEditDialogProps) => {
   const { toast } = useToast();
-  console.log('🔍 DEBUG ExamplesEditDialog - word.examples:', word.examples);
+  // console.log('🔍 DEBUG ExamplesEditDialog - word.examples:', word.examples);
 
   const [editedExamples, setEditedExamples] = useState<{ hebrew: string; russian: string }[] | null>(
     word.examples || null
   );
 
   useEffect(() => {
-    console.log('🔍 DEBUG ExamplesEditDialog - useEffect triggered, word.examples:', word.examples);
+    // console.log('🔍 DEBUG ExamplesEditDialog - useEffect triggered, word.examples:', word.examples);
     setEditedExamples(word.examples || null);
   }, [word]);
 
   const handleSave = () => {
-    console.log('🔍 DEBUG handleSave - editedExamples:', editedExamples);
+    // console.log('🔍 DEBUG handleSave - editedExamples:', editedExamples);
 
     // Проверяем, нет ли пустых примеров перед сохранением
     const hasEmptyExample = editedExamples?.some(
@@ -57,7 +57,7 @@ const ExamplesEditDialog = ({
       ...word,
       examples: editedExamples,
     };
-    console.log('🔍 DEBUG handleSave - updatedWord:', updatedWord);
+    // console.log('🔍 DEBUG handleSave - updatedWord:', updatedWord);
     onSave(updatedWord);
     onClose();
     

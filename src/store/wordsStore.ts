@@ -100,8 +100,6 @@ async function processWordsInBackground(
   set: (partial: Partial<WordsStore> | ((state: WordsStore) => Partial<WordsStore>)) => void,
   get: () => WordsStore
 ) {
-  console.log(`🚀 DEBUG: Starting processWordsInBackground for task ${taskId}`);
-  console.log(`📝 DEBUG: Input text length: ${inputText.length}`);
   
   try {
     // Update task status to running
@@ -112,7 +110,6 @@ async function processWordsInBackground(
       )
     }));
 
-    console.log(`✅ DEBUG: Task ${taskId} marked as running`);
 
     const apiKey = localStorage.getItem('openRouterApiKey') || DEFAULT_OPENROUTER_API_KEY;
     const model = localStorage.getItem('openRouterModel') || DEFAULT_OPENROUTER_MODEL;
@@ -127,7 +124,6 @@ async function processWordsInBackground(
     const currentState = get();
     const task = currentState.backgroundTasks.find(t => t.id === taskId);
     if (task?.cancelled) {
-      console.log(`🚫 DEBUG: Task ${taskId} was cancelled, stopping processing`);
       return;
     }
 
@@ -225,7 +221,6 @@ async function processWordsInBackground(
         const postTranslationState = get();
         const postTranslationTask = postTranslationState.backgroundTasks.find(t => t.id === taskId);
         if (postTranslationTask?.cancelled) {
-          console.log(`🚫 DEBUG: Task ${taskId} was cancelled after translation, stopping processing`);
           return;
         }
         
@@ -248,11 +243,11 @@ async function processWordsInBackground(
         }));
 
         // Continue processing with Hebrew words
-        console.log(`🔄 DEBUG: Processing translated Hebrew words (${translatedWords.length} words)`);
+        // console.log(`🔄 DEBUG: Processing translated Hebrew words (${translatedWords.length} words)`);
         await processHebrewWords(taskId, translatedWords, existingWords, apiKey, model, toast, set, get);
       } else {
         // Process Hebrew words directly
-        console.log(`🔄 DEBUG: Processing Hebrew words directly (${wordsToTranslate.length} words)`);
+        // console.log(`🔄 DEBUG: Processing Hebrew words directly (${wordsToTranslate.length} words)`);
         await processHebrewWords(taskId, wordsToTranslate, existingWords, apiKey, model, toast, set, get);
       }
     }
@@ -331,27 +326,23 @@ async function processHebrewWords(
   let allFailedWords: string[] = [];
   let processedCount = 0;
 
-  console.log(`🔄 DEBUG: Starting chunk processing for task ${taskId}`);
-  console.log(`📊 DEBUG: Total chunks to process: ${chunks.length}`);
-  console.log(`📝 DEBUG: Unique words: ${uniqueWords.length}, Total words: ${hebrewWords.length}`);
 
   for (let i = 0; i < chunks.length; i++) {
     // Check if task was cancelled before processing each chunk
     const taskState = get();
     const currentTask = taskState.backgroundTasks.find((t: BackgroundTask) => t.id === taskId);
     if (currentTask?.cancelled) {
-      console.log(`🚫 DEBUG: Task ${taskId} was cancelled, stopping chunk processing at chunk ${i + 1}`);
       return;
     }
 
     const chunk = chunks[i];
-    console.log(`🚀 DEBUG: Processing chunk ${i + 1}/${chunks.length} with ${chunk.length} words:`, chunk);
+    // console.log(`🚀 DEBUG: Processing chunk ${i + 1}/${chunks.length} with ${chunk.length} words:`, chunk);
     
     // Add progressive delay between chunks (2-5 seconds, increasing with chunk number)
     if (i > 0) {
       const delaySeconds = Math.min(2 + i * 0.5, 5); // Start at 2s, increase by 0.5s per chunk, max 5s
       const delayMs = delaySeconds * 1000;
-      console.log(`⏱️ DEBUG: Waiting ${delaySeconds}s before processing chunk ${i + 1}...`);
+      // console.log(`⏱️ DEBUG: Waiting ${delaySeconds}s before processing chunk ${i + 1}...`);
       
       // Check if cancelled during delay
       await new Promise<void>((resolve) => {
@@ -360,7 +351,7 @@ async function processHebrewWords(
           if (currentTaskState?.cancelled) {
             clearInterval(checkInterval);
             clearTimeout(delayTimeout);
-            console.log(`🚫 DEBUG: Task ${taskId} was cancelled during delay`);
+            // console.log(`🚫 DEBUG: Task ${taskId} was cancelled during delay`);
             return;
           }
         }, 100);
@@ -375,13 +366,13 @@ async function processHebrewWords(
       const finalTaskState = get();
       const finalCurrentTask = finalTaskState.backgroundTasks.find((t: BackgroundTask) => t.id === taskId);
       if (finalCurrentTask?.cancelled) {
-        console.log(`🚫 DEBUG: Task ${taskId} was cancelled after delay, stopping chunk processing at chunk ${i + 1}`);
+        // console.log(`🚫 DEBUG: Task ${taskId} was cancelled after delay, stopping chunk processing at chunk ${i + 1}`);
         return;
       }
     }
     
     try {
-      console.log(`⚡ DEBUG: Calling enrichWordsWithLLM for chunk ${i + 1}`);
+      // console.log(`⚡ DEBUG: Calling enrichWordsWithLLM for chunk ${i + 1}`);
       
       // Enhanced LLM enrichment options for better reliability
       const llmOptions = {
@@ -404,30 +395,30 @@ async function processHebrewWords(
         currentTask?.abortController,
         llmOptions
       );
-      console.log(`📥 DEBUG: LLM result for chunk ${i + 1}:`, result);
+      // console.log(`📥 DEBUG: LLM result for chunk ${i + 1}:`, result);
       
       const valid = validateLLMWordsResponse(result);
-      console.log(`✅ DEBUG: Valid words from chunk ${i + 1}: ${valid.length}`, valid.map(w => w.hebrew));
+      // console.log(`✅ DEBUG: Valid words from chunk ${i + 1}: ${valid.length}`, valid.map(w => w.hebrew));
       
       if (valid.length > 0) {
         allValidWords = allValidWords.concat(valid);
-        console.log(`📝 DEBUG: Total valid words so far: ${allValidWords.length}`);
+        // console.log(`📝 DEBUG: Total valid words so far: ${allValidWords.length}`);
         
         // Add words to store immediately
         set((state: WordsStore) => ({
           ...state,
           words: [...state.words, ...valid]
         }));
-        console.log(`💾 DEBUG: Added ${valid.length} words to store`);
+        // console.log(`💾 DEBUG: Added ${valid.length} words to store`);
       }
 
       // Track failed words in this chunk
       const chunkFailed = chunk.filter(w => !valid.some(v => v.hebrew === w));
       allFailedWords = allFailedWords.concat(chunkFailed);
-      console.log(`❌ DEBUG: Failed words from chunk ${i + 1}: ${chunkFailed.length}`, chunkFailed);
+      // console.log(`❌ DEBUG: Failed words from chunk ${i + 1}: ${chunkFailed.length}`, chunkFailed);
 
       processedCount += chunk.length;
-      console.log(`📊 DEBUG: Progress - processed: ${processedCount}/${uniqueWords.length}`);
+      // console.log(`📊 DEBUG: Progress - processed: ${processedCount}/${uniqueWords.length}`);
       
       // Update progress with detailed statistics
       set((state: WordsStore) => ({
@@ -451,7 +442,7 @@ async function processHebrewWords(
       
       // Check if this is an abort error
       if (err instanceof Error && err.name === 'AbortError') {
-        console.log(`🚫 DEBUG: Request aborted for chunk ${i + 1}, task ${taskId}`);
+        // console.log(`🚫 DEBUG: Request aborted for chunk ${i + 1}, task ${taskId}`);
         return; // Stop processing if request was aborted
       }
       
@@ -478,8 +469,8 @@ async function processHebrewWords(
     }
   }
 
-  console.log(`🏁 DEBUG: Chunk processing completed for task ${taskId}`);
-  console.log(`📊 DEBUG: Final stats - Valid: ${allValidWords.length}, Failed: ${allFailedWords.length}, Skipped: ${skippedCount}`);
+  // console.log(`🏁 DEBUG: Chunk processing completed for task ${taskId}`);
+  // console.log(`📊 DEBUG: Final stats - Valid: ${allValidWords.length}, Failed: ${allFailedWords.length}, Skipped: ${skippedCount}`);
 
   // Final task completion with full statistics
   set((state: WordsStore) => ({
@@ -502,7 +493,7 @@ async function processHebrewWords(
     )
   }));
 
-  console.log(`✅ DEBUG: Task ${taskId} marked as completed`);
+  // console.log(`✅ DEBUG: Task ${taskId} marked as completed`);
 
   // Show detailed completion message
   let message = `Добавлено: ${allValidWords.length}`;
@@ -789,8 +780,8 @@ export const useWordsStore = create<WordsStore>((set, get) => {
     },
 
     updateWord: updatedWord => {
-      console.log('🔍 DEBUG wordsStore updateWord - updatedWord:', updatedWord);
-      console.log('🔍 DEBUG wordsStore updateWord - updatedWord.conjugations:', updatedWord.conjugations);
+      // console.log('🔍 DEBUG wordsStore updateWord - updatedWord:', updatedWord);
+      // console.log('🔍 DEBUG wordsStore updateWord - updatedWord.conjugations:', updatedWord.conjugations);
       set(state => ({
         ...state,
         words: state.words.map(word => (word.id === updatedWord.id ? updatedWord : word)),
@@ -809,8 +800,8 @@ export const useWordsStore = create<WordsStore>((set, get) => {
     },
 
     replaceAllWords: (newWords, toast) => {
-      console.log('🔍 DEBUG wordsStore replaceAllWords - newWords:', newWords);
-      console.log('🔍 DEBUG wordsStore replaceAllWords - word with conjugations:', newWords.find(w => w.conjugations));
+      // console.log('🔍 DEBUG wordsStore replaceAllWords - newWords:', newWords);
+      // console.log('🔍 DEBUG wordsStore replaceAllWords - word with conjugations:', newWords.find(w => w.conjugations));
       set(() => {
         const newCurrentIndex = newWords.length > 0 ? 0 : 0;
         if (newWords.length === 0) {

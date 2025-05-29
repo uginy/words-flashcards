@@ -78,12 +78,9 @@ const WordTable: FC<WordTableProps> = ({ onEditWord }) => {
 
   // Function to handle saving edited word
   const handleSaveEdit = useCallback((editedWord: Word) => {
-    console.log('🔍 DEBUG WordTable handleSaveEdit - editedWord:', editedWord);
-    console.log('🔍 DEBUG WordTable handleSaveEdit - editedWord.conjugations:', editedWord.conjugations);
     const updatedWords = allWords.map(word =>
       word.id === editedWord.id ? editedWord : word
     );
-    console.log('🔍 DEBUG WordTable handleSaveEdit - calling replaceAllWords with:', updatedWords.find(w => w.id === editedWord.id));
     replaceAllWords(updatedWords);
     if (onEditWord) {
       onEditWord(editedWord);
@@ -140,12 +137,11 @@ const WordTable: FC<WordTableProps> = ({ onEditWord }) => {
           title: "Успех", 
           description: `Импортировано ${parsedWords.length} слов!`
         });
-      } catch (error) {
-        console.error("Ошибка при импорте слов:", error);
-        toast({ 
-          title: "Ошибка", 
+      } catch {
+        toast({
+          title: "Ошибка",
           description: 'Ошибка при парсинге JSON. Проверьте формат файла.',
-          variant: "destructive" 
+          variant: "destructive"
         });
       } finally {
         if (event.target) {
@@ -254,7 +250,7 @@ const WordTable: FC<WordTableProps> = ({ onEditWord }) => {
             </div>
           </div>
 
-          <div className="h-[78vh] min-h-[400px]">
+          <div className="h-[70vh] min-h-[400px]">
             <DataTable
               columns={columns}
               data={allWords}

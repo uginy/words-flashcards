@@ -65,7 +65,7 @@ export async function enrichWordsWithLLM(
       "devstral", // Mistral Devstral series
     ];
     effectiveModelSupportsTools = knownToolSupportingModelPatterns.some(name => modelIdentifier.toLowerCase().includes(name));
-    console.log(`Model "${modelIdentifier}" determined to ${effectiveModelSupportsTools ? 'support' : 'not support'} tools based on heuristic.`);
+    // console.log(`Model "${modelIdentifier}" determined to ${effectiveModelSupportsTools ? 'support' : 'not support'} tools based on heuristic.`);
   }
 
   const userContent = `Process the following Hebrew words/phrases: ${hebrewWords.join(', ')}`;
@@ -353,7 +353,7 @@ export async function enrichWordsWithLLM(
     // Check if this is an abort error
     if (error instanceof Error && error.name === 'AbortError') {
       logger('Request was aborted by user');
-      console.log('Request was aborted by user');
+      // console.log('Request was aborted by user');
       throw error; // Re-throw abort errors to be handled by the caller
     }
 

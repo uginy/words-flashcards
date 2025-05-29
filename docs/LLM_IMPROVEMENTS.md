@@ -110,7 +110,7 @@ const logger = (message: string) => {
 if (i > 0) {
   const delaySeconds = Math.min(2 + i * 0.5, 5); // Start at 2s, increase by 0.5s per chunk, max 5s
   const delayMs = delaySeconds * 1000;
-  console.log(`⏱️ DEBUG: Waiting ${delaySeconds}s before processing chunk ${i + 1}...`);
+  // console.log(`⏱️ DEBUG: Waiting ${delaySeconds}s before processing chunk ${i + 1}...`);
   
   // Cancellation-aware delay
   await new Promise<void>((resolve) => {
