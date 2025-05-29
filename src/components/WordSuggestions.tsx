@@ -3,7 +3,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { useToast } from '../hooks/use-toast';
-import { fetchSuggestedWords } from '../services/wordSuggestions';
+import { fetchSuggestedWords } from '../services/openrouter';
 import { useWordsStore } from '../store/wordsStore';
 
 interface WordSuggestionsProps {

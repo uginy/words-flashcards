@@ -4,8 +4,7 @@ import { create } from 'zustand';
 import type { Word, WordsState, BackgroundTask } from '../types';
 import { saveToLocalStorage, loadFromLocalStorage } from '../utils/storage';
 import { parseAndTranslateWords } from '../utils/translation';
-import { enrichWordsWithLLM, refineWordWithLLM } from '../services/openrouter';
-import { translateToHebrew } from '../services/translation';
+import { enrichWordsWithLLM, refineWordWithLLM, translateToHebrew } from '../services/openrouter';
 import { DEFAULT_OPENROUTER_API_KEY, DEFAULT_OPENROUTER_MODEL } from '../config/openrouter';
 
 const initialState: WordsState = {

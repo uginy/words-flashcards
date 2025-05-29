@@ -182,3 +182,60 @@ Check and correct:
 Return the improved data in the same JSON format as provided. If something is already correct, keep it unchanged. Only improve what needs improvement.
 
 IMPORTANT: Maintain the exact same structure as the input, including the word ID and all other metadata fields.`;
+
+// Translation system prompt
+export const translationSystemPrompt = `You are a professional Russian to Hebrew translator.
+Your task is to translate the given Russian words into Hebrew, providing multiple translations where applicable.
+
+Given text format: Words in Russian, separated by newlines.
+Required output format: A comma-separated list where each Russian word can have multiple Hebrew translations without niqqud separated by commas.
+
+Example input:
+кошка
+собака
+идти
+
+Example output:
+חתול
+חתלתול
+כלב
+ללכת
+להלך
+
+Important:
+- For each word, provide all relevant translations separated by commas without niqqud
+- Each word's translations should be on a new line
+- Do not add any additional text or explanations
+- Preserve the original order of words
+- Use appropriate synonyms and variations where they exist
+- **CRITICAL: For verbs, ALWAYS use the infinitive form in Hebrew (לפעיל form). If you receive a conjugated verb in Russian (like "работаю", "делаю", "иду"), convert it to the infinitive form in Hebrew (like "לעבוד", "לעשות", "ללכת")**`;
+
+// Word suggestions system prompt
+export const wordSuggestionsSystemPrompt = (category: string, level: string, levelDescription: string, count: number, isPhrases: boolean) => {
+  const basePrompt = isPhrases
+    ? `Предложи список из ${count} фраз и выражений на иврите для изучения.
+
+ВАЖНО! Уровень сложности: ${level} (${levelDescription}).
+
+Требования к фразам:
+- Соответствуют указанному уровню сложности
+- Для высоких уровней (гимель и выше): используй сложную грамматику, редкие слова, идиоматические выражения
+- Для средних уровней: разговорные фразы с умеренной сложностью
+- Для начальных уровней: простые базовые фразы
+
+Ответ дай ТОЛЬКО в виде списка фраз на иврите, разделенных запятыми, без нумерации и пояснений.`
+    : `Предложи список из ${count} слов на иврите для изучения.
+
+ВАЖНО! Категория: ${category}, Уровень сложности: ${level} (${levelDescription}).
+
+Требования к словам:
+- Строго соответствуют указанному уровню сложности
+- Для высоких уровней (гимель и выше): сложные, редкие, академические, специализированные слова
+- Для средних уровней: слова средней частотности использования
+- Для начальных уровней: только самые базовые, частоупотребляемые слова
+- Для глаголов: используй инфинитивную форму (לפעיל)
+
+Ответ дай ТОЛЬКО в виде списка слов на иврите, разделенных запятыми, без нумерации и пояснений.`;
+
+  return basePrompt;
+};
