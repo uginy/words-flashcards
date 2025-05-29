@@ -254,49 +254,51 @@ const WordTable: FC<WordTableProps> = ({ onEditWord }) => {
             </div>
           </div>
 
-          <DataTable
-            columns={columns}
-            data={allWords}
-            searchable
-            searchColumns={[
-              { id: "hebrew", placeholder: "Поиск на иврите..." },
-              { id: "russian", placeholder: "Поиск по переводу..." }
-            ]}
-            paginated
-            filters={[
-              {
-                id: "category",
-                label: "Категории",
-                options: [
-                  { label: "Глагол", value: "פועל" },
-                  { label: "Существительное", value: "שם עצם" },
-                  { label: "Прилагательное", value: "שם תואר" },
-                  { label: "Фразы", value: "פרזות" },
-                ]
-              },
-              {
-                id: "isLearned",
-                label: "Статус",
-                options: [
-                  { label: "Изучено", value: true },
-                  { label: "Не изучено", value: false },
-                ]
-              },
-              {
-                id: "learningStage",
-                label: "Уровень",
-                options: [
-                  { label: "Уровень 5", value: "5" },
-                  { label: "Уровень 4", value: "4" },
-                  { label: "Уровень 3", value: "3" },
-                  { label: "Уровень 2", value: "2" },
-                  { label: "Уровень 1", value: "1" },
-                  { label: "Не начато", value: "0" },
-                ]
-              }
-            ]}
-            onFilteredRowCountChange={setFilteredWordCount}
-          />
+          <div className="h-[70vh] min-h-[400px]">
+            <DataTable
+              columns={columns}
+              data={allWords}
+              searchable
+              searchColumns={[
+                { id: "hebrew", placeholder: "Поиск на иврите..." },
+                { id: "russian", placeholder: "Поиск по переводу..." }
+              ]}
+              paginated
+              filters={[
+                {
+                  id: "category",
+                  label: "Категории",
+                  options: [
+                    { label: "Глагол", value: "פועל" },
+                    { label: "Существительное", value: "שם עצם" },
+                    { label: "Прилагательное", value: "שם תואר" },
+                    { label: "Фразы", value: "פרזות" },
+                  ]
+                },
+                {
+                  id: "isLearned",
+                  label: "Статус",
+                  options: [
+                    { label: "Изучено", value: true },
+                    { label: "Не изучено", value: false },
+                  ]
+                },
+                {
+                  id: "learningStage",
+                  label: "Уровень",
+                  options: [
+                    { label: "Уровень 5", value: "5" },
+                    { label: "Уровень 4", value: "4" },
+                    { label: "Уровень 3", value: "3" },
+                    { label: "Уровень 2", value: "2" },
+                    { label: "Уровень 1", value: "1" },
+                    { label: "Не начато", value: "0" },
+                  ]
+                }
+              ]}
+              onFilteredRowCountChange={setFilteredWordCount}
+            />
+          </div>
         </div>
       </div>
     </div>
