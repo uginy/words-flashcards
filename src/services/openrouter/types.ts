@@ -38,4 +38,5 @@ export interface LLMBatchResponseItem {
   examples?: { hebrew: string; russian: string }[] | null;
 }
 
+// biome-ignore lint/style/useExportType: <explanation>
 export { Word, WordCategory };
