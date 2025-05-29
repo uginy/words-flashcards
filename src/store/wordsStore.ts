@@ -1045,10 +1045,10 @@ export function getCurrentWord(words: Word[], currentIndex: number): Word | unde
 
 // Auto-save to localStorage on every change
 useWordsStore.subscribe(state => {
-  console.log('🔍 DEBUG localStorage subscribe - saving state to localStorage');
-  console.log('🔍 DEBUG localStorage subscribe - words with conjugations:', state.words.filter(w => w.conjugations));
+  // console.log('🔍 DEBUG localStorage subscribe - saving state to localStorage');
+  // console.log('🔍 DEBUG localStorage subscribe - words with conjugations:', state.words.filter(w => w.conjugations));
   if (state.words.length > 0 || state.currentIndex !== 0) {
     saveToLocalStorage({ words: state.words, currentIndex: state.currentIndex });
-    console.log('🔍 DEBUG localStorage subscribe - saved to localStorage');
+    // console.log('🔍 DEBUG localStorage subscribe - saved to localStorage');
   }
 });

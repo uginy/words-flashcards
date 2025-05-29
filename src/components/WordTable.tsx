@@ -153,6 +153,7 @@ const WordTable: FC<WordTableProps> = ({ onEditWord }) => {
     localStorage.removeItem('hebrew-flashcards-data');
     toast({ title: "Успех", description: 'Все слова удалены.' });
   };
+console.log(new Date());
 
   return (
     <div className="w-full min-w-0">
