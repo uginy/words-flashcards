@@ -61,6 +61,9 @@ const WordTable: FC<WordTableProps> = ({ onEditWord }) => {
     refineWord(id, toastWrapper);
   }, [refineWord, toastWrapper]);
 
+  // Create a stable function to check if word is refining
+  const isWordRefining = useCallback((id: string) => refiningWords.has(id), [refiningWords]);
+
   // Memoize columns to prevent table flickering
   const columns = useMemo(() => getColumns(
     setEditingWord,
@@ -68,10 +71,10 @@ const WordTable: FC<WordTableProps> = ({ onEditWord }) => {
     markAsNotLearned,
     deleteWord,
     handleRefineWord,
-    refiningWords,
+    isWordRefining,
     setEditingConjugations,
     setEditingExamples
-  ), [markAsLearned, markAsNotLearned, deleteWord, handleRefineWord, refiningWords]);
+  ), [markAsLearned, markAsNotLearned, deleteWord, handleRefineWord, isWordRefining]);
 
   // Function to handle saving edited word
   const handleSaveEdit = useCallback((editedWord: Word) => {

@@ -23,7 +23,7 @@ export const getColumns = (
   markAsNotLearned: (id: string) => void,
   deleteWord: (id: string) => void,
   refineWord: (id: string) => void,
-  refiningWords: Set<string>,
+  isWordRefining: (id: string) => boolean,
   setEditingConjugations?: (word: Word) => void,
   setEditingExamples?: (word: Word) => void,
 ): ColumnDef<Word>[] => [
@@ -296,7 +296,7 @@ export const getColumns = (
       header: "Действия",
       cell: ({ row }) => {
         const word = row.original;
-        const isRefining = refiningWords.has(word.id);
+        const isRefining = isWordRefining(word.id);
         
         const handleEditWord = () => setEditingWord(word);
         const handleEditConjugations = setEditingConjugations ? () => setEditingConjugations(word) : undefined;
