@@ -153,7 +153,7 @@ const Settings: React.FC = () => {
               <SelectValue placeholder="Выберите количество записей" />
             </SelectTrigger>
             <SelectContent>
-              {[5, 10, 20, 30, 50].map((size) => (
+              {[5, 10, 20, 30, 50, 100, 150, 200].map((size) => (
                 <SelectItem key={size} value={size.toString()}>
                   {size} записей
                 </SelectItem>

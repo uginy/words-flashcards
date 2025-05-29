@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import { enrichWordsWithLLM } from '../src/services/openrouter.js';
+import { enrichWordsWithLLM } from '../src/services/openrouter/index.js';
 import { DEFAULT_OPENROUTER_API_KEY } from '../src/config/openrouter.js';
 import type { Word } from '../src/types/index.js';
 import * as fs from 'fs';

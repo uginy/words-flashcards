@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import { enrichWordsWithLLM } from '../src/services/openrouter.ts';
+import { enrichWordsWithLLM } from '../src/services/openrouter/index.ts';
 import { DEFAULT_OPENROUTER_API_KEY, DEFAULT_OPENROUTER_MODEL } from '../src/config/openrouter.ts';
 import type { Word } from '../src/types/index.ts';
 
