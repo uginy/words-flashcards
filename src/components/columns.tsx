@@ -29,6 +29,7 @@ export const getColumns = (
 ): ColumnDef<Word>[] => [
     {
       accessorKey: "hebrew",
+      size: 180,
       header: ({ column }) => (
         <Button
           variant="ghost"
@@ -54,6 +55,7 @@ export const getColumns = (
     },
     {
       accessorKey: "russian",
+      size: 200,
       header: ({ column }) => (
         <Button
           variant="ghost"
@@ -68,6 +70,7 @@ export const getColumns = (
     },
     {
       accessorKey: "transcription",
+      size: 160,
       header: ({ column }) => (
         <Button
           variant="ghost"
@@ -81,6 +84,7 @@ export const getColumns = (
     },
     {
       accessorKey: "examples",
+      size: 100,
       header: ({ column }) => (
         <Button
           variant="ghost"
@@ -137,6 +141,7 @@ export const getColumns = (
     },
     {
       accessorKey: "conjugations",
+      size: 120,
       header: ({ column }) => (
         <Button
           variant="ghost"
@@ -180,6 +185,7 @@ export const getColumns = (
     },
     {
       accessorKey: "category",
+      size: 130,
       header: ({ column }) => (
         <Button
           variant="ghost"
@@ -206,6 +212,7 @@ export const getColumns = (
     },
     {
       accessorKey: "isLearned",
+      size: 120,
       header: ({ column }) => (
         <Button
           variant="ghost"
@@ -229,6 +236,7 @@ export const getColumns = (
     },
     {
       accessorKey: "learningStage",
+      size: 100,
       header: ({ column }) => (
         <Button
           variant="ghost"
@@ -257,6 +265,7 @@ export const getColumns = (
     },
     {
       accessorKey: "dateAdded",
+      size: 120,
       header: ({ column }) => (
         <Button
           variant="ghost"
@@ -293,6 +302,7 @@ export const getColumns = (
     // },
     {
       id: "actions",
+      size: 120,
       header: "Действия",
       cell: ({ row }) => {
         const word = row.original;

@@ -150,57 +150,78 @@ export function DataTable<TData, TValue>({
         )}
       </div>
 
-      {/* Scrollable table content */}
-      <div className="flex-1 min-h-0 rounded-md border w-full overflow-auto">
-        <Table className="w-full">
-          <TableHeader className="sticky top-0 z-20 bg-white">
-            {table.getHeaderGroups().map((headerGroup) => (
-              <TableRow key={headerGroup.id}>
-                {headerGroup.headers.map((header) => {
-                  return (
-                    <TableHead key={header.id} className="bg-gray-50">
-                      {header.isPlaceholder
-                        ? null
-                        : flexRender(
-                            header.column.columnDef.header,
-                            header.getContext()
-                          )}
-                    </TableHead>
-                  );
-                })}
-              </TableRow>
-            ))}
-          </TableHeader>
-          <TableBody>
-            {table.getRowModel().rows?.length ? (
-              table.getRowModel().rows.map((row) => (
-                <TableRow
-                  key={row.id}
-                  data-state={row.getIsSelected() && "selected"}
-                  className="hover:bg-gray-50"
-                >
-                  {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id}>
-                      {flexRender(
-                        cell.column.columnDef.cell,
-                        cell.getContext()
-                      )}
-                    </TableCell>
-                  ))}
+      {/* Table with sticky header */}
+      <div className="flex-1 min-h-0 rounded-md border w-full overflow-hidden flex flex-col">
+        {/* Sticky table header */}
+        <div className="sticky top-0 z-20 bg-white border-b">
+          <Table className="w-full table-fixed">
+            <TableHeader>
+              {table.getHeaderGroups().map((headerGroup) => (
+                <TableRow key={headerGroup.id}>
+                  {headerGroup.headers.map((header) => {
+                    return (
+                      <TableHead
+                        key={header.id}
+                        className="bg-gray-50"
+                        style={{ width: header.getSize() !== 150 ? `${header.getSize()}px` : 'auto' }}
+                      >
+                        {header.isPlaceholder
+                          ? null
+                          : flexRender(
+                              header.column.columnDef.header,
+                              header.getContext()
+                            )}
+                      </TableHead>
+                    );
+                  })}
                 </TableRow>
-              ))
-            ) : (
-              <TableRow>
-                <TableCell
-                  colSpan={columns.length}
-                  className="h-24 text-center"
-                >
-                  Нет данных
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
+              ))}
+            </TableHeader>
+          </Table>
+        </div>
+
+        {/* Scrollable table body */}
+        <div className="flex-1 overflow-auto">
+          <Table className="w-full table-fixed">
+            <colgroup>
+              {table.getHeaderGroups()[0]?.headers.map((header) => (
+                <col
+                  key={header.id}
+                  style={{ width: header.getSize() !== 150 ? `${header.getSize()}px` : 'auto' }}
+                />
+              ))}
+            </colgroup>
+            <TableBody>
+              {table.getRowModel().rows?.length ? (
+                table.getRowModel().rows.map((row) => (
+                  <TableRow
+                    key={row.id}
+                    data-state={row.getIsSelected() && "selected"}
+                    className="hover:bg-gray-50"
+                  >
+                    {row.getVisibleCells().map((cell) => (
+                      <TableCell key={cell.id}>
+                        {flexRender(
+                          cell.column.columnDef.cell,
+                          cell.getContext()
+                        )}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell
+                    colSpan={columns.length}
+                    className="h-24 text-center"
+                  >
+                    Нет данных
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </div>
       </div>
 
       {/* Sticky footer with pagination */}
