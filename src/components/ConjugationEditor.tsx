@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 
 interface ConjugationEditorProps {
   conjugations: {
@@ -28,6 +28,14 @@ const pronouns = [
   { key: 'הן', hebrew: 'הן', name: 'они (ж.р.)' },
 ];
 
+// Imperative pronouns (only second person)
+const imperativePronouns = [
+  { key: 'אתה', hebrew: 'אתה', name: 'ты (м.р.)' },
+  { key: 'את', hebrew: 'את', name: 'ты (ж.р.)' },
+  { key: 'אתם', hebrew: 'אתם', name: 'вы (м.р.)' },
+  { key: 'אתן', hebrew: 'אתן', name: 'вы (ж.р.)' },
+];
+
 const tenses = [
   { key: 'past', title: 'Прошедшее время' },
   { key: 'present', title: 'Настоящее время' },
@@ -35,18 +43,23 @@ const tenses = [
   { key: 'imperative', title: 'Повелительное наклонение' },
 ];
 
-const ConjugationEditor: React.FC<ConjugationEditorProps> = ({
+const ConjugationEditor = ({
   conjugations,
   onConjugationsChange,
-}) => {
+}: ConjugationEditorProps) => {
   const [localConjugations, setLocalConjugations] = useState(conjugations);
+  const isInternalUpdate = useRef(false);
 
-  // Update local state when conjugations prop changes
+  // Update local state when conjugations prop changes (but not from internal updates)
   useEffect(() => {
-    // console.log('🔍 DEBUG ConjugationEditor - useEffect triggered, setting conjugations:', conjugations);
-    setLocalConjugations(conjugations);
+    if (!isInternalUpdate.current) {
+      console.log('🔍 DEBUG ConjugationEditor - External update, setting conjugations:', conjugations);
+      setLocalConjugations(conjugations);
+    }
+    isInternalUpdate.current = false;
   }, [conjugations]);
-  const handleConjugationChange = (
+
+  const handleConjugationChange = useCallback((
     tense: string,
     pronounKey: string,
     value: string
@@ -70,31 +83,27 @@ const ConjugationEditor: React.FC<ConjugationEditorProps> = ({
     };
 
     // Clean up null tenses
-    Object.keys(updatedConjugations).forEach(key => {
+    for (const key of Object.keys(updatedConjugations)) {
       if (updatedConjugations[key as keyof typeof updatedConjugations] === null) {
         delete updatedConjugations[key as keyof typeof updatedConjugations];
       }
-    });
+    }
 
     const finalConjugations = Object.keys(updatedConjugations).length > 0 ? updatedConjugations : null;
     
+    // Mark as internal update to prevent useEffect loop
+    isInternalUpdate.current = true;
     setLocalConjugations(finalConjugations);
     onConjugationsChange(finalConjugations);
-  };
+  }, [localConjugations, onConjugationsChange]);
 
-  const getConjugationValue = (tense: string, pronounKey: string): string => {
-    // console.log(`🔍 DEBUG getConjugationValue - tense: ${tense}, pronounKey: ${pronounKey}`, {
-    //   localConjugations,
-    //   tenseConjugations: localConjugations?.[tense as keyof typeof localConjugations],
-    //   value: localConjugations?.[tense as keyof typeof localConjugations]?.[pronounKey]
-    // });
-    
+  const getConjugationValue = useCallback((tense: string, pronounKey: string): string => {
     if (!localConjugations || !localConjugations[tense as keyof typeof localConjugations]) {
       return '';
     }
     const tenseConjugations = localConjugations[tense as keyof typeof localConjugations];
     return tenseConjugations?.[pronounKey] || '';
-  };
+  }, [localConjugations]);
 
   return (
     <div className="space-y-6">
@@ -104,7 +113,7 @@ const ConjugationEditor: React.FC<ConjugationEditorProps> = ({
             {tense.title}
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            {pronouns.map((pronoun) => (
+            {(tense.key === 'imperative' ? imperativePronouns : pronouns).map((pronoun) => (
               <div key={pronoun.key} className="flex items-center gap-3">
                 <div className="flex items-center gap-2 min-w-[120px]">
                   <span className="text-sm font-medium text-gray-600 text-right" dir="rtl">
