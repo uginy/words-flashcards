@@ -11,7 +11,7 @@ const ConjugationDisplay: React.FC<ConjugationDisplayProps> = ({ conjugations })
     past: 'Прошедшее время',
     present: 'Настоящее время',
     future: 'Будущее время',
-    imperative: 'Повелительное наклонение'
+    imperative: 'Повелительное'
   };
 
   return (
@@ -22,7 +22,7 @@ const ConjugationDisplay: React.FC<ConjugationDisplayProps> = ({ conjugations })
 
           return (
             <div key={tense} className="border rounded-lg p-4 bg-muted/50">
-              <div className="font-medium mb-3 text-base text-foreground/90 border-b pb-2">
+              <div className="font-medium mb-3 text-base text-foreground/90 border-b pb-2 text-nowrap">
                 {sections[tense]}
               </div>
               <div className="space-y-2.5">
