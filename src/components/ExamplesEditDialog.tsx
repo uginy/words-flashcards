@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { Word } from '@/types';
+import type { Word } from '@/types';
+import { useToast } from '@/hooks/use-toast';
 import {
   Dialog,
   DialogContent,
@@ -23,6 +24,7 @@ const ExamplesEditDialog = ({
   onClose,
   onSave,
 }: ExamplesEditDialogProps) => {
+  const { toast } = useToast();
   console.log('🔍 DEBUG ExamplesEditDialog - word.examples:', word.examples);
 
   const [editedExamples, setEditedExamples] = useState<{ hebrew: string; russian: string }[] | null>(
@@ -36,6 +38,21 @@ const ExamplesEditDialog = ({
 
   const handleSave = () => {
     console.log('🔍 DEBUG handleSave - editedExamples:', editedExamples);
+
+    // Проверяем, нет ли пустых примеров перед сохранением
+    const hasEmptyExample = editedExamples?.some(
+      example => !example.hebrew.trim() || !example.russian.trim()
+    );
+
+    if (hasEmptyExample) {
+      toast({
+        title: "Ошибка",
+        description: "Заполните или удалите пустые примеры перед сохранением",
+        variant: "destructive"
+      });
+      return;
+    }
+
     const updatedWord = {
       ...word,
       examples: editedExamples,
@@ -43,6 +60,11 @@ const ExamplesEditDialog = ({
     console.log('🔍 DEBUG handleSave - updatedWord:', updatedWord);
     onSave(updatedWord);
     onClose();
+    
+    toast({
+      title: "Успех",
+      description: "Примеры успешно сохранены"
+    });
   };
 
   const handleExamplesChange = (examples: { hebrew: string; russian: string }[] | null) => {
@@ -69,12 +91,14 @@ const ExamplesEditDialog = ({
         </div>
         <DialogFooter>
           <button
+            type="button"
             className="px-4 py-2 text-white bg-gray-500 rounded hover:bg-gray-600"
             onClick={onClose}
           >
             Отмена
           </button>
           <button
+            type="button"
             className="px-4 py-2 text-white bg-blue-500 rounded hover:bg-blue-600 ml-2"
             onClick={handleSave}
           >

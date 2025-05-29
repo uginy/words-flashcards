@@ -41,7 +41,7 @@ const Layout: React.FC<LayoutProps> = ({
       </header>
 
       <main className="flex-1 overflow-y-auto px-4 sm:px-6 lg:px-8 py-6">
-        <div className="max-w-7xl mx-auto">
+        <div className="max-w-full mx-auto">
           {children}
         </div>
       </main>

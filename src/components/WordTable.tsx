@@ -5,6 +5,7 @@ import type { Word } from '../types';
 import { useWordsStore } from '../store/wordsStore';
 import EditWordDialog from './EditWordDialog';
 import ConjugationEditDialog from './ConjugationEditDialog';
+import ExamplesEditDialog from './ExamplesEditDialog';
 import { DataTable } from './DataTable';
 import { getColumns } from './columns';
 import { Download, Upload } from 'lucide-react';
@@ -38,6 +39,7 @@ const WordTable: FC<WordTableProps> = ({ onEditWord }) => {
   const { toast } = useToast();
   const [editingWord, setEditingWord] = useState<Word | null>(null);
   const [editingConjugations, setEditingConjugations] = useState<Word | null>(null);
+  const [editingExamples, setEditingExamples] = useState<Word | null>(null);
   const [filteredWordCount, setFilteredWordCount] = useState<number>(allWords.length);
 
   // Update filteredWordCount when allWords changes
@@ -61,7 +63,8 @@ const WordTable: FC<WordTableProps> = ({ onEditWord }) => {
     deleteWord,
     (id: string) => refineWord(id, toastWrapper),
     refiningWords,
-    setEditingConjugations
+    setEditingConjugations,
+    setEditingExamples
   );
 
   // Function to handle saving edited word
@@ -167,6 +170,15 @@ const WordTable: FC<WordTableProps> = ({ onEditWord }) => {
           word={editingConjugations}
           isOpen={true}
           onClose={() => setEditingConjugations(null)}
+          onSave={handleSaveEdit}
+        />
+      )}
+
+      {editingExamples && (
+        <ExamplesEditDialog
+          word={editingExamples}
+          isOpen={true}
+          onClose={() => setEditingExamples(null)}
           onSave={handleSaveEdit}
         />
       )}
