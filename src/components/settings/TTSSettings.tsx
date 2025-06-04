@@ -85,7 +85,11 @@ export function TTSSettings() {
 
   const clearCache = () => {
     const ttsManager = getTTSManager();
+    const stats = ttsManager.getCacheStats();
     ttsManager.clearCache();
+    
+    setTestMessage(`✅ Cache cleared! Removed ${stats.size} cached audio files.`);
+    setTimeout(() => setTestMessage(''), 3000);
   };
 
   return (
