@@ -259,7 +259,12 @@ export const DialogGenerator: React.FC<DialogGeneratorProps> = ({ className }) =
               onChange={(e) => setIncludeNewWords(e.target.checked)}
               className="rounded"
             />
-            <span className="text-sm">Включать новые слова</span>
+            <div className="flex flex-col">
+              <span className="text-sm">Включать новые слова</span>
+              <span className="text-xs text-muted-foreground">
+                Если включено, ИИ может использовать новые слова, которых нет в вашей коллекции
+              </span>
+            </div>
           </label>
         </div>
 

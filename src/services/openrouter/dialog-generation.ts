@@ -130,17 +130,29 @@ function transformToDialog(dialogData: unknown, settings: DialogGenerationSettin
   // Generate unique ID
   const dialogId = `dialog_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 
-  // Transform cards
+  // Create name-to-ID mapping for participants
+  const participantNameToId = new Map<string, string>();
+  settings.participants.forEach(participant => {
+    participantNameToId.set(participant.name, participant.id);
+  });
+
+  // Transform cards and map speaker names to IDs
   const dialogCards: DialogCard[] = cards.map((card, index: number) => {
     if (!card.hebrew || !card.russian || !card.speaker) {
       throw new Error(`Invalid card data at index ${index}`);
+    }
+
+    // Map speaker name to participant ID
+    const speakerId = participantNameToId.get(card.speaker);
+    if (!speakerId) {
+      throw new Error(`Unknown speaker "${card.speaker}" in card ${index + 1}. Available participants: ${settings.participants.map(p => p.name).join(', ')}`);
     }
 
     return {
       id: `card_${dialogId}_${index}`,
       hebrew: card.hebrew,
       russian: card.russian,
-      speaker: card.speaker,
+      speaker: speakerId,
       order: card.order ?? index
     };
   });
