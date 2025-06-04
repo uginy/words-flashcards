@@ -19,11 +19,14 @@ const PARTICIPANT_NAMES = {
   female: ['שרה', 'רחל', 'מרים', 'לאה', 'דינה']
 };
 
+type ViewMode = 'list' | 'generator' | 'study';
+
 interface DialogGeneratorProps {
   className?: string;
+  setViewMode: (_k: ViewMode) => void;
 }
 
-export const DialogGenerator: React.FC<DialogGeneratorProps> = ({ className }) => {
+export const DialogGenerator: React.FC<DialogGeneratorProps> = ({ className, setViewMode }) => {
   const { words } = useWordsStore();
   const { generateDialog, isBackgroundProcessing } = useDialogsStore();
   const { toast } = useToast();
@@ -134,6 +137,7 @@ export const DialogGenerator: React.FC<DialogGeneratorProps> = ({ className }) =
 
     try {
       await generateDialog(settings, toast);
+      setViewMode('list')
     } catch (error) {
       console.error('Dialog generation error:', error);
     }
