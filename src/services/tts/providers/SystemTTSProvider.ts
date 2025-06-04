@@ -44,9 +44,14 @@ export class SystemTTSProvider implements TTSProvider {
       utterance.onerror = (event) => {
         this.currentUtterance = null;
         if (event.error === 'not-allowed') {
-          reject(new Error('Speech synthesis requires user interaction. Please click on the page first.'));
+          console.warn('Speech synthesis autoplay prevented - user interaction required');
+          resolve(); // Don't treat autoplay prevention as an error
+        } else if (event.error === 'interrupted') {
+          console.warn('Speech synthesis interrupted');
+          resolve(); // Don't treat interruption as an error
         } else {
-          reject(new Error(`Speech synthesis error: ${event.error}`));
+          console.warn(`Speech synthesis error: ${event.error}`);
+          resolve(); // Be more tolerant of speech errors
         }
       };
 

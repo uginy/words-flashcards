@@ -4,6 +4,7 @@ import CompactConjugation from './CompactConjugation';
 import { SpeakerIcon } from './SpeakerIcon';
 import { useWordsStore } from '../store/wordsStore';
 import { getCurrentWord } from '../store/wordsStore';
+import { hasUserInteracted } from '../utils/userInteraction';
 
 import type { Word } from '../types';
 
@@ -36,11 +37,11 @@ const FlashCard: React.FC<FlashCardProps> = ({ word: propWord, reverse, onMarkAs
     lang: 'he-IL'
   });
 
-  // Automatically speak when card appears or changes
+  // Automatically speak when card appears or changes (only after user interaction)
   useEffect(() => {
     let timeoutId: NodeJS.Timeout | undefined;
     
-    if (!flipped && word?.hebrew) {
+    if (!flipped && word?.hebrew && hasUserInteracted()) {
       timeoutId = setTimeout(() => {
         speak();
       }, 1000);

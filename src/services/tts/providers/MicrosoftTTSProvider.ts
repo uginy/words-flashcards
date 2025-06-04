@@ -68,7 +68,7 @@ export class MicrosoftTTSProvider implements TTSProvider {
       throw new Error('Microsoft TTS provider is not properly configured');
     }
 
-    // Stop any current playback
+    // Stop any current playbook
     this.stop();
 
     try {
@@ -80,11 +80,17 @@ export class MicrosoftTTSProvider implements TTSProvider {
       const audioBuffer = await this.synthesizeSpeech(ssml);
       console.log('TTS request successful, received audio buffer');
       
-      // Play audio
+      // Play audio (won't throw on autoplay issues)
       await this.playAudio(audioBuffer);
       
     } catch (error) {
-      throw new Error(`Microsoft TTS error: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      // Only throw for synthesis errors, not playback errors
+      if (error instanceof Error && error.message.includes('TTS synthesis failed')) {
+        throw new Error(`Microsoft TTS error: ${error.message}`);
+      }
+      
+      // For other errors (like autoplay), just log and continue
+      console.warn('Microsoft TTS warning:', error instanceof Error ? error.message : 'Unknown error');
     }
   }
 
@@ -164,40 +170,43 @@ export class MicrosoftTTSProvider implements TTSProvider {
   }
 
   private async playAudio(audioBuffer: ArrayBuffer): Promise<void> {
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve) => {
       const blob = new Blob([audioBuffer], { type: 'audio/mpeg' });
       const audioUrl = URL.createObjectURL(blob);
       
       const audio = new Audio(audioUrl);
       this.currentAudio = audio;
 
-      // Handle autoplay restrictions
-      const handlePlay = () => {
-        audio.play().catch(error => {
-          if (error.name === 'NotAllowedError') {
-            console.warn('Autoplay prevented - waiting for user interaction');
-            // Don't treat this as an error, just resolve without playing
-            resolve();
-          } else {
-            reject(error);
-          }
-        });
+      const cleanup = () => {
+        URL.revokeObjectURL(audioUrl);
+        if (this.currentAudio === audio) {
+          this.currentAudio = null;
+        }
       };
 
       audio.onended = () => {
-        URL.revokeObjectURL(audioUrl);
-        document.removeEventListener('click', handlePlay);
-        this.currentAudio = null;
+        cleanup();
         resolve();
       };
 
       audio.onerror = () => {
-        URL.revokeObjectURL(audioUrl);
-        this.currentAudio = null;
-        reject(new Error('Audio playback failed'));
+        cleanup();
+        console.warn('Audio playback error - continuing anyway');
+        resolve(); // Don't reject on audio errors
       };
 
-      audio.play().catch(reject);
+      // Try to play with autoplay protection handling
+      audio.play().catch((error: Error) => {
+        if (error.name === 'NotAllowedError') {
+          console.warn('Autoplay prevented - audio ready but not playing due to browser policy');
+          cleanup();
+          resolve(); // Don't treat autoplay prevention as an error
+        } else {
+          console.warn('Audio play error:', error.message);
+          cleanup();
+          resolve(); // Don't reject, just log and continue
+        }
+      });
     });
   }
 }
