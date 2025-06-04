@@ -12,10 +12,12 @@ interface FlashCardProps {
   reverse?: boolean;
   onMarkAsLearned?: (id: string) => void;
   onNext?: () => void;
+  currentIndex?: number;
+  totalWords?: number;
 }
 
 
-const FlashCard: React.FC<FlashCardProps> = ({ word: propWord, reverse, onMarkAsLearned, onNext }) => {
+const FlashCard: React.FC<FlashCardProps> = ({ word: propWord, reverse, onMarkAsLearned, onNext, currentIndex: propCurrentIndex, totalWords: propTotalWords }) => {
 
   const words = useWordsStore((state) => state.words);
   const currentIndex = useWordsStore((state) => state.currentIndex);
@@ -185,6 +187,10 @@ const FlashCard: React.FC<FlashCardProps> = ({ word: propWord, reverse, onMarkAs
                 Сбросить уровень ({word.learningStage})
               </button>
             )}
+          </div>
+          {/* Progress indicator */}
+          <div className="text-lg font-semibold text-gray-700">
+            {(propCurrentIndex !== undefined ? propCurrentIndex : currentIndex) + 1} / {propTotalWords !== undefined ? propTotalWords : words.length}
           </div>
           <button
             type="button"

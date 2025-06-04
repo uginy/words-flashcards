@@ -257,6 +257,8 @@ function App() {
                         reverse={reverseMode}
                         onMarkAsLearned={handleMarkAsLearned}
                         onNext={handleNextWord}
+                        currentIndex={filteredIndex}
+                        totalWords={filteredWords.length}
                       />
                     )}
                   </div>

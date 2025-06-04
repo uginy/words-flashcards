@@ -691,8 +691,6 @@ export const useWordsStore = create<WordsStore>((set, get) => {
 
     nextWord: () => {
       set(state => {
-        // Debug log before change
-
         if (state.words.length === 0) {
           return state;
         }
