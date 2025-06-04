@@ -70,9 +70,15 @@ function App() {
   // Обработчик для "Далее" — навигация для всех слов
   const handleNextWord = () => {
     if (filteredWords.length === 0) return;
-    
+
     // Всегда переходим к следующему слову по кругу
     setFilteredIndex((prev) => (prev + 1) % filteredWords.length);
+  };
+
+  // Handler for "Previous" - cyclic navigation backwards
+  const handlePreviousWord = () => {
+    if (filteredWords.length === 0) return;
+    setFilteredIndex((prev) => (prev - 1 + filteredWords.length) % filteredWords.length);
   };
 
   // Сброс filteredIndex при смене категории или слов
@@ -257,6 +263,7 @@ function App() {
                         reverse={reverseMode}
                         onMarkAsLearned={handleMarkAsLearned}
                         onNext={handleNextWord}
+                        onPrevious={handlePreviousWord} // Pass the new handler
                         currentIndex={filteredIndex}
                         totalWords={filteredWords.length}
                       />

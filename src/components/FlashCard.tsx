@@ -12,12 +12,13 @@ interface FlashCardProps {
   reverse?: boolean;
   onMarkAsLearned?: (id: string) => void;
   onNext?: () => void;
+  onPrevious?: () => void; // Add onPrevious prop
   currentIndex?: number;
   totalWords?: number;
 }
 
 
-const FlashCard: React.FC<FlashCardProps> = ({ word: propWord, reverse, onMarkAsLearned, onNext, currentIndex: propCurrentIndex, totalWords: propTotalWords }) => {
+const FlashCard: React.FC<FlashCardProps> = ({ word: propWord, reverse, onMarkAsLearned, onNext, onPrevious, currentIndex: propCurrentIndex, totalWords: propTotalWords }) => {
 
   const words = useWordsStore((state) => state.words);
   const currentIndex = useWordsStore((state) => state.currentIndex);
@@ -122,6 +123,14 @@ const FlashCard: React.FC<FlashCardProps> = ({ word: propWord, reverse, onMarkAs
     }
   };
 
+  // Handler for "Previous" button
+  const handlePreviousWord = () => {
+    if (onPrevious) {
+      onPrevious();
+    }
+    setFlipped(false); // Flip back to front when navigating
+  };
+
   const handleSkip = () => {
     setFlipped(false);
     if (onNext) {
@@ -188,20 +197,35 @@ const FlashCard: React.FC<FlashCardProps> = ({ word: propWord, reverse, onMarkAs
               </button>
             )}
           </div>
-          {/* Progress indicator */}
-          <div className="text-lg font-semibold text-gray-700">
-            {(propCurrentIndex !== undefined ? propCurrentIndex : currentIndex) + 1} / {propTotalWords !== undefined ? propTotalWords : words.length}
+          {/* Navigation and Progress */}
+          <div className="flex items-center gap-4">
+            {/* Previous button */}
+            <button
+              type="button"
+              className="w-full sm:w-auto px-3 py-2 rounded-md bg-gray-500 text-white text-base sm:text-lg hover:bg-gray-600 transition-colors"
+              onClick={(e) => {
+                e.stopPropagation();
+                handlePreviousWord();
+              }}
+            >
+              ← Предыдущее
+            </button>
+            {/* Progress indicator */}
+            <div className="text-lg font-semibold text-gray-700">
+              {(propCurrentIndex !== undefined ? propCurrentIndex : currentIndex) + 1} / {propTotalWords !== undefined ? propTotalWords : words.length}
+            </div>
+            {/* Next button */}
+            <button
+              type="button"
+              className="w-full sm:w-auto px-3 py-2 rounded-md bg-orange-500 text-white text-base sm:text-lg hover:bg-orange-600 transition-colors"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleSkip();
+              }}
+            >
+              Далее →
+            </button>
           </div>
-          <button
-            type="button"
-            className="w-full sm:w-auto px-3 py-2 rounded-md bg-orange-500 text-white text-base sm:text-lg hover:bg-orange-600 transition-colors"
-            onClick={(e) => {
-              e.stopPropagation();
-              handleSkip();
-            }}
-          >
-            Далее
-          </button>
         </div>
         <div className="card-container relative">
           <div className="absolute top-3 right-4 z-10">
