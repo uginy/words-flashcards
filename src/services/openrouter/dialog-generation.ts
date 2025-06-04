@@ -55,7 +55,7 @@ export async function generateDialogWithOpenRouter(
       messages: [
         {
           role: 'system',
-          content: getDialogGenerationSystemPrompt(settings.level)
+          content: getDialogGenerationSystemPrompt(settings.level, settings.participants)
         },
         {
           role: 'user',
@@ -130,24 +130,24 @@ function transformToDialog(dialogData: unknown, settings: DialogGenerationSettin
   // Generate unique ID
   const dialogId = `dialog_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 
-  // Create name-to-ID mapping for participants
-  const participantNameToId = new Map<string, string>();
-  settings.participants.forEach(participant => {
-    participantNameToId.set(participant.name, participant.id);
+  // Create mapping for API-returned speaker indices to participant IDs
+  const speakerIndexToId = new Map<string, string>();
+  settings.participants.forEach((participant, index) => {
+    speakerIndexToId.set((index + 1).toString(), participant.id);
+    speakerIndexToId.set(participant.name, participant.id);
   });
 
-  // Transform cards and map speaker names to IDs
+  // Transform cards and map speaker indices to IDs
   const dialogCards: DialogCard[] = cards.map((card, index: number) => {
     if (!card.hebrew || !card.russian || !card.speaker) {
       throw new Error(`Invalid card data at index ${index}`);
     }
-
-    // Map speaker name to participant ID
-    const speakerId = participantNameToId.get(card.speaker);
+    
+    // Map speaker index or name to participant ID
+    const speakerId = speakerIndexToId.get(card.speaker);
     if (!speakerId) {
-      throw new Error(`Unknown speaker "${card.speaker}" in card ${index + 1}. Available participants: ${settings.participants.map(p => p.name).join(', ')}`);
+      throw new Error(`Unknown speaker "${card.speaker}" in card ${index + 1}. Available mappings: ${Array.from(speakerIndexToId.keys()).join(', ')}`);
     }
-
     return {
       id: `card_${dialogId}_${index}`,
       hebrew: card.hebrew,
@@ -183,7 +183,7 @@ function transformToDialog(dialogData: unknown, settings: DialogGenerationSettin
 /**
  * Get system prompt for dialog generation based on level
  */
-function getDialogGenerationSystemPrompt(level: string): string {
+function getDialogGenerationSystemPrompt(level: string, participants: Array<{id: string, name: string}>): string {
   const levelInstructions = {
     אלף: 'Use very simple Hebrew words and basic sentence structures. Focus on present tense and common everyday vocabulary. Keep sentences short and clear.',
     בית: 'Use simple Hebrew with some past and future tense. Include common phrases and basic conversational patterns. Vocabulary should be elementary but practical.',
@@ -210,6 +210,8 @@ function getDialogGenerationSystemPrompt(level: string): string {
 - DO NOT include speaker labels like ":דוד:", "שרה", "David:", etc. in the text
 - The "hebrew" field should contain ONLY the spoken text without any names or labels- The "russian" field should contain ONLY the translation without any names or labels
 
+**Available participants**: ${participants.map(p => `${p.id} (${p.name})`).join(', ')}
+
 **Output format**: Return ONLY a valid JSON object with this exact structure:
 {
   "title": "Dialog title in Hebrew",
@@ -225,7 +227,7 @@ function getDialogGenerationSystemPrompt(level: string): string {
 }
 
 **Important**:
-- Use only the participant IDs provided in the user prompt
+- Use only these participant IDs: ${participants.map(p => p.id).join(', ')}
 - Hebrew text should be natural and level-appropriate
 - Russian translations should be accurate and natural
 - Order should start from 0 and increment sequentially
