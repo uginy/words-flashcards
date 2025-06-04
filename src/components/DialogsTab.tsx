@@ -148,7 +148,6 @@ export const DialogsTab: React.FC<DialogsTabProps> = ({ className }) => {
         <div className="flex-1 flex items-center justify-center p-8">
           <div className="text-center max-w-md">
             <Play className="mx-auto h-16 w-16 text-muted-foreground/50" />
-            <h3 className="mt-4 text-lg font-semibold">Нет диалогов</h3>
             <p className="mt-2 text-muted-foreground">
               Создайте свой первый диалог с помощью генератора. Диалоги помогут вам 
               изучать иврит в контексте реальных разговоров.

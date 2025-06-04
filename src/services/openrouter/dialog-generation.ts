@@ -206,14 +206,18 @@ function getDialogGenerationSystemPrompt(level: string): string {
 5. Ensure proper speaker attribution for each line
 6. Make the dialog educational while keeping it entertaining
 
+**CRITICAL TEXT FORMATTING RULES**:
+- DO NOT include speaker labels like ":דוד:", "שרה", "David:", etc. in the text
+- The "hebrew" field should contain ONLY the spoken text without any names or labels- The "russian" field should contain ONLY the translation without any names or labels
+
 **Output format**: Return ONLY a valid JSON object with this exact structure:
 {
   "title": "Dialog title in Hebrew",
   "titleRu": "Dialog title in Russian",
   "cards": [
     {
-      "hebrew": "Hebrew text for this line",
-      "russian": "Russian translation",
+      "hebrew": "Hebrew text for this line WITHOUT speaker name",
+      "russian": "Russian translation WITHOUT speaker name",
       "speaker": "participant_id",
       "order": 0
     }

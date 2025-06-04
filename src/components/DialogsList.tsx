@@ -203,12 +203,6 @@ export const DialogsList: React.FC<DialogsListProps> = ({
         <div className="text-center py-12">
           <MessageSquare className="mx-auto h-12 w-12 text-muted-foreground/50" />
           <h3 className="mt-2 text-sm font-semibold text-muted-foreground">Диалоги не найдены</h3>
-          <p className="mt-1 text-sm text-muted-foreground">
-            {dialogs.length === 0 
-              ? 'Создайте свой первый диалог с помощью генератора'
-              : 'Попробуйте изменить фильтры поиска'
-            }
-          </p>
         </div>
       ) : (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
