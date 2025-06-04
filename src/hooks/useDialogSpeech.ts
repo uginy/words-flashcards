@@ -124,7 +124,8 @@ export const useDialogSpeech = ({
         rate: (settings?.rate || 1) * playbackSpeed,
         pitch: settings?.pitch || 1,
         volume: settings?.volume || 1,
-        voice: voice?.name
+        voice: voice?.name,
+        gender: queueItem.participant.gender
       };
 
       // Speak using TTS manager
@@ -178,7 +179,7 @@ export const useDialogSpeech = ({
         // Add pause between cards for natural dialog flow
         if (i < queue.length - 1) {
           await new Promise(resolve => {
-            timeoutRef.current = setTimeout(resolve, 500);
+            timeoutRef.current = setTimeout(resolve, 40);
           });
         }
       }

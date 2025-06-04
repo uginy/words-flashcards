@@ -221,7 +221,8 @@ export class TTSManager {
       lang: options.lang,
       rate: options.rate,
       pitch: options.pitch,
-      voice: options.voice
+      voice: options.voice,
+      gender: options.gender
     });
     return `${this.currentProvider.name}-${text}-${btoa(optionsHash)}`;
   }

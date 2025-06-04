@@ -3,7 +3,7 @@ import type { TTSProvider, TTSOptions, TTSVoice, SSMLBuilder } from '../types';
 class MicrosoftSSMLBuilder implements SSMLBuilder {
   buildSSML(text: string, options: TTSOptions): string {
     const lang = options.lang || 'he-IL';
-    const voiceName = this.getVoiceName(lang, options.voice);
+    const voiceName = this.getVoiceName(lang, options.voice, options.gender);
     // Convert rate and pitch to readable values
     const rateValue = options.rate || 1.0;
     const pitchValue = options.pitch || 1.0;
@@ -21,22 +21,29 @@ class MicrosoftSSMLBuilder implements SSMLBuilder {
 </speak>`.trim();
   }
 
-  private getVoiceName(lang: string, voiceHint?: string): string {
-    const voiceMap: Record<string, string[]> = {
-      'he-IL': ['he-IL-HilaNeural', 'he-IL-AvriNeural'],
-      'ru-RU': ['ru-RU-SvetlanaNeural', 'ru-RU-DmitryNeural'],
-      'en-US': ['en-US-JennyNeural', 'en-US-GuyNeural']
+  private getVoiceName(lang: string, voiceHint?: string, gender?: 'male' | 'female'): string {
+    const voiceMap: Record<string, { male: string; female: string }> = {
+      'he-IL': { female: 'he-IL-HilaNeural', male: 'he-IL-AvriNeural' },
+      'ru-RU': { female: 'ru-RU-SvetlanaNeural', male: 'ru-RU-DmitryNeural' },
+      'en-US': { female: 'en-US-JennyNeural', male: 'en-US-GuyNeural' }
     };
 
-    const voices = voiceMap[lang] || voiceMap['he-IL'];
+    const languageVoices = voiceMap[lang] || voiceMap['he-IL'];
     
-    // If voice hint provided, try to match it
+    // If voice hint provided, try to match it first
     if (voiceHint) {
-      const matchedVoice = voices.find(v => v.includes(voiceHint));
+      const allVoices = [languageVoices.male, languageVoices.female];
+      const matchedVoice = allVoices.find(v => v.includes(voiceHint));
       if (matchedVoice) return matchedVoice;
     }
 
-    return voices[0];
+    // Select voice by gender
+    if (gender) {
+      return languageVoices[gender];
+    }
+
+    // Default to female voice
+    return languageVoices.female;
   }
 
   private escapeXml(text: string): string {

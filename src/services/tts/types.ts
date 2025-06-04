@@ -14,6 +14,7 @@ export interface TTSOptions {
   pitch?: number;
   volume?: number;
   voice?: string;
+  gender?: 'male' | 'female';
 }
 
 export interface TTSProvider {
