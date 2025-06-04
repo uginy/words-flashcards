@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { getTTSManager } from '../../services/tts/TTSManager';
 import type { TTSConfig, TTSProviderType } from '../../services/tts/types';
@@ -9,7 +10,8 @@ export function TTSSettings() {
   const [config, setConfig] = useState<TTSConfig>({
     provider: 'system',
     fallbackToSystem: true,
-    cacheEnabled: true
+    cacheEnabled: false,
+    microsoftRegion: 'westeurope'
   });
   const [isTestPlaying, setIsTestPlaying] = useState(false);
   const [testMessage, setTestMessage] = useState<string>('');

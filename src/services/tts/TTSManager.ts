@@ -41,6 +41,13 @@ export class TTSManager {
       return;
     }
 
+    console.log('TTS speak called with:', {
+      text: `${text.substring(0, 50)}...`,
+      options,
+      currentProvider: this.currentProvider.name,
+      config: this.config
+    });
+
     // Auto-detect language if not provided
     if (!options.lang) {
       options.lang = this.languageDetector.detect(text);
@@ -51,12 +58,15 @@ export class TTSManager {
     if (this.config.cacheEnabled && this.cache.has(cacheKey)) {
       const cached = this.cache.get(cacheKey);
       if (cached) {
+        console.log('Using cached audio');
         await this.playFromCache(cached);
         return;
       }
     }
 
     try {
+      console.log(`Using TTS provider: ${this.currentProvider.name}`);
+      
       // Try current provider
       if (this.currentProvider.name === 'system') {
         // System TTS doesn't support caching
@@ -115,6 +125,9 @@ export class TTSManager {
   }
 
   updateConfig(newConfig: Partial<TTSConfig>): void {
+    console.log('Updating TTS config:', newConfig);
+    console.log('Previous config:', this.config);
+    
     this.config = { ...this.config, ...newConfig };
     
     // Save to localStorage
@@ -123,6 +136,9 @@ export class TTSManager {
     // Update providers if needed
     this.updateProviders();
     this.updateCurrentProvider();
+    
+    console.log('New config applied:', this.config);
+    console.log('Current provider after update:', this.currentProvider.name);
     
     // Clear cache if provider changed
     if (newConfig.provider && newConfig.provider !== this.currentProvider.name) {
@@ -196,7 +212,12 @@ export class TTSManager {
     const saved = localStorage.getItem('tts_config');
     if (saved) {
       try {
-        return JSON.parse(saved);
+        const config = JSON.parse(saved);
+        // Ensure microsoftRegion always has a default value
+        if (!config.microsoftRegion) {
+          config.microsoftRegion = 'westeurope';
+        }
+        return config;
       } catch (error) {
         console.error('Failed to parse TTS config:', error);
       }
@@ -206,7 +227,8 @@ export class TTSManager {
     return {
       provider: 'system',
       fallbackToSystem: true,
-      cacheEnabled: true
+      cacheEnabled: false,
+      microsoftRegion: 'westeurope'
     };
   }
 
@@ -215,20 +237,36 @@ export class TTSManager {
   }
 
   private updateProviders(): void {
+    console.log('Updating providers with config:', this.config);
+    console.log('Microsoft API Key present:', !!this.config.microsoftApiKey);
+    console.log('Microsoft Region present:', !!this.config.microsoftRegion);
+    console.log('Microsoft Region value:', this.config.microsoftRegion);
+    
     // Update Microsoft provider if config changed
     if (this.config.microsoftApiKey && this.config.microsoftRegion) {
+      console.log('Creating Microsoft TTS provider');
       const microsoftProvider = new MicrosoftTTSProvider(
         this.config.microsoftApiKey,
         this.config.microsoftRegion
       );
       this.registerProvider(microsoftProvider);
+      console.log('Microsoft provider registered, isAvailable:', microsoftProvider.isAvailable);
+    } else {
+      console.log('Microsoft provider not configured (missing API key or region)');
+      console.log(`API Key: ${this.config.microsoftApiKey ? 'present' : 'missing'}`);
+      console.log(`Region: ${this.config.microsoftRegion ? this.config.microsoftRegion : 'missing'}`);
     }
   }
 
   private updateCurrentProvider(): void {
+    console.log(`Trying to set provider to: ${this.config.provider}`);
+    
     const provider = this.providers.get(this.config.provider);
+    console.log(`Found provider: ${provider ? provider.name : 'null'}, isAvailable: ${provider?.isAvailable}`);
+    
     if (provider?.isAvailable) {
       this.currentProvider = provider;
+      console.log(`Successfully set current provider to: ${this.currentProvider.name}`);
     } else {
       // Fallback to system provider
       const systemProvider = this.providers.get('system');
@@ -237,6 +275,7 @@ export class TTSManager {
         if (this.config.provider !== 'system') {
           console.warn(`Provider ${this.config.provider} not available, falling back to system`);
         }
+        console.log(`Fallback to system provider: ${this.currentProvider.name}`);
       } else {
         throw new Error('No TTS providers available');
       }
