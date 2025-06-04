@@ -172,19 +172,28 @@ export const useDialogSpeech = ({
 
     try {
       for (let i = startFromIndex; i < queue.length; i++) {
-        // Check if playback was stopped or paused
-        if (!state.isPlaying || state.isPaused) {
+        // Use a ref to check current state in async loop
+        const shouldContinue = await new Promise<boolean>((resolve) => {
+          setState(prev => {
+            if (!prev.isPlaying || prev.isPaused) {
+              resolve(false);
+              return prev;
+            }
+            resolve(true);
+            return { ...prev, currentCardIndex: i };
+          });
+        });
+
+        if (!shouldContinue) {
           break;
         }
 
-        setState(prev => ({ ...prev, currentCardIndex: i }));
-
         await playCard(queue[i]);
 
-        // Add small pause between cards
+        // Add pause between cards for natural dialog flow
         if (i < queue.length - 1) {
           await new Promise(resolve => {
-            timeoutRef.current = setTimeout(resolve, 500);
+            timeoutRef.current = setTimeout(resolve, 2000);
           });
         }
       }
@@ -198,7 +207,7 @@ export const useDialogSpeech = ({
         isPaused: false
       }));
     }
-  }, [isSupported, buildQueue, playCard, state.isPlaying, state.isPaused]);
+  }, [isSupported, buildQueue, playCard]);
 
   // Play single card by index
   const playSingleCard = useCallback(async (cardIndex: number) => {
