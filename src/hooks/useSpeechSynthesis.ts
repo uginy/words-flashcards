@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
+import { getTTSManager } from '../services/tts/TTSManager';
 
 interface UseSpeechSynthesisProps {
   text: string;
@@ -32,7 +33,7 @@ export const useSpeechSynthesis = ({ text, lang = 'he-IL', rate, voice }: UseSpe
     }
   }, []);
 
-  const speak = useCallback(() => {
+  const speak = useCallback(async () => {
     if (!isSupported) {
       setError('Speech synthesis is not supported');
       return;
@@ -56,10 +57,17 @@ export const useSpeechSynthesis = ({ text, lang = 'he-IL', rate, voice }: UseSpe
       }
       
       // Stop any ongoing speech
-      window.speechSynthesis.cancel();
+      const ttsManager = getTTSManager();
+      ttsManager.stop();
       
-      // Speak the new text
-      window.speechSynthesis.speak(utterance);
+      // Speak using TTS manager
+      await ttsManager.speak(text, {
+        lang,
+        rate: utterance.rate,
+        pitch: utterance.pitch,
+        volume: utterance.volume,
+        voice: utterance.voice?.name
+      });
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to speak text');
     }

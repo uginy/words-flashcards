@@ -4,7 +4,8 @@
   "version": "0.0.30",
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "start": "vite",
+    "dev": "rm -rf node_modules/.vite && bun run start",
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview",

@@ -9,7 +9,7 @@ import {
 } from "./ui/select"
 import { DEFAULT_OPENROUTER_API_KEY, DEFAULT_OPENROUTER_MODEL } from '../config/openrouter';
 import { loadTableSettings, saveTableSettings } from '@/utils/tableSettings';
-import { useSpeechSynthesis } from '@/hooks/useSpeechSynthesis';
+import { TTSSettings } from './settings/TTSSettings';
 
 const OPENROUTER_API_KEY_STORAGE_KEY = 'openRouterApiKey';
 const OPENROUTER_SELECTED_MODEL_STORAGE_KEY = 'openRouterModel';
@@ -28,17 +28,12 @@ interface OpenRouterModel {
 const Settings: React.FC = () => {
   const [apiKey, setApiKey] = useState<string>('');
   const [pageSize, setPageSize] = useState<number>(10);
-  const [speechRate, setSpeechRate] = useState<number>(1);
-  const [speechVoice, setSpeechVoice] = useState<string>('default');
   const [selectedModel, setSelectedModel] = useState<string>('');
   const [availableModels, setAvailableModels] = useState<OpenRouterModel[]>([]);
   const [filteredModels, setFilteredModels] = useState<OpenRouterModel[]>([]);
   const [isLoadingModels, setIsLoadingModels] = useState<boolean>(false);
   const [showFreeOnly, setShowFreeOnly] = useState<boolean>(true);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
-  
-  // Get available voices for speech synthesis
-  const { availableVoices } = useSpeechSynthesis({ text: '' }); // Empty text just to get voices
 
   useEffect(() => {
     const storedApiKey = localStorage.getItem(OPENROUTER_API_KEY_STORAGE_KEY);
@@ -52,14 +47,6 @@ const Settings: React.FC = () => {
       setSelectedModel(storedModel);
     } else {
       setSelectedModel(DEFAULT_OPENROUTER_MODEL);
-    }
-    const storedSpeechRate = localStorage.getItem('speechRate');
-    if (storedSpeechRate) {
-      setSpeechRate(parseFloat(storedSpeechRate));
-    }
-    const storedSpeechVoice = localStorage.getItem('speechVoice');
-    if (storedSpeechVoice) {
-      setSpeechVoice(storedSpeechVoice);
     }
     const tableSettings = loadTableSettings();
     setPageSize(tableSettings.pageSize);
@@ -111,12 +98,6 @@ const Settings: React.FC = () => {
     const modelToSave = selectedModel && selectedModel.trim() !== '' ? selectedModel : DEFAULT_OPENROUTER_MODEL;
     localStorage.setItem(OPENROUTER_API_KEY_STORAGE_KEY, keyToSave);
     localStorage.setItem(OPENROUTER_SELECTED_MODEL_STORAGE_KEY, modelToSave);
-    localStorage.setItem('speechRate', speechRate.toString());
-    if (speechVoice === 'default') {
-      localStorage.removeItem('speechVoice');
-    } else {
-      localStorage.setItem('speechVoice', speechVoice);
-    }
     setApiKey(keyToSave);
     setSelectedModel(modelToSave);
     setMessage({ type: 'success', text: 'Settings saved successfully!' });
@@ -162,50 +143,8 @@ const Settings: React.FC = () => {
           </Select>
         </div>
 
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Скорость озвучки
-          </label>
-          <div className="flex items-center gap-4">
-            <input
-              type="range"
-              min="0.1"
-              max="3"
-              step="0.1"
-              value={speechRate}
-              onChange={(e) => setSpeechRate(parseFloat(e.target.value))}
-              className="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
-            />
-            <span className="text-sm text-gray-600 min-w-[3rem]">{speechRate.toFixed(1)}x</span>
-          </div>
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Голос для озвучки
-          </label>
-          <Select
-            value={speechVoice}
-            onValueChange={setSpeechVoice}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Выберите голос (по умолчанию - системный)" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="default">По умолчанию (системный)</SelectItem>
-              {availableVoices
-                .filter(voice => voice.lang.includes('he') || voice.lang.includes('ru') || voice.lang.includes('en'))
-                .map((voice,i) => (
-                  <SelectItem key={voice.name + i} value={voice.name}>
-                    {voice.name} ({voice.lang})
-                  </SelectItem>
-                ))}
-            </SelectContent>
-          </Select>
-          <p className="text-xs text-gray-500 mt-1">
-            Показаны голоса для иврита, русского и английского языков. Выберите голос, который вам больше нравится.
-          </p>
-        </div>
+        {/* TTS Settings */}
+        <TTSSettings />
 
         {/* OpenRouter Settings */}
         <h3 className="text-lg font-medium text-gray-800 mb-4">Настройки LLM (OpenRouter)</h3>

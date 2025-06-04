@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState, useRef } from 'react';
 import type { DialogCard, DialogParticipant } from '../types';
+import { getTTSManager } from '../services/tts/TTSManager';
 
 export interface TTSQueueItem {
   id: string;
@@ -37,7 +38,6 @@ export const useDialogSpeech = ({
     availableVoices: []
   });
 
-  const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Check if speech synthesis is supported
@@ -112,40 +112,25 @@ export const useDialogSpeech = ({
       }
 
       // Stop any current speech
-      window.speechSynthesis.cancel();
+      const ttsManager = getTTSManager();
+      ttsManager.stop();
 
-      const utterance = new SpeechSynthesisUtterance(queueItem.text);
-      utteranceRef.current = utterance;
-
-      // Configure utterance
-      utterance.lang = 'he-IL';
-      utterance.rate = playbackSpeed;
-      
-      // Apply participant voice settings
+      // Configure voice settings
       const voice = getVoiceForParticipant(queueItem.participant);
-      if (voice) {
-        utterance.voice = voice;
-      }
-
-      // Apply participant-specific voice settings
-      if (queueItem.participant.voiceSettings) {
-        const settings = queueItem.participant.voiceSettings;
-        utterance.pitch = settings.pitch || 1;
-        utterance.rate = (settings.rate || 1) * playbackSpeed;
-        utterance.volume = settings.volume || 1;
-      }
-
-      // Set up event handlers
-      utterance.onend = () => {
-        resolve();
+      const settings = queueItem.participant.voiceSettings;
+      
+      const options = {
+        lang: 'he-IL',
+        rate: (settings?.rate || 1) * playbackSpeed,
+        pitch: settings?.pitch || 1,
+        volume: settings?.volume || 1,
+        voice: voice?.name
       };
 
-      utterance.onerror = (event) => {
-        reject(new Error(`Speech synthesis error: ${event.error}`));
-      };
-
-      // Start speaking
-      window.speechSynthesis.speak(utterance);
+      // Speak using TTS manager
+      ttsManager.speak(queueItem.text, options)
+        .then(() => resolve())
+        .catch(error => reject(error));
     });
   }, [isSupported, playbackSpeed, getVoiceForParticipant]);
 
@@ -238,7 +223,8 @@ export const useDialogSpeech = ({
 
   // Stop playback
   const stopPlayback = useCallback(() => {
-    window.speechSynthesis.cancel();
+    const ttsManager = getTTSManager();
+    ttsManager.stop();
     
     if (timeoutRef.current) {
       clearTimeout(timeoutRef.current);
@@ -256,7 +242,8 @@ export const useDialogSpeech = ({
   // Pause playback
   const pausePlayback = useCallback(() => {
     if (state.isPlaying) {
-      window.speechSynthesis.pause();
+      const ttsManager = getTTSManager();
+      ttsManager.pause();
       setState(prev => ({ ...prev, isPaused: true }));
     }
   }, [state.isPlaying]);
@@ -264,7 +251,8 @@ export const useDialogSpeech = ({
   // Resume playback
   const resumePlayback = useCallback(() => {
     if (state.isPaused) {
-      window.speechSynthesis.resume();
+      const ttsManager = getTTSManager();
+      ttsManager.resume();
       setState(prev => ({ ...prev, isPaused: false }));
     }
   }, [state.isPaused]);
