@@ -4,16 +4,17 @@ class MicrosoftSSMLBuilder implements SSMLBuilder {
   buildSSML(text: string, options: TTSOptions): string {
     const lang = options.lang || 'he-IL';
     const voiceName = this.getVoiceName(lang, options.voice);
-    const rate = options.rate || 1.0;
-    const pitch = options.pitch || 1.0;
-
-    // Convert rate and pitch to percentage values
-    const ratePercent = Math.round(rate * 100);
-    const pitchPercent = Math.round(pitch * 100);
+    // Convert rate and pitch to readable values
+    const rateValue = options.rate || 1.0;
+    const pitchValue = options.pitch || 1.0;
+    
+    // Use "medium" for default speed, or calculate percentage for custom speed
+    const rate = rateValue === 1.0 ? 'medium' : `${Math.round(rateValue * 100)}%`;
+    const pitch = pitchValue === 1.0 ? 'medium' : `${Math.round(pitchValue * 100)}%`;
     
     return `<speak xmlns="http://www.w3.org/2001/10/synthesis" xmlns:mstts="http://www.w3.org/2001/mstts" version="1.0" xml:lang="${lang}">
   <voice name="${voiceName}">
-    <prosody rate="${ratePercent}%" pitch="${pitchPercent}%">
+    <prosody rate="${rate}" pitch="${pitch}">
       ${this.escapeXml(text)}
     </prosody>
   </voice>
@@ -170,8 +171,22 @@ export class MicrosoftTTSProvider implements TTSProvider {
       const audio = new Audio(audioUrl);
       this.currentAudio = audio;
 
+      // Handle autoplay restrictions
+      const handlePlay = () => {
+        audio.play().catch(error => {
+          if (error.name === 'NotAllowedError') {
+            console.warn('Autoplay prevented - waiting for user interaction');
+            // Don't treat this as an error, just resolve without playing
+            resolve();
+          } else {
+            reject(error);
+          }
+        });
+      };
+
       audio.onended = () => {
         URL.revokeObjectURL(audioUrl);
+        document.removeEventListener('click', handlePlay);
         this.currentAudio = null;
         resolve();
       };
