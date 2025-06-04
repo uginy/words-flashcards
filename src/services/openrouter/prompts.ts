@@ -239,3 +239,105 @@ export const wordSuggestionsSystemPrompt = (category: string, level: string, lev
 
   return basePrompt;
 };
+
+// Dialog generation system prompt
+export const dialogGenerationSystemPrompt = (level: string) => {
+  const levelInstructions = {
+    אלף: 'Use very simple Hebrew words and basic sentence structures. Focus on present tense and common everyday vocabulary. Keep sentences short and clear.',
+    בית: 'Use simple Hebrew with some past and future tense. Include common phrases and basic conversational patterns. Vocabulary should be elementary but practical.',
+    גימל: 'Use intermediate Hebrew with varied tenses and more complex sentences. Include some idiomatic expressions and intermediate vocabulary.',
+    דלת: 'Use advanced Hebrew with sophisticated grammar, complex sentences, and varied vocabulary. Include literary expressions and professional terminology.',
+    הא: 'Use expert-level Hebrew with complex linguistic structures, rare vocabulary, advanced idioms, and sophisticated literary or academic language.'
+  };
+
+  return `You are a Hebrew language expert creating educational dialogs for language learners.
+
+**Your task**: Generate a natural, educational Hebrew dialog appropriate for the specified level.
+
+**Level-specific instructions**: ${levelInstructions[level as keyof typeof levelInstructions] || levelInstructions.אלף}
+
+**Requirements**:
+1. Create realistic, engaging conversation between the specified participants
+2. Each line should feel natural and contribute to the dialog flow
+3. Use vocabulary and grammar appropriate for the learning level
+4. Provide accurate Russian translations for each Hebrew line
+5. Ensure proper speaker attribution for each line
+6. Make the dialog educational while keeping it entertaining
+
+**Output format**: Return ONLY a valid JSON object with this exact structure:
+{
+  "title": "Dialog title in Hebrew",
+  "titleRu": "Dialog title in Russian",
+  "cards": [
+    {
+      "hebrew": "Hebrew text for this line",
+      "russian": "Russian translation",
+      "speaker": "participant_id",
+      "order": 0
+    }
+  ]
+}
+
+**Important**:
+- Use only the participant IDs provided in the user prompt
+- Hebrew text should be natural and level-appropriate
+- Russian translations should be accurate and natural
+- Order should start from 0 and increment sequentially
+- Do not include any text outside the JSON object
+- Do not wrap the JSON in markdown code blocks`;
+};
+
+// Dialog prompt builder helper
+export const buildDialogGenerationPrompt = (
+  level: string,
+  participants: Array<{ id: string; name: string; gender: string }>,
+  topic?: string,
+  wordsToInclude?: Array<{ hebrew: string; russian: string }>
+) => {
+  const levelDescriptions = {
+    אלף: 'Beginner (basic words and simple sentences)',
+    בית: 'Elementary (common phrases and basic grammar)',
+    גימל: 'Intermediate (complex sentences and varied vocabulary)',
+    דלת: 'Advanced (sophisticated language and idioms)',
+    הא: 'Expert (complex literary and professional language)'
+  };
+
+  const participantNames = participants.map(p => `${p.name} (${p.gender})`).join(', ');
+  
+  let wordsContext = '';
+  if (wordsToInclude && wordsToInclude.length > 0) {
+    wordsContext = `\n\nInclude these Hebrew words naturally in the dialog:\n${wordsToInclude.map(w => `- ${w.hebrew} (${w.russian})`).join('\n')}`;
+  }
+
+  const topicContext = topic ? `\n\nDialog topic: ${topic}` : '';
+
+  return `Generate a Hebrew dialog for language learning with the following requirements:
+
+**Level**: ${level} - ${levelDescriptions[level as keyof typeof levelDescriptions]}
+**Participants**: ${participantNames}
+**Number of exchanges**: 6-8 lines total${topicContext}${wordsContext}
+
+**Requirements**:
+1. Create natural, realistic conversation appropriate for the level
+2. Each line should be meaningful and contribute to the conversation
+3. Include both Hebrew text and Russian translation for each line
+4. Assign each line to the appropriate participant
+5. Use level-appropriate vocabulary and grammar
+6. Make the dialog engaging and educational
+
+**Output format** (JSON):
+{
+  "title": "Dialog title in Hebrew",
+  "titleRu": "Dialog title in Russian",
+  "cards": [
+    {
+      "hebrew": "Hebrew text",
+      "russian": "Russian translation",
+      "speaker": "${participants[0]?.id || 'participant_1'}",
+      "order": 0
+    }
+  ]
+}
+
+Generate a complete, coherent dialog that flows naturally between the participants.`;
+};
