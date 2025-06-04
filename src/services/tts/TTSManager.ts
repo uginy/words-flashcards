@@ -24,6 +24,9 @@ export class TTSManager {
     // Set initial provider
     this.currentProvider = this.providers.get('system') || new SystemTTSProvider();
     this.updateCurrentProvider();
+    
+    // Clean expired cache on startup
+    this.clearExpiredCache();
   }
 
   static getInstance(): TTSManager {
@@ -55,12 +58,12 @@ export class TTSManager {
 
     try {
       // Try current provider
-      await this.currentProvider.speak(text, options);
-      
-      // Cache successful synthesis (for audio providers)
-      if (this.config.cacheEnabled && this.currentProvider.name !== 'system') {
-        // Note: Actual caching would be implemented here for audio providers
-        // For now, we just mark it as cached
+      if (this.currentProvider.name === 'system') {
+        // System TTS doesn't support caching
+        await this.currentProvider.speak(text, options);
+      } else {
+        // For audio providers, use caching
+        await this.speakWithCaching(text, options);
       }
       
     } catch (error) {
@@ -133,6 +136,33 @@ export class TTSManager {
 
   clearCache(): void {
     this.cache.clear();
+  }
+
+  getCacheStats(): { size: number; entries: Array<{ key: string; timestamp: number; provider: string }> } {
+    const entries = Array.from(this.cache.entries()).map(([key, entry]) => ({
+      key,
+      timestamp: entry.timestamp,
+      provider: entry.provider
+    }));
+    
+    return {
+      size: this.cache.size,
+      entries
+    };
+  }
+
+  clearExpiredCache(maxAgeMs: number = 24 * 60 * 60 * 1000): number { // Default: 24 hours
+    const now = Date.now();
+    let removedCount = 0;
+    
+    for (const [key, entry] of this.cache.entries()) {
+      if (now - entry.timestamp > maxAgeMs) {
+        this.cache.delete(key);
+        removedCount++;
+      }
+    }
+    
+    return removedCount;
   }
 
   private loadConfig(): TTSConfig {
@@ -211,6 +241,68 @@ export class TTSManager {
       audio.onerror = () => {
         URL.revokeObjectURL(audioUrl);
         reject(new Error('Cached audio playback failed'));
+      };
+
+      audio.play().catch(reject);
+    });
+  }
+
+  private async speakWithCaching(text: string, options: TTSOptions): Promise<void> {
+    const cacheKey = this.generateCacheKey(text, options);
+    
+    // Check cache first
+    if (this.config.cacheEnabled && this.cache.has(cacheKey)) {
+      const cached = this.cache.get(cacheKey);
+      if (cached) {
+        await this.playFromCache(cached);
+        return;
+      }
+    }
+
+    // Synthesize audio using provider-specific method
+    const audioBuffer = await this.synthesizeAudio(text, options);
+    
+    // Cache the result
+    if (this.config.cacheEnabled) {
+      const cacheEntry: TTSCacheEntry = {
+        audioData: audioBuffer,
+        timestamp: Date.now(),
+        provider: this.currentProvider.name
+      };
+      this.cache.set(cacheKey, cacheEntry);
+    }
+
+    // Play the audio
+    await this.playAudioBuffer(audioBuffer);
+  }
+
+  private async synthesizeAudio(text: string, options: TTSOptions): Promise<ArrayBuffer> {
+    // Check if provider supports synthesis method
+    if (this.currentProvider.synthesize) {
+      return await this.currentProvider.synthesize(text, options);
+    }
+    
+    throw new Error(`Caching not supported for provider: ${this.currentProvider.name}`);
+  }
+
+  private async playAudioBuffer(audioBuffer: ArrayBuffer): Promise<void> {
+    return new Promise((resolve, reject) => {
+      const blob = new Blob([audioBuffer], { type: 'audio/mpeg' });
+      const audioUrl = URL.createObjectURL(blob);
+      const audio = new Audio(audioUrl);
+
+      const cleanup = () => {
+        URL.revokeObjectURL(audioUrl);
+      };
+
+      audio.onended = () => {
+        cleanup();
+        resolve();
+      };
+
+      audio.onerror = () => {
+        cleanup();
+        reject(new Error('Audio playback failed'));
       };
 
       audio.play().catch(reject);

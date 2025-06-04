@@ -94,6 +94,18 @@ export class MicrosoftTTSProvider implements TTSProvider {
     }
   }
 
+  async synthesize(text: string, options: TTSOptions = {}): Promise<ArrayBuffer> {
+    if (!this.isAvailable) {
+      throw new Error('Microsoft TTS provider is not properly configured');
+    }
+
+    // Build SSML
+    const ssml = this.ssmlBuilder.buildSSML(text, options);
+    
+    // Make TTS request and return audio buffer
+    return await this.synthesizeSpeech(ssml);
+  }
+
   stop(): void {
     if (this.currentAudio) {
       this.currentAudio.pause();

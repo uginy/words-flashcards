@@ -21,6 +21,7 @@ export interface TTSProvider {
   readonly isAvailable: boolean;
   
   speak(text: string, options: TTSOptions): Promise<void>;
+  synthesize?(text: string, options: TTSOptions): Promise<ArrayBuffer>;
   stop(): void;
   pause(): void;
   resume(): void;
