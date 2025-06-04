@@ -10,6 +10,7 @@ import {
 import { DEFAULT_OPENROUTER_API_KEY, DEFAULT_OPENROUTER_MODEL } from '../config/openrouter';
 import { loadTableSettings, saveTableSettings } from '@/utils/tableSettings';
 import { TTSSettings } from './settings/TTSSettings';
+import { useToast } from '../hooks/use-toast';
 
 const OPENROUTER_API_KEY_STORAGE_KEY = 'openRouterApiKey';
 const OPENROUTER_SELECTED_MODEL_STORAGE_KEY = 'openRouterModel';
@@ -26,6 +27,7 @@ interface OpenRouterModel {
 }
 
 const Settings: React.FC = () => {
+  const { toast } = useToast();
   const [apiKey, setApiKey] = useState<string>('');
   const [pageSize, setPageSize] = useState<number>(10);
   const [selectedModel, setSelectedModel] = useState<string>('');
@@ -33,7 +35,6 @@ const Settings: React.FC = () => {
   const [filteredModels, setFilteredModels] = useState<OpenRouterModel[]>([]);
   const [isLoadingModels, setIsLoadingModels] = useState<boolean>(false);
   const [showFreeOnly, setShowFreeOnly] = useState<boolean>(true);
-  const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
   useEffect(() => {
     const storedApiKey = localStorage.getItem(OPENROUTER_API_KEY_STORAGE_KEY);
@@ -73,7 +74,6 @@ const Settings: React.FC = () => {
 
   const fetchModels = async () => {
     setIsLoadingModels(true);
-    setMessage(null);
     try {
       // Note: OpenRouter's /models endpoint does not require the API key in the header for fetching the list.
       // The key is used for making inference requests.
@@ -85,7 +85,11 @@ const Settings: React.FC = () => {
       setAvailableModels(data.data || []);
     } catch (error) {
       console.error('Error fetching OpenRouter models:', error);
-      setMessage({ type: 'error', text: 'Could not fetch models. Check console for details.' });
+      toast({
+        title: "Ошибка",
+        description: "Не удалось загрузить модели. Проверьте консоль для деталей.",
+        variant: "error"
+      });
       setAvailableModels([]);
     } finally {
       setIsLoadingModels(false);
@@ -100,7 +104,13 @@ const Settings: React.FC = () => {
     localStorage.setItem(OPENROUTER_SELECTED_MODEL_STORAGE_KEY, modelToSave);
     setApiKey(keyToSave);
     setSelectedModel(modelToSave);
-    setMessage({ type: 'success', text: 'Settings saved successfully!' });
+    
+    toast({
+      title: "Настройки сохранены",
+      description: "Все настройки успешно сохранены!",
+      variant: "success"
+    });
+    
     if (availableModels.length === 0 && keyToSave) {
       fetchModels();
     }
@@ -110,15 +120,6 @@ const Settings: React.FC = () => {
     <div className="w-full max-w-2xl mx-auto p-4 sm:p-6 bg-white rounded-lg shadow-md">
       <h2 className="text-2xl font-semibold text-gray-800 mb-4">Настройки</h2>
 
-      {message && (
-        <div
-          className={`p-3 rounded-md mb-4 text-sm ${
-            message.type === 'success' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
-          }`}
-        >
-          {message.text}
-        </div>
-      )}
 
       <div className="space-y-6">
         <h3 className="text-lg font-medium text-gray-800 mb-4">Настройки таблицы</h3>
@@ -160,7 +161,6 @@ const Settings: React.FC = () => {
             value={apiKey}
             onChange={(e) => {
                 setApiKey(e.target.value);
-                if (message) setMessage(null);
             }}
             placeholder={DEFAULT_OPENROUTER_API_KEY}
           />
