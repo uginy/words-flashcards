@@ -178,7 +178,7 @@ export const useDialogSpeech = ({
         // Add pause between cards for natural dialog flow
         if (i < queue.length - 1) {
           await new Promise(resolve => {
-            timeoutRef.current = setTimeout(resolve, 2000);
+            timeoutRef.current = setTimeout(resolve, 500);
           });
         }
       }
