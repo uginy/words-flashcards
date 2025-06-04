@@ -30,19 +30,25 @@ class MicrosoftSSMLBuilder implements SSMLBuilder {
 
     const languageVoices = voiceMap[lang] || voiceMap['he-IL'];
     
-    // If voice hint provided, try to match it first
+    // Prioritize gender selection over voice hint for reliable gender-based voice selection
+    if (gender) {
+      const genderVoice = languageVoices[gender];
+      console.log(`Selected voice for gender ${gender}:`, genderVoice);
+      return genderVoice;
+    }
+
+    // If voice hint provided but no gender specified, try to match it
     if (voiceHint) {
       const allVoices = [languageVoices.male, languageVoices.female];
       const matchedVoice = allVoices.find(v => v.includes(voiceHint));
-      if (matchedVoice) return matchedVoice;
-    }
-
-    // Select voice by gender
-    if (gender) {
-      return languageVoices[gender];
+      if (matchedVoice) {
+        console.log('Selected voice by hint:', matchedVoice);
+        return matchedVoice;
+      }
     }
 
     // Default to female voice
+    console.log('Using default female voice:', languageVoices.female);
     return languageVoices.female;
   }
 

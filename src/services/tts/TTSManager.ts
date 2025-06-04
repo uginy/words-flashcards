@@ -138,6 +138,33 @@ export class TTSManager {
     this.cache.clear();
   }
 
+  clearCacheForGender(gender: 'male' | 'female'): number {
+    let removedCount = 0;
+    
+    for (const [key] of this.cache.entries()) {
+      // Parse the cache key to check if it contains the gender
+      try {
+        const parts = key.split('-');
+        if (parts.length >= 3) {
+          const optionsBase64 = parts[parts.length - 1];
+          const optionsJson = atob(optionsBase64);
+          const options = JSON.parse(optionsJson);
+          
+          if (options.gender === gender) {
+            this.cache.delete(key);
+            removedCount++;
+          }
+        }
+      } catch {
+        // Skip malformed cache keys
+        console.warn('Skipping malformed cache key:', key);
+      }
+    }
+    
+    console.log(`Cleared ${removedCount} cache entries for gender: ${gender}`);
+    return removedCount;
+  }
+
   getCacheStats(): { size: number; entries: Array<{ key: string; timestamp: number; provider: string }> } {
     const entries = Array.from(this.cache.entries()).map(([key, entry]) => ({
       key,
@@ -217,14 +244,21 @@ export class TTSManager {
   }
 
   private generateCacheKey(text: string, options: TTSOptions): string {
-    const optionsHash = JSON.stringify({
-      lang: options.lang,
-      rate: options.rate,
-      pitch: options.pitch,
-      voice: options.voice,
-      gender: options.gender
-    });
-    return `${this.currentProvider.name}-${text}-${btoa(optionsHash)}`;
+    // Ensure consistent ordering and include all relevant options for cache key
+    const cacheOptions = {
+      lang: options.lang || 'he-IL',
+      rate: options.rate || 1.0,
+      pitch: options.pitch || 1.0,
+      voice: options.voice || '',
+      gender: options.gender || 'female'
+    };
+    
+    const optionsHash = JSON.stringify(cacheOptions, Object.keys(cacheOptions).sort());
+    const cacheKey = `${this.currentProvider.name}-${text}-${btoa(optionsHash)}`;
+    
+    console.log('Generated cache key for:', { text: text.substring(0, 50), gender: cacheOptions.gender, provider: this.currentProvider.name });
+    
+    return cacheKey;
   }
 
   private async playFromCache(cached: TTSCacheEntry): Promise<void> {

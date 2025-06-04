@@ -130,8 +130,14 @@ export const useDialogSpeech = ({
 
       // Speak using TTS manager
       ttsManager.speak(queueItem.text, options)
-        .then(() => resolve())
-        .catch(error => reject(error));
+        .then(() => {
+          console.log('Successfully played card for:', queueItem.participant.name);
+          resolve();
+        })
+        .catch(error => {
+          console.error('Error playing card for:', queueItem.participant.name, error);
+          reject(error);
+        });
     });
   }, [isSupported, playbackSpeed, getVoiceForParticipant]);
 
