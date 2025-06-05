@@ -3,5 +3,27 @@
     "loading": "Loading...",
     "error": "Error",
     "success": "Success"
+  },
+  "languageSwitcher": {
+    "title": "Language",
+    "selectLanguage": "Select language",
+    "tooltip": "Change interface language",
+    "languages": {
+      "ru": "Russian",
+      "en": "English",
+      "he": "Hebrew"
+    }
+  },
+  "navigation": {
+    "words": "Words",
+    "dialogs": "Dialogs",
+    "statistics": "Statistics",
+    "settings": "Settings"
+  },
+  "demo": {
+    "welcome": "Welcome!",
+    "description": "This is a demonstration of language switching in the vocabulary learning app.",
+    "currentLanguage": "Current language",
+    "rtlTest": "Text direction test"
   }
 }

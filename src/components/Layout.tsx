@@ -1,4 +1,6 @@
 import React, { type ReactNode } from 'react';
+import { useTranslation } from 'react-i18next';
+import LanguageSwitcher from './LanguageSwitcher';
 
 interface TabProps {
   id: string;
@@ -19,6 +21,8 @@ const Layout: React.FC<LayoutProps> = ({
   activeTab,
   onTabChange
 }) => {
+  const { t } = useTranslation();
+
   return (
     <div className="h-screen bg-gray-50 flex flex-col">
       <header className="bg-white shadow-sm flex-shrink-0">
@@ -33,8 +37,19 @@ const Layout: React.FC<LayoutProps> = ({
               </svg>
               <h1 className="text-xl font-semibold text-gray-900">FlashCards: Иврит-Русский</h1>
             </div>
-            <div className="text-xs text-gray-500">
-              v{import.meta.env.VITE_APP_VERSION} {/* Use environment variable */}
+            
+            <div className="flex items-center gap-4">
+              {/* Language Switcher - responsive design */}
+              <div className="hidden sm:block">
+                <LanguageSwitcher />
+              </div>
+              <div className="block sm:hidden">
+                <LanguageSwitcher compact />
+              </div>
+              
+              <div className="text-xs text-gray-500 hidden md:block">
+                v{import.meta.env.VITE_APP_VERSION}
+              </div>
             </div>
           </div>
         </div>
@@ -53,14 +68,16 @@ const Layout: React.FC<LayoutProps> = ({
               <button
                 key={tab.id}
                 type="button"
-                className={`flex flex-col items-center py-3 px-2 text-xs font-medium ${activeTab === tab.id
+                className={`flex flex-col items-center py-3 px-2 text-xs font-medium transition-colors duration-200 ${activeTab === tab.id
                     ? 'text-blue-600 border-t-2 border-blue-500'
                     : 'text-gray-500 hover:text-gray-700'
                   }`}
                 onClick={() => onTabChange(tab.id)}
               >
                 {tab.icon}
-                <span className="mt-1">{tab.label}</span>
+                <span className="mt-1">
+                  {t(`navigation.${tab.id}`, { defaultValue: tab.label })}
+                </span>
               </button>
             ))}
           </div>

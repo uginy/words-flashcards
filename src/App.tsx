@@ -9,7 +9,7 @@ import BackgroundTasksIndicator from './components/BackgroundTasksIndicator';
 import { useWordsStore, getStats } from './store/wordsStore';
 import Settings from './components/Settings';
 import { DialogsTab } from './components/DialogsTab';
-import LanguageSwitcher from './components/LanguageSwitcher';
+import LanguageDemo from './components/LanguageDemo';
 import {
   Select,
   SelectTrigger,
@@ -145,6 +145,18 @@ function App() {
           <path d="M12 12h.01"/>
           <path d="M16 12h.01"/>
           <path d="M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+        </svg>
+      ),
+    },
+    {
+      id: 'languages',
+      label: 'Языки',
+      icon: (
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <title>Языки</title>
+          <circle cx="12" cy="12" r="10"/>
+          <path d="M2 12h20"/>
+          <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
         </svg>
       ),
     },
@@ -303,6 +315,8 @@ function App() {
         );
       case 'dialogs':
         return <DialogsTab />;
+      case 'languages':
+        return <LanguageDemo />;
       case 'settings': // Add case for settings tab
         return <Settings />;
       default:
@@ -315,11 +329,6 @@ function App() {
       <Toaster />
       <BackgroundTasksIndicator />
       <Layout tabs={tabs} activeTab={activeTab} onTabChange={setActiveTab}>
-        {/* Language Switcher at the top */}
-        <div className="mb-4 p-4 bg-gray-50 rounded-lg">
-          <LanguageSwitcher />
-        </div>
-        
         {activeTab === 'add' ? (
           <div ref={wordInputRef}>
             <WordInput />

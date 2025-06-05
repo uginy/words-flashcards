@@ -26,8 +26,8 @@ const languageDetectorOptions = {
   // Order of detection
   order: ['localStorage', 'navigator', 'htmlTag'],
   
-  // Keys for localStorage
-  lookupLocalStorage: 'i18nextLng',
+  // Keys for localStorage - use same key as LanguageSwitcher
+  lookupLocalStorage: 'preferred-language',
   
   // Cache user language on localStorage
   caches: ['localStorage'],

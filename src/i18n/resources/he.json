@@ -3,5 +3,27 @@
     "loading": "טוען...",
     "error": "שגיאה",
     "success": "הצלחה"
+  },
+  "languageSwitcher": {
+    "title": "שפה",
+    "selectLanguage": "בחר שפה",
+    "tooltip": "שנה שפת ממשק",
+    "languages": {
+      "ru": "רוסית",
+      "en": "אנגלית",
+      "he": "עברית"
+    }
+  },
+  "navigation": {
+    "words": "מילים",
+    "dialogs": "דיאלוגים",
+    "statistics": "סטטיסטיקה",
+    "settings": "הגדרות"
+  },
+  "demo": {
+    "welcome": "ברוכים הבאים!",
+    "description": "זוהי הדגמה של החלפת שפות באפליקציה ללימוד אוצר מילים.",
+    "currentLanguage": "שפה נוכחית",
+    "rtlTest": "בדיקת כיוון טקסט"
   }
 }

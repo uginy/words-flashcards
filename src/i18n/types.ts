@@ -5,6 +5,28 @@ export interface TranslationResources {
     error: string;
     success: string;
   };
+  languageSwitcher: {
+    title: string;
+    selectLanguage: string;
+    tooltip: string;
+    languages: {
+      ru: string;
+      en: string;
+      he: string;
+    };
+  };
+  navigation: {
+    words: string;
+    dialogs: string;
+    statistics: string;
+    settings: string;
+  };
+  demo: {
+    welcome: string;
+    description: string;
+    currentLanguage: string;
+    rtlTest: string;
+  };
 }
 
 // Supported languages
