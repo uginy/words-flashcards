@@ -25,5 +25,84 @@
     "description": "This is a demonstration of language switching in the vocabulary learning app.",
     "currentLanguage": "Current language",
     "rtlTest": "Text direction test"
+  },
+  "tabs": {
+    "learn": "Learn",
+    "add": "Add",
+    "list": "List",
+    "dialogs": "Dialogs",
+    "languages": "Languages",
+    "settings": "Settings"
+  },
+  "filters": {
+    "category": "Category:",
+    "status": "Status:",
+    "selectCategory": "Select category",
+    "selectStatus": "Select status",
+    "allCategories": "All categories",
+    "all": "All",
+    "learned": "Learned",
+    "notLearned": "Not learned",
+    "reverseMode": "Russian → Hebrew (reverse mode)"
+  },
+  "actions": {
+    "know": "I Know",
+    "next": "Next →",
+    "previous": "← Previous",
+    "resetLevel": "Reset level ({{level}})",
+    "resetProgress": "Reset progress",
+    "addNewWords": "Add new words",
+    "addWords": "Add words"
+  },
+  "status": {
+    "learned": "Learned",
+    "notLearned": "Not learned",
+    "learningLevel": "Learning level: {{level}} of 5",
+    "examples": "Examples:",
+    "conjugations": "Conjugations:",
+    "translateToHebrew": "[Translate to Hebrew]",
+    "clickToSeeAnswer": "Click to see answer",
+    "clickToSeeTranslation": "Click to see translation",
+    "resetProgressTooltip": "Reset learning progress"
+  },
+  "messages": {
+    "congratulations": "Congratulations!",
+    "allWordsLearned": "You've learned all words in the list! What would you like to do next?",
+    "emptyWordList": "Word list is empty",
+    "addWordsToStart": "Add words to start learning."
+  },
+  "wordTable": {
+    "title": "Word list ({{count}})",
+    "exportTooltip": "Export words",
+    "importTooltip": "Import words",
+    "clearAllTooltip": "Clear all words",
+    "searchHebrew": "Search in Hebrew...",
+    "searchRussian": "Search in translation...",
+    "categories": "Categories",
+    "statusFilter": "Status",
+    "levelFilter": "Level",
+    "deleteAllTitle": "Delete all words?",
+    "deleteAllDescription": "This action cannot be undone. All words will be deleted from your collection.",
+    "wordUpdated": "Word successfully updated.",
+    "noWordsToExport": "No words to export.",
+    "fileReadError": "Could not read file.",
+    "invalidFileFormat": "Invalid file format. Expected array of words.",
+    "jsonParseError": "Error parsing JSON. Check file format.",
+    "importSuccess": "Imported {{count}} words!",
+    "allWordsDeleted": "All words deleted.",
+    "categoryLabels": {
+      "verb": "Verb",
+      "noun": "Noun",
+      "adjective": "Adjective",
+      "phrase": "Phrases"
+    },
+    "levelLabels": {
+      "level5": "Level 5",
+      "level4": "Level 4",
+      "level3": "Level 3",
+      "level2": "Level 2",
+      "level1": "Level 1",
+      "notStarted": "Not started"
+    }
   }
 }

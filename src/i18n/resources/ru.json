@@ -25,5 +25,84 @@
     "description": "Это демонстрация переключения языков в приложении для изучения слов.",
     "currentLanguage": "Текущий язык",
     "rtlTest": "Тест направления текста"
+  },
+  "tabs": {
+    "learn": "Учить",
+    "add": "Добавить",
+    "list": "Список",
+    "dialogs": "Диалоги",
+    "languages": "Языки",
+    "settings": "Настройки"
+  },
+  "filters": {
+    "category": "Категория:",
+    "status": "Статус:",
+    "selectCategory": "Выберите категорию",
+    "selectStatus": "Выберите статус",
+    "allCategories": "Все категории",
+    "all": "Все",
+    "learned": "Изученные",
+    "notLearned": "Не изученные",
+    "reverseMode": "Русский → Иврит (реверсивный режим)"
+  },
+  "actions": {
+    "know": "Знаю",
+    "next": "Далее →",
+    "previous": "← Предыдущее",
+    "resetLevel": "Сбросить уровень ({{level}})",
+    "resetProgress": "Сбросить прогресс",
+    "addNewWords": "Добавить новые слова",
+    "addWords": "Добавить слова"
+  },
+  "status": {
+    "learned": "Изучено",
+    "notLearned": "Не изучено",
+    "learningLevel": "Уровень знания: {{level}} из 5",
+    "examples": "Примеры:",
+    "conjugations": "Спряжения:",
+    "translateToHebrew": "[Переведите на иврит]",
+    "clickToSeeAnswer": "Нажмите, чтобы увидеть ответ",
+    "clickToSeeTranslation": "Нажмите, чтобы увидеть перевод",
+    "resetProgressTooltip": "Сбросить прогресс изучения"
+  },
+  "messages": {
+    "congratulations": "Поздравляем!",
+    "allWordsLearned": "Вы выучили все слова в списке! Что хотите сделать дальше?",
+    "emptyWordList": "Список слов пуст",
+    "addWordsToStart": "Добавьте слова, чтобы начать изучение."
+  },
+  "wordTable": {
+    "title": "Список слов ({{count}})",
+    "exportTooltip": "Экспорт слов",
+    "importTooltip": "Импорт слов",
+    "clearAllTooltip": "Очистить все слова",
+    "searchHebrew": "Поиск на иврите...",
+    "searchRussian": "Поиск по переводу...",
+    "categories": "Категории",
+    "statusFilter": "Статус",
+    "levelFilter": "Уровень",
+    "deleteAllTitle": "Удалить все слова?",
+    "deleteAllDescription": "Это действие нельзя отменить. Все слова будут удалены из вашей коллекции.",
+    "wordUpdated": "Слово успешно обновлено.",
+    "noWordsToExport": "Нет слов для экспорта.",
+    "fileReadError": "Не удалось прочитать файл.",
+    "invalidFileFormat": "Неверный формат файла. Ожидается массив слов.",
+    "jsonParseError": "Ошибка при парсинге JSON. Проверьте формат файла.",
+    "importSuccess": "Импортировано {{count}} слов!",
+    "allWordsDeleted": "Все слова удалены.",
+    "categoryLabels": {
+      "verb": "Глагол",
+      "noun": "Существительное",
+      "adjective": "Прилагательное",
+      "phrase": "Фразы"
+    },
+    "levelLabels": {
+      "level5": "Уровень 5",
+      "level4": "Уровень 4",
+      "level3": "Уровень 3",
+      "level2": "Уровень 2",
+      "level1": "Уровень 1",
+      "notStarted": "Не начато"
+    }
   }
 }

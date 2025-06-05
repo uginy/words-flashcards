@@ -25,5 +25,84 @@
     "description": "זוהי הדגמה של החלפת שפות באפליקציה ללימוד אוצר מילים.",
     "currentLanguage": "שפה נוכחית",
     "rtlTest": "בדיקת כיוון טקסט"
+  },
+  "tabs": {
+    "learn": "למד",
+    "add": "הוסף",
+    "list": "רשימה",
+    "dialogs": "דיאלוגים",
+    "languages": "שפות",
+    "settings": "הגדרות"
+  },
+  "filters": {
+    "category": "קטגוריה:",
+    "status": "סטטוס:",
+    "selectCategory": "בחר קטגוריה",
+    "selectStatus": "בחר סטטוס",
+    "allCategories": "כל הקטגוריות",
+    "all": "הכל",
+    "learned": "נלמדו",
+    "notLearned": "לא נלמדו",
+    "reverseMode": "רוסית ← עברית (מצב הפוך)"
+  },
+  "actions": {
+    "know": "יודע",
+    "next": "הבא ←",
+    "previous": "→ קודם",
+    "resetLevel": "איפוס רמה ({{level}})",
+    "resetProgress": "איפוס התקדמות",
+    "addNewWords": "הוסף מילים חדשות",
+    "addWords": "הוסף מילים"
+  },
+  "status": {
+    "learned": "נלמד",
+    "notLearned": "לא נלמד",
+    "learningLevel": "רמת לימוד: {{level}} מתוך 5",
+    "examples": "דוגמאות:",
+    "conjugations": "נטיות:",
+    "translateToHebrew": "[תרגם לעברית]",
+    "clickToSeeAnswer": "לחץ לראות תשובה",
+    "clickToSeeTranslation": "לחץ לראות תרגום",
+    "resetProgressTooltip": "איפוס התקדמות הלימוד"
+  },
+  "messages": {
+    "congratulations": "ברכות!",
+    "allWordsLearned": "למדת את כל המילים ברשימה! מה תרצה לעשות עכשיו?",
+    "emptyWordList": "רשימת המילים ריקה",
+    "addWordsToStart": "הוסף מילים כדי להתחיל ללמוד."
+  },
+  "wordTable": {
+    "title": "רשימת מילים ({{count}})",
+    "exportTooltip": "יצוא מילים",
+    "importTooltip": "יבוא מילים",
+    "clearAllTooltip": "נקה את כל המילים",
+    "searchHebrew": "חיפוש בעברית...",
+    "searchRussian": "חיפוש בתרגום...",
+    "categories": "קטגוריות",
+    "statusFilter": "סטטוס",
+    "levelFilter": "רמה",
+    "deleteAllTitle": "למחוק את כל המילים?",
+    "deleteAllDescription": "פעולה זו לא ניתנת לביטול. כל המילים יימחקו מהאוסף שלך.",
+    "wordUpdated": "המילה עודכנה בהצלחה.",
+    "noWordsToExport": "אין מילים לייצוא.",
+    "fileReadError": "לא ניתן לקרוא את הקובץ.",
+    "invalidFileFormat": "פורמט קובץ לא תקין. צפוי מערך של מילים.",
+    "jsonParseError": "שגיאה בניתוח JSON. בדוק את פורמט הקובץ.",
+    "importSuccess": "יובאו {{count}} מילים!",
+    "allWordsDeleted": "כל המילים נמחקו.",
+    "categoryLabels": {
+      "verb": "פועל",
+      "noun": "שם עצם",
+      "adjective": "תואר",
+      "phrase": "ביטויים"
+    },
+    "levelLabels": {
+      "level5": "רמה 5",
+      "level4": "רמה 4",
+      "level3": "רמה 3",
+      "level2": "רמה 2",
+      "level1": "רמה 1",
+      "notStarted": "לא התחיל"
+    }
   }
 }

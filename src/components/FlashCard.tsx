@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useSpeechSynthesis } from '../hooks/useSpeechSynthesis';
 import CompactConjugation from './CompactConjugation';
 import { SpeakerIcon } from './SpeakerIcon';
@@ -20,6 +21,7 @@ interface FlashCardProps {
 
 
 const FlashCard: React.FC<FlashCardProps> = ({ word: propWord, reverse, onMarkAsLearned, onNext, onPrevious, currentIndex: propCurrentIndex, totalWords: propTotalWords }) => {
+  const { t } = useTranslation();
 
   const words = useWordsStore((state) => state.words);
   const currentIndex = useWordsStore((state) => state.currentIndex);
@@ -58,7 +60,7 @@ const FlashCard: React.FC<FlashCardProps> = ({ word: propWord, reverse, onMarkAs
   const renderExamples = (examples: Array<{ hebrew?: string, russian?: string } | string>) => {
     return (
       <div className="mt-4 text-left">
-        <h4 className="text-md font-semibold text-gray-600 mb-1">Примеры:</h4>
+        <h4 className="text-md font-semibold text-gray-600 mb-1">{t('status.examples')}</h4>
         <ul className="list-none list-inside text-sm text-gray-500">
           {examples.map((example, index) => {
 
@@ -185,16 +187,16 @@ const FlashCard: React.FC<FlashCardProps> = ({ word: propWord, reverse, onMarkAs
                 handleMarkLearned();
               }}
             >
-              Знаю
+              {t('actions.know')}
             </button>
             {!!word.learningStage && word.learningStage > 0 && (
               <button
                 type="button"
                 className="w-full sm:w-auto px-3 py-2 rounded-md bg-blue-500 text-white text-sm hover:bg-blue-600 transition-colors"
                 onClick={handleResetProgress}
-                title="Сбросить прогресс изучения"
+                title={t('status.resetProgressTooltip')}
               >
-                Сбросить уровень ({word.learningStage})
+                {t('actions.resetLevel', { level: word.learningStage })}
               </button>
             )}
           </div>
@@ -209,7 +211,7 @@ const FlashCard: React.FC<FlashCardProps> = ({ word: propWord, reverse, onMarkAs
                 handlePreviousWord();
               }}
             >
-              ← Предыдущее
+              {t('actions.previous')}
             </button>
             {/* Progress indicator */}
             <div className="text-lg font-semibold text-gray-700">
@@ -224,7 +226,7 @@ const FlashCard: React.FC<FlashCardProps> = ({ word: propWord, reverse, onMarkAs
                 handleSkip();
               }}
             >
-              Далее →
+              {t('actions.next')}
             </button>
           </div>
         </div>
@@ -232,7 +234,7 @@ const FlashCard: React.FC<FlashCardProps> = ({ word: propWord, reverse, onMarkAs
           <div className="absolute top-3 right-4 z-10">
             {word.isLearned ? (
               <span
-                title={`Уровень знания: ${word.learningStage || 1} из 5`}
+                title={t('status.learningLevel', { level: word.learningStage || 1 })}
                 className="inline-flex items-center text-green-600"
               >
                 <div className="relative">
@@ -248,7 +250,7 @@ const FlashCard: React.FC<FlashCardProps> = ({ word: propWord, reverse, onMarkAs
                 </div>
               </span>
             ) : (
-              <span title="Не изучено" className="inline-flex items-center text-gray-400">
+              <span title={t('status.notLearned')} className="inline-flex items-center text-gray-400">
                 <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className="bg-gray-100 rounded-full p-1">
                   <circle cx="12" cy="12" r="11" stroke="currentColor" fill="#f3f4f6" />
                   <path d="M8 7h8m-8 10h8m-7-2c0-2 3-2 3-4s-3-2-3-4m6 8c0-2-3-2-3-4s3-2 3-4" />
@@ -271,8 +273,8 @@ const FlashCard: React.FC<FlashCardProps> = ({ word: propWord, reverse, onMarkAs
                 {reverse ? (
                   <>
                     <h2 className={`text-4xl font-bold mb-2 ${categoryColors.text}`}>{word.russian}</h2>
-                    <p className={`text-xl ${categoryColors.text} mb-3`}>[Переведите на иврит]</p>
-                    <p className="text-sm text-gray-500 mt-2">Нажмите, чтобы увидеть ответ</p>
+                    <p className={`text-xl ${categoryColors.text} mb-3`}>{t('status.translateToHebrew')}</p>
+                    <p className="text-sm text-gray-500 mt-2">{t('status.clickToSeeAnswer')}</p>
 
                     {word.examples && word.examples.length > 0 && renderExamples(word.examples)}
                   </>
@@ -289,7 +291,7 @@ const FlashCard: React.FC<FlashCardProps> = ({ word: propWord, reverse, onMarkAs
                       </span>
                     </h2>
                     <p className={`text-xl ${categoryColors.text} mb-3`}>[{word.transcription}]</p>
-                    <p className="text-sm text-gray-500 mt-2">Нажмите, чтобы увидеть перевод</p>
+                    <p className="text-sm text-gray-500 mt-2">{t('status.clickToSeeTranslation')}</p>
                     {word.examples && word.examples.length > 0 && renderExamples(word.examples)}
                   </>
                 )}
@@ -319,7 +321,7 @@ const FlashCard: React.FC<FlashCardProps> = ({ word: propWord, reverse, onMarkAs
                     {word.examples && word.examples.length > 0 && renderExamples(word.examples)}
                     {word.category === "פועל" && word.conjugations && (
                       <div className="text-left mx-auto w-full px-2 my-4">
-                        <div className={`font-medium text-lg mb-2 ${categoryColors.text}`}>Спряжения:</div>
+                        <div className={`font-medium text-lg mb-2 ${categoryColors.text}`}>{t('status.conjugations')}</div>
                         <CompactConjugation conjugations={word.conjugations} />
                       </div>
                     )}

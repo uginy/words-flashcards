@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Toaster } from '@/components/ui/toaster'; // shadcn/ui Toaster
 import Layout from './components/Layout';
 import FlashCard from './components/FlashCard';
@@ -19,6 +20,7 @@ import {
 } from './components/ui/select';
 
 function App() {
+  const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState('learn');
   const [reverseMode, setReverseMode] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
@@ -38,7 +40,7 @@ function App() {
 
   // Получаем список уникальных категорий из слов
   const categories = Array.from(new Set(words.map(w => w.category))).filter(Boolean);
-  const categoryOptions = [{ value: 'all', label: 'Все категории' }, ...categories.map(c => ({ value: c, label: c }))];
+  const categoryOptions = [{ value: 'all', label: t('filters.allCategories') }, ...categories.map(c => ({ value: c, label: c }))];
 
   // Фильтруем слова по выбранной категории и статусу (только для режима "Учить")
   const filteredWords = words.filter(w => {
@@ -99,10 +101,10 @@ function App() {
   const tabs = [
     {
       id: 'learn',
-      label: 'Учить',
+      label: t('tabs.learn'),
       icon: (
         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <title>Учить</title>
+          <title>{t('tabs.learn')}</title>
           <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" />
           <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" />
         </svg>
@@ -110,10 +112,10 @@ function App() {
     },
     {
       id: 'add',
-      label: 'Добавить',
+      label: t('tabs.add'),
       icon: (
         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <title>Добавить</title>
+          <title>{t('tabs.add')}</title>
           <path d="M11 12H3" />
           <path d="M16 6H3" />
           <path d="M16 18H3" />
@@ -124,10 +126,10 @@ function App() {
     },
     {
       id: 'list',
-      label: 'Список',
+      label: t('tabs.list'),
       icon: (
         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <title>Список</title>
+          <title>{t('tabs.list')}</title>
           <rect width="18" height="18" x="3" y="3" rx="2" />
           <path d="M7 7h10" />
           <path d="M7 12h10" />
@@ -137,10 +139,10 @@ function App() {
     },
     {
       id: 'dialogs',
-      label: 'Диалоги',
+      label: t('tabs.dialogs'),
       icon: (
         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <title>Диалоги</title>
+          <title>{t('tabs.dialogs')}</title>
           <path d="M8 12h.01"/>
           <path d="M12 12h.01"/>
           <path d="M16 12h.01"/>
@@ -150,10 +152,10 @@ function App() {
     },
     {
       id: 'languages',
-      label: 'Языки',
+      label: t('tabs.languages'),
       icon: (
         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <title>Языки</title>
+          <title>{t('tabs.languages')}</title>
           <circle cx="12" cy="12" r="10"/>
           <path d="M2 12h20"/>
           <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
@@ -162,10 +164,10 @@ function App() {
     },
     {
       id: 'settings',
-      label: 'Настройки',
+      label: t('tabs.settings'),
       icon: (
         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-settings">
-          <title>Настройки</title>
+          <title>{t('tabs.settings')}</title>
           <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 .25 1l-.01.44a2 2 0 0 1-1.73 1l-.25.43a2 2 0 0 1 0 2l.08.15a2 2 0 0 0 .73 2.73l.38.22a2 2 0 0 0 2.73-.73l.1-.15a2 2 0 0 1 1-.25l.43-.01a2 2 0 0 1 1.73 1V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.38a2 2 0 0 0-.73-2.73l-.15-.1a2 2 0 0 1-.25-1l.01-.44a2 2 0 0 1 1.73-1l.25-.43a2 2 0 0 1 0 2l-.08-.15a2 2 0 0 0-.73-2.73l-.38-.22a2 2 0 0 0-2.73.73l-.1.15a2 2 0 0 1-1 .25l-.43.01a2 2 0 0 1-1.73-1V4a2 2 0 0 0-2-2z"/>
           <circle cx="12" cy="12" r="3"/>
         </svg>
@@ -182,10 +184,10 @@ function App() {
             {/* Фильтр по категориям и переключатель режима обучения */}
             <div className="flex flex-col gap-2 mb-2 sm:flex-row sm:items-center sm:gap-4 sm:justify-center">
               <div className="w-full sm:w-64">
-                <label className="block text-sm font-medium text-gray-700 mb-1">Категория:</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">{t('filters.category')}</label>
                 <Select value={selectedCategory} onValueChange={setSelectedCategory}>
                   <SelectTrigger>
-                    <SelectValue placeholder="Выберите категорию" />
+                    <SelectValue placeholder={t('filters.selectCategory')} />
                   </SelectTrigger>
                   <SelectContent>
                     {categoryOptions.map(opt => (
@@ -197,15 +199,15 @@ function App() {
                 </Select>
               </div>
               <div className="w-full sm:w-64">
-                <label className="block text-sm font-medium text-gray-700 mb-1">Статус:</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">{t('filters.status')}</label>
                 <Select value={selectedStatus} onValueChange={v => setSelectedStatus(v as 'all' | 'learned' | 'not_learned')}>
                   <SelectTrigger>
-                    <SelectValue placeholder="Выберите статус" />
+                    <SelectValue placeholder={t('filters.selectStatus')} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">Все</SelectItem>
-                    <SelectItem value="learned">Изученные</SelectItem>
-                    <SelectItem value="not_learned">Не изученные</SelectItem>
+                    <SelectItem value="all">{t('filters.all')}</SelectItem>
+                    <SelectItem value="learned">{t('filters.learned')}</SelectItem>
+                    <SelectItem value="not_learned">{t('filters.notLearned')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -216,7 +218,7 @@ function App() {
                   onChange={() => setReverseMode((v) => !v)}
                   className="form-checkbox h-5 w-5 text-blue-600"
                 />
-                <span className="ml-2 text-sm text-gray-700 font-medium">Русский → Иврит (реверсивный режим)</span>
+                <span className="ml-2 text-sm text-gray-700 font-medium">{t('filters.reverseMode')}</span>
               </label>
             </div>
             <Statistics stats={stats} />
@@ -224,20 +226,20 @@ function App() {
               // Case: No words in the list at all
               <div className="bg-white rounded-lg shadow-md p-6 text-center">
                 <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mx-auto text-green-500 mb-3">
-                  <title>Список слов пуст</title>
+                  <title>{t('messages.emptyWordList')}</title>
                   <path d="M5 12h14" />
                   <path d="M12 5v14" />
                 </svg>
-                <h3 className="text-lg font-medium text-gray-900 mb-2">Список слов пуст</h3>
+                <h3 className="text-lg font-medium text-gray-900 mb-2">{t('messages.emptyWordList')}</h3>
                 <p className="text-gray-600 mb-4">
-                  Добавьте слова, чтобы начать изучение.
+                  {t('messages.addWordsToStart')}
                 </p>
                 <button
                   type="button"
                   onClick={() => setActiveTab('add')}
                   className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
                 >
-                  Добавить слова
+                  {t('actions.addWords')}
                 </button>
               </div>
             ) : (
@@ -245,13 +247,13 @@ function App() {
               (['all', 'not_learned'].includes(selectedStatus) && stats.remaining === 0 && stats.total > 0) ? (
                 <div className="bg-white rounded-lg shadow-md p-6 text-center animate-fadeIn">
                   <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mx-auto text-green-500 mb-3">
-                    <title>Поздравляем!</title>
+                    <title>{t('messages.congratulations')}</title>
                     <circle cx="12" cy="12" r="10" />
                     <path d="M9 12l2 2 4-4" />
                   </svg>
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">Поздравляем!</h3>
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">{t('messages.congratulations')}</h3>
                   <p className="text-gray-600 mb-4">
-                    Вы выучили все слова в списке! Что хотите сделать дальше?
+                    {t('messages.allWordsLearned')}
                   </p>
                   <div className="flex flex-col gap-2 mt-4 items-center">
                     <button
@@ -259,7 +261,7 @@ function App() {
                       onClick={() => resetProgress()}
                       className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
                     >
-                      Сбросить прогресс
+                      {t('actions.resetProgress')}
                     </button>
                     <button
                       type="button"
@@ -273,7 +275,7 @@ function App() {
                       }}
                       className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
                     >
-                      Добавить новые слова
+                      {t('actions.addNewWords')}
                     </button>
                   </div>
                 </div>

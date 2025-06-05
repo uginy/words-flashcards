@@ -27,6 +27,85 @@ export interface TranslationResources {
     currentLanguage: string;
     rtlTest: string;
   };
+  tabs: {
+    learn: string;
+    add: string;
+    list: string;
+    dialogs: string;
+    languages: string;
+    settings: string;
+  };
+  filters: {
+    category: string;
+    status: string;
+    selectCategory: string;
+    selectStatus: string;
+    allCategories: string;
+    all: string;
+    learned: string;
+    notLearned: string;
+    reverseMode: string;
+  };
+  actions: {
+    know: string;
+    next: string;
+    previous: string;
+    resetLevel: string;
+    resetProgress: string;
+    addNewWords: string;
+    addWords: string;
+  };
+  status: {
+    learned: string;
+    notLearned: string;
+    learningLevel: string;
+    examples: string;
+    conjugations: string;
+    translateToHebrew: string;
+    clickToSeeAnswer: string;
+    clickToSeeTranslation: string;
+    resetProgressTooltip: string;
+  };
+  messages: {
+    congratulations: string;
+    allWordsLearned: string;
+    emptyWordList: string;
+    addWordsToStart: string;
+  };
+  wordTable: {
+    title: string;
+    exportTooltip: string;
+    importTooltip: string;
+    clearAllTooltip: string;
+    searchHebrew: string;
+    searchRussian: string;
+    categories: string;
+    statusFilter: string;
+    levelFilter: string;
+    deleteAllTitle: string;
+    deleteAllDescription: string;
+    wordUpdated: string;
+    noWordsToExport: string;
+    fileReadError: string;
+    invalidFileFormat: string;
+    jsonParseError: string;
+    importSuccess: string;
+    allWordsDeleted: string;
+    categoryLabels: {
+      verb: string;
+      noun: string;
+      adjective: string;
+      phrase: string;
+    };
+    levelLabels: {
+      level5: string;
+      level4: string;
+      level3: string;
+      level2: string;
+      level1: string;
+      notStarted: string;
+    };
+  };
 }
 
 // Supported languages

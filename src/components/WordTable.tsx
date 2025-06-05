@@ -1,5 +1,6 @@
 import type { FC } from 'react';
 import { useState, useRef, useEffect, useMemo, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useToast } from '@/hooks/use-toast';
 import type { Word } from '../types';
 import { useWordsStore } from '../store/wordsStore';
@@ -27,6 +28,7 @@ interface WordTableProps {
 }
 
 const WordTable: FC<WordTableProps> = ({ onEditWord }) => {
+  const { t } = useTranslation();
   const allWords = useWordsStore(state => state.words);
   const replaceAllWords = useWordsStore(state => state.replaceAllWords);
   const clearAllWords = useWordsStore(state => state.clearAllWords);
@@ -85,13 +87,13 @@ const WordTable: FC<WordTableProps> = ({ onEditWord }) => {
     if (onEditWord) {
       onEditWord(editedWord);
     }
-    toast({ title: "Успех", description: 'Слово успешно обновлено.' });
-  }, [allWords, replaceAllWords, onEditWord, toast]);
+    toast({ title: t('common.success'), description: t('wordTable.wordUpdated') });
+  }, [allWords, replaceAllWords, onEditWord, toast, t]);
 
   // Function to handle word export
   const handleExportWords = useCallback(() => {
     if (!allWords || allWords.length === 0) {
-      toast({ title: "Информация", description: 'Нет слов для экспорта.' });
+      toast({ title: "Информация", description: t('wordTable.noWordsToExport') });
       return;
     }
 
@@ -105,7 +107,7 @@ const WordTable: FC<WordTableProps> = ({ onEditWord }) => {
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
-  }, [allWords, toast]);
+  }, [allWords, toast, t]);
 
   // Function to handle word import
   const handleImportWords = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
@@ -118,29 +120,29 @@ const WordTable: FC<WordTableProps> = ({ onEditWord }) => {
       try {
         const content = e.target?.result;
         if (typeof content !== 'string') {
-          toast({ title: "Ошибка", description: 'Не удалось прочитать файл.', variant: "destructive" });
+          toast({ title: t('common.error'), description: t('wordTable.fileReadError'), variant: "destructive" });
           return;
         }
         
         const parsedWords = JSON.parse(content);
         if (!Array.isArray(parsedWords)) {
-          toast({ 
-            title: "Ошибка", 
-            description: 'Неверный формат файла. Ожидается массив слов.',
-            variant: "destructive" 
+          toast({
+            title: t('common.error'),
+            description: t('wordTable.invalidFileFormat'),
+            variant: "destructive"
           });
           return;
         }
 
         replaceAllWords(parsedWords);
-        toast({ 
-          title: "Успех", 
-          description: `Импортировано ${parsedWords.length} слов!`
+        toast({
+          title: t('common.success'),
+          description: t('wordTable.importSuccess', { count: parsedWords.length })
         });
       } catch {
         toast({
-          title: "Ошибка",
-          description: 'Ошибка при парсинге JSON. Проверьте формат файла.',
+          title: t('common.error'),
+          description: t('wordTable.jsonParseError'),
           variant: "destructive"
         });
       } finally {
@@ -151,13 +153,13 @@ const WordTable: FC<WordTableProps> = ({ onEditWord }) => {
     };
 
     reader.readAsText(file);
-  }, [replaceAllWords, toast]);
+  }, [replaceAllWords, toast, t]);
 
   const performClearAllWords = useCallback(() => {
     clearAllWords();
     localStorage.removeItem('hebrew-flashcards-data');
-    toast({ title: "Успех", description: 'Все слова удалены.' });
-  }, [clearAllWords, toast]);
+    toast({ title: t('common.success'), description: t('wordTable.allWordsDeleted') });
+  }, [clearAllWords, toast, t]);
 
   return (
     <div className="w-full min-w-0">
@@ -192,7 +194,7 @@ const WordTable: FC<WordTableProps> = ({ onEditWord }) => {
         <div className="p-4 space-y-4 w-full">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <h3 className="text-base sm:text-lg font-medium text-gray-800 truncate max-w-full">
-              Список слов ({filteredWordCount})
+              {t('wordTable.title', { count: filteredWordCount })}
             </h3>
             <div className="flex flex-wrap gap-2 w-full sm:w-auto justify-start sm:justify-end">
               <TooltipProvider>
@@ -208,7 +210,7 @@ const WordTable: FC<WordTableProps> = ({ onEditWord }) => {
                     </Button>
                   </TooltipTrigger>
                   <TooltipContent>
-                    <p>Экспорт слов</p>
+                    <p>{t('wordTable.exportTooltip')}</p>
                   </TooltipContent>
                 </Tooltip>
 
@@ -234,15 +236,15 @@ const WordTable: FC<WordTableProps> = ({ onEditWord }) => {
                     </div>
                   </TooltipTrigger>
                   <TooltipContent>
-                    <p>Импорт слов</p>
+                    <p>{t('wordTable.importTooltip')}</p>
                   </TooltipContent>
                 </Tooltip>
 
                 <DeleteButton
                   onDelete={performClearAllWords}
-                  tooltipText="Очистить все слова"
-                  dialogTitle="Удалить все слова?"
-                  dialogDescription="Это действие нельзя отменить. Все слова будут удалены из вашей коллекции."
+                  tooltipText={t('wordTable.clearAllTooltip')}
+                  dialogTitle={t('wordTable.deleteAllTitle')}
+                  dialogDescription={t('wordTable.deleteAllDescription')}
                   variant="destructive"
                   className="h-9 w-9"
                 />
@@ -256,39 +258,39 @@ const WordTable: FC<WordTableProps> = ({ onEditWord }) => {
               data={allWords}
               searchable
               searchColumns={[
-                { id: "hebrew", placeholder: "Поиск на иврите..." },
-                { id: "russian", placeholder: "Поиск по переводу..." }
+                { id: "hebrew", placeholder: t('wordTable.searchHebrew') },
+                { id: "russian", placeholder: t('wordTable.searchRussian') }
               ]}
               paginated
               filters={[
                 {
                   id: "category",
-                  label: "Категории",
+                  label: t('wordTable.categories'),
                   options: [
-                    { label: "Глагол", value: "פועל" },
-                    { label: "Существительное", value: "שם עצם" },
-                    { label: "Прилагательное", value: "שם תואר" },
-                    { label: "Фразы", value: "פרזות" },
+                    { label: t('wordTable.categoryLabels.verb'), value: "פועל" },
+                    { label: t('wordTable.categoryLabels.noun'), value: "שם עצם" },
+                    { label: t('wordTable.categoryLabels.adjective'), value: "שם תואר" },
+                    { label: t('wordTable.categoryLabels.phrase'), value: "פרזות" },
                   ]
                 },
                 {
                   id: "isLearned",
-                  label: "Статус",
+                  label: t('wordTable.statusFilter'),
                   options: [
-                    { label: "Изучено", value: true },
-                    { label: "Не изучено", value: false },
+                    { label: t('status.learned'), value: true },
+                    { label: t('status.notLearned'), value: false },
                   ]
                 },
                 {
                   id: "learningStage",
-                  label: "Уровень",
+                  label: t('wordTable.levelFilter'),
                   options: [
-                    { label: "Уровень 5", value: "5" },
-                    { label: "Уровень 4", value: "4" },
-                    { label: "Уровень 3", value: "3" },
-                    { label: "Уровень 2", value: "2" },
-                    { label: "Уровень 1", value: "1" },
-                    { label: "Не начато", value: "0" },
+                    { label: t('wordTable.levelLabels.level5'), value: "5" },
+                    { label: t('wordTable.levelLabels.level4'), value: "4" },
+                    { label: t('wordTable.levelLabels.level3'), value: "3" },
+                    { label: t('wordTable.levelLabels.level2'), value: "2" },
+                    { label: t('wordTable.levelLabels.level1'), value: "1" },
+                    { label: t('wordTable.levelLabels.notStarted'), value: "0" },
                   ]
                 }
               ]}
