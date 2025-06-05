@@ -25,7 +25,7 @@ const FlagIcon: React.FC<{ languageCode: SupportedLanguage; className?: string }
     en: '🇺🇸',
     he: '🇮🇱'
   };
-  
+
   return (
     <span
       className={`inline-block text-base flag-icon ${className}`}
@@ -41,13 +41,13 @@ const FlagIcon: React.FC<{ languageCode: SupportedLanguage; className?: string }
 const CompactLanguageSwitcher: React.FC = () => {
   const { i18n, t } = useTranslation();
   const [isChanging, setIsChanging] = React.useState(false);
-  
+
   const handleLanguageChange = (language: SupportedLanguage) => {
     setIsChanging(true);
     i18n.changeLanguage(language);
     // Save to localStorage
     localStorage.setItem('preferred-language', language);
-    
+
     // Reset animation state
     setTimeout(() => setIsChanging(false), 300);
   };
@@ -67,13 +67,13 @@ const CompactLanguageSwitcher: React.FC = () => {
             </SelectTrigger>
             <SelectContent className="min-w-[160px]">
               {Object.values(LANGUAGES).map((lang) => (
-                <SelectItem 
-                  key={lang.code} 
+                <SelectItem
+                  key={lang.code}
                   value={lang.code}
-                  className="flex items-center gap-2 cursor-pointer hover:bg-gray-50 transition-colors"
+                  className="flex flex-row items-center gap-2 cursor-pointer hover:bg-gray-50 transition-colors"
                 >
                   <FlagIcon languageCode={lang.code} className="w-4 h-4" />
-                  <span className="font-medium">{lang.nativeName}</span>
+                  <span className="font-medium mx-2">{lang.nativeName}</span>
                 </SelectItem>
               ))}
             </SelectContent>
@@ -91,13 +91,13 @@ const CompactLanguageSwitcher: React.FC = () => {
 const FullLanguageSwitcher: React.FC = () => {
   const { i18n, t } = useTranslation();
   const [isChanging, setIsChanging] = React.useState(false);
-  
+
   const handleLanguageChange = (language: SupportedLanguage) => {
     setIsChanging(true);
     i18n.changeLanguage(language);
     // Save to localStorage
     localStorage.setItem('preferred-language', language);
-    
+
     // Reset animation state
     setTimeout(() => setIsChanging(false), 300);
   };
@@ -126,16 +126,13 @@ const FullLanguageSwitcher: React.FC = () => {
               </SelectTrigger>
               <SelectContent className="min-w-[180px] border-gray-200 shadow-lg">
                 {Object.values(LANGUAGES).map((lang) => (
-                  <SelectItem 
-                    key={lang.code} 
+                  <SelectItem
+                    key={lang.code}
                     value={lang.code}
-                    className="flex items-center gap-3 py-2 cursor-pointer hover:bg-blue-50 focus:bg-blue-50 transition-colors duration-150"
+                    className="flex items-center gap-2 py-2 cursor-pointer hover:bg-blue-50 focus:bg-blue-50 transition-colors duration-150"
                   >
                     <FlagIcon languageCode={lang.code} />
-                    <div className="flex flex-col">
-                      <span className="font-medium text-gray-900">{lang.nativeName}</span>
-                      <span className="text-xs text-gray-500">{lang.name}</span>
-                    </div>
+                    <span className="font-medium text-gray-900 mx-2">{lang.nativeName}</span>
                   </SelectItem>
                 ))}
               </SelectContent>
