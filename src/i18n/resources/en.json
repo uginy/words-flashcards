@@ -104,5 +104,150 @@
       "level1": "Level 1",
       "notStarted": "Not started"
     }
+  },
+  "settings": {
+    "title": "Settings",
+    "tableSettings": "Table Settings",
+    "recordsPerPage": "Records per page",
+    "recordsPerPagePlaceholder": "Select number of records",
+    "recordsText": "records",
+    "llmSettings": "LLM Settings (OpenRouter)",
+    "apiKeyLabel": "OpenRouter API Key",
+    "apiKeyHint": "Your API key is stored locally in your browser's localStorage.",
+    "modelSelectLabel": "Select LLM Model",
+    "searchModelPlaceholder": "Search model...",
+    "noModelsFound": "No models found",
+    "refreshButton": "Refresh",
+    "refreshingButton": "Refreshing...",
+    "showFreeOnlyLabel": "Show only models with $0 prompt/completion cost",
+    "noModelsError": "No models loaded. Ensure your API key is correct and try refreshing.",
+    "saveButton": "Save Settings",
+    "settingsSaved": "Settings saved",
+    "settingsSavedDescription": "All settings successfully saved!",
+    "modelsFetchError": "Error",
+    "modelsFetchErrorDesc": "Failed to load models. Check console for details.",
+    "costWarning": "Note: Using LLMs can incur costs. Please check OpenRouter's pricing for details. This application is not responsible for any charges."
+  },
+  "wordInput": {
+    "title": "Add Words",
+    "importedWordsDetected": "Imported words detected!",
+    "importWordsButton": "Import words",
+    "instructions": "Add a list of words in Hebrew or Russian, each word should be on a new line. We will analyze it and correctly add it to the database.",
+    "backgroundProcessingInfo": "💡 Background processing: Words will be processed in the background. The process will continue even when navigating to other pages of the application!",
+    "placeholder": "Enter words in Russian or Hebrew, each word on a new line...",
+    "useSampleButton": "Use sample",
+    "clearButton": "Clear",
+    "addWordsButton": "🔄 Add words",
+    "apiNotConfigured": "OpenRouter API key or model not configured. Please set them in Settings.",
+    "processingError": "Error starting background processing",
+    "importSuccess": "Success!",
+    "importSuccessDescription": "Imported words loaded into the form. Click \"Add\" to complete the import.",
+    "errorTitle": "Error:"
+  },
+  "dialogs": {
+    "generateTitle": "Dialog Generator",
+    "generateButton": "Generate Dialog",
+    "generatingButton": "Generating...",
+    "noWordsAvailable": "No words available for dialog generation",
+    "addWordsFirst": "Add words to start generating dialogs.",
+    "generationError": "Dialog generation error",
+    "dialogsListTitle": "Dialogs List",
+    "noDialogsAvailable": "No dialogs available",
+    "startGenerating": "Start generating dialogs above.",
+    "deleteDialogTitle": "Delete dialog?",
+    "deleteDialogDescription": "This action cannot be undone.",
+    "deleteButton": "Delete",
+    "cancelButton": "Cancel",
+    "dialogDeleted": "Dialog deleted",
+    "participantsNotConfigured": "Not all participants are configured",
+    "participantNamesRequired": "All participants must have names",
+    "difficultyLevel": "Difficulty Level",
+    "participantCount": "Number of Participants",
+    "participants": "participants",
+    "dialogParticipants": "Dialog Participants",
+    "participantName": "Participant Name"
+  },
+  "statistics": {
+    "title": "Learning Statistics",
+    "totalWords": "Total Words",
+    "learnedWords": "Learned Words",
+    "learningProgress": "Learning Progress",
+    "averageLevel": "Average Level",
+    "categoryBreakdown": "Category Breakdown",
+    "levelDistribution": "Level Distribution",
+    "noDataAvailable": "No data available",
+    "remainingWords": "Remaining",
+    "needReview": "Words need review"
+  },
+  "conjugation": {
+    "title": "Conjugations",
+    "editTitle": "Edit Conjugation",
+    "addTitle": "Add Conjugation",
+    "pronounLabel": "Pronoun",
+    "formLabel": "Form",
+    "addConjugationButton": "Add Conjugation",
+    "saveButton": "Save",
+    "cancelButton": "Cancel",
+    "deleteButton": "Delete",
+    "conjugationSaved": "Conjugation saved",
+    "conjugationDeleted": "Conjugation deleted",
+    "validation": {
+      "pronounRequired": "Pronoun is required",
+      "formRequired": "Form is required"
+    }
+  },
+  "examples": {
+    "title": "Examples",
+    "editTitle": "Edit Example",
+    "addTitle": "Add Example",
+    "hebrewLabel": "Hebrew",
+    "russianLabel": "Russian",
+    "addExampleButton": "Add Example",
+    "saveButton": "Save",
+    "cancelButton": "Cancel",
+    "deleteButton": "Delete",
+    "exampleSaved": "Example saved",
+    "exampleDeleted": "Example deleted",
+    "validation": {
+      "hebrewRequired": "Hebrew text is required",
+      "russianRequired": "Russian translation is required"
+    }
+  },
+  "suggestions": {
+    "generateSuggestions": "Generate Word Suggestions",
+    "generating": "Generating...",
+    "noSuggestions": "No suggestions",
+    "error": "Suggestions generation error",
+    "selectCategory": "Select category",
+    "categories": {
+      "verb": "Verbs",
+      "noun": "Nouns",
+      "adjective": "Adjectives",
+      "phrase": "Phrases",
+      "mixed": "Mixed"
+    }
+  },
+  "confirmations": {
+    "deleteWord": "Delete word?",
+    "deleteWordDescription": "This action cannot be undone.",
+    "resetProgress": "Reset progress?",
+    "resetProgressDescription": "This action will reset all learning progress for this word.",
+    "clearAllWords": "Delete all words?",
+    "clearAllWordsDescription": "This action cannot be undone. All words will be deleted from your collection.",
+    "confirmButton": "Confirm",
+    "cancelButton": "Cancel"
+  },
+  "editWord": {
+    "title": "Edit Word",
+    "hebrewLabel": "Hebrew word",
+    "russianLabel": "Russian translation",
+    "categoryLabel": "Category",
+    "saveButton": "Save",
+    "cancelButton": "Cancel",
+    "wordSaved": "Word successfully updated",
+    "validation": {
+      "hebrewRequired": "Hebrew word is required",
+      "russianRequired": "Russian translation is required"
+    }
   }
 }

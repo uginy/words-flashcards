@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Combobox } from './ui/combobox';
 import {
   Select,
@@ -27,6 +28,7 @@ interface OpenRouterModel {
 }
 
 const Settings: React.FC = () => {
+  const { t } = useTranslation();
   const { toast } = useToast();
   const [apiKey, setApiKey] = useState<string>('');
   const [pageSize, setPageSize] = useState<number>(10);
@@ -86,8 +88,8 @@ const Settings: React.FC = () => {
     } catch (error) {
       console.error('Error fetching OpenRouter models:', error);
       toast({
-        title: "Ошибка",
-        description: "Не удалось загрузить модели. Проверьте консоль для деталей.",
+        title: t('settings.modelsFetchError'),
+        description: t('settings.modelsFetchErrorDesc'),
         variant: "error"
       });
       setAvailableModels([]);
@@ -106,8 +108,8 @@ const Settings: React.FC = () => {
     setSelectedModel(modelToSave);
     
     toast({
-      title: "Настройки сохранены",
-      description: "Все настройки успешно сохранены!",
+      title: t('settings.settingsSaved'),
+      description: t('settings.settingsSavedDescription'),
       variant: "success"
     });
     
@@ -118,26 +120,26 @@ const Settings: React.FC = () => {
 
   return (
     <div className="w-full max-w-2xl mx-auto p-4 sm:p-6 bg-white rounded-lg shadow-md">
-      <h2 className="text-2xl font-semibold text-gray-800 mb-4">Настройки</h2>
+      <h2 className="text-2xl font-semibold text-gray-800 mb-4">{t('settings.title')}</h2>
 
 
       <div className="space-y-6">
-        <h3 className="text-lg font-medium text-gray-800 mb-4">Настройки таблицы</h3>
+        <h3 className="text-lg font-medium text-gray-800 mb-4">{t('settings.tableSettings')}</h3>
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
-            Количество записей на странице
+            {t('settings.recordsPerPage')}
           </label>
           <Select
             value={pageSize.toString()}
             onValueChange={(value) => setPageSize(Number(value))}
           >
             <SelectTrigger>
-              <SelectValue placeholder="Выберите количество записей" />
+              <SelectValue placeholder={t('settings.recordsPerPagePlaceholder')} />
             </SelectTrigger>
             <SelectContent>
               {[5, 10, 20, 30, 50, 100, 150, 200].map((size) => (
                 <SelectItem key={size} value={size.toString()}>
-                  {size} записей
+                  {size} {t('settings.recordsText')}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -148,11 +150,11 @@ const Settings: React.FC = () => {
         <TTSSettings />
 
         {/* OpenRouter Settings */}
-        <h3 className="text-lg font-medium text-gray-800 mb-4">Настройки LLM (OpenRouter)</h3>
+        <h3 className="text-lg font-medium text-gray-800 mb-4">{t('settings.llmSettings')}</h3>
         
         <div>
           <label htmlFor="apiKey" className="block text-sm font-medium text-gray-700 mb-1">
-            OpenRouter API Key
+            {t('settings.apiKeyLabel')}
           </label>
           <input
             type="password"
@@ -165,13 +167,13 @@ const Settings: React.FC = () => {
             placeholder={DEFAULT_OPENROUTER_API_KEY}
           />
           <p className="text-xs text-gray-500 mt-1">
-            Your API key is stored locally in your browser&apos;s localStorage.
+            {t('settings.apiKeyHint')}
           </p>
         </div>
 
         <div>
           <label htmlFor="modelSelect" className="block text-sm font-medium text-gray-700 mb-1">
-            Select LLM Model
+            {t('settings.modelSelectLabel')}
           </label>
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
             <div className="flex-1">
@@ -183,8 +185,8 @@ const Settings: React.FC = () => {
                 value={selectedModel}
                 onValueChange={setSelectedModel}
                 placeholder={DEFAULT_OPENROUTER_MODEL}
-                searchPlaceholder="Поиск модели..."
-                noResultsText="Модели не найдены"
+                searchPlaceholder={t('settings.searchModelPlaceholder')}
+                noResultsText={t('settings.noModelsFound')}
                 disabled={isLoadingModels || availableModels.length === 0}
               />
             </div>
@@ -194,7 +196,7 @@ const Settings: React.FC = () => {
               disabled={!apiKey || isLoadingModels}
               className="px-3 py-2 text-sm bg-blue-500 text-white rounded-md hover:bg-blue-600 disabled:bg-blue-300 shrink-0 w-full sm:w-auto"
             >
-              {isLoadingModels ? 'Refreshing...' : 'Refresh'}
+              {isLoadingModels ? t('settings.refreshingButton') : t('settings.refreshButton')}
             </button>
           </div>
            <div className="flex items-center mt-2">
@@ -207,12 +209,12 @@ const Settings: React.FC = () => {
                 onChange={(e) => setShowFreeOnly(e.target.checked)}
             />
             <label htmlFor="freeOnly" className="ml-2 block text-sm text-gray-900">
-                Show only models with $0 prompt/completion cost
+                {t('settings.showFreeOnlyLabel')}
             </label>
           </div>
           {availableModels.length === 0 && !isLoadingModels && apiKey && (
             <p className="text-xs text-red-500 mt-1">
-              No models loaded. Ensure your API key is correct and try refreshing.
+              {t('settings.noModelsError')}
             </p>
           )}
         </div>
@@ -223,13 +225,12 @@ const Settings: React.FC = () => {
             onClick={handleSaveSettings}
             className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 w-full sm:w-auto"
           >
-            Save Settings
+            {t('settings.saveButton')}
           </button>
         </div>
       </div>
        <p className="text-xs text-gray-500 mt-6">
-        Note: Using LLMs can incur costs. Please check OpenRouter&apos;s pricing for details.
-        This application is not responsible for any charges.
+        {t('settings.costWarning')}
       </p>
     </div>
   );

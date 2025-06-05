@@ -1,4 +1,5 @@
 import { createOpenAIClient, retryWithBackoff } from './api-client';
+import { useTranslation } from 'react-i18next';
 import { wordSuggestionsSystemPrompt } from './prompts';
 import type { RetryConfig } from './types';
 
@@ -23,26 +24,26 @@ const defaultRetryConfig: RetryConfig = {
 };
 
 // Helper function to get level description
-function getLevelDescription(level: string): string {
-  if (level.includes('Алеф') || level.includes('א')) {
-    return 'начальный уровень - самые базовые, простые слова для новичков';
+function getLevelDescription(level: string, t: (key: string) => string): string {
+  if (level.includes(t('levels.aleph')) || level.includes('א')) {
+    return t('levels.beginner');
   }
-  if (level.includes('Бет') || level.includes('ב')) {
-    return 'элементарный уровень - простые повседневные слова';
+  if (level.includes(t('levels.bet')) || level.includes('ב')) {
+    return t('levels.elementary');
   }
-  if (level.includes('Гимель') || level.includes('ג')) {
-    return 'средний уровень - более сложные слова, требующие хорошего знания языка';
+  if (level.includes(t('levels.gimel')) || level.includes('ג')) {
+    return t('levels.intermediate');
   }
-  if (level.includes('Далет') || level.includes('ד')) {
-    return 'выше среднего уровень - продвинутые слова для опытных изучающих';
+  if (level.includes(t('levels.dalet')) || level.includes('ד')) {
+    return t('levels.upperIntermediate');
   }
-  if (level.includes('Һей') || level.includes('ה')) {
-    return 'высокий уровень - сложные академические и специализированные термины';
+  if (level.includes(t('levels.hey')) || level.includes('ה')) {
+    return t('levels.advanced');
   }
-  if (level.includes('Вав') || level.includes('ו')) {
-    return 'профессиональный уровень - очень сложные слова, литературная лексика, архаизмы, высокий иврит';
+  if (level.includes(t('levels.vav')) || level.includes('ו')) {
+    return t('levels.professional');
   }
-  return 'средний уровень';
+  return t('levels.default');
 }
 
 export async function fetchSuggestedWords(
@@ -50,16 +51,17 @@ export async function fetchSuggestedWords(
   options: WordSuggestionsOptions = {}
 ): Promise<string[]> {
   const { category, level, apiKey, modelIdentifier, count } = params;
+  const { t } = useTranslation();
   const retryConfig = { ...defaultRetryConfig, ...options.retryConfig };
   const logger = options.enableDetailedLogging ? console.log : undefined;
 
   if (!apiKey || !modelIdentifier) {
-    throw new Error('API key or model not configured.');
+    throw new Error(t('wordSuggestions.apiNotConfigured'));
   }
 
   // Special handling for phrases category
-  const isPhrases = category.includes('Фразы') || category.includes('פרזות');
-  const levelDescription = getLevelDescription(level);
+  const isPhrases = category.includes(t('categories.phrases')) || category.includes('פרזות');
+  const levelDescription = getLevelDescription(level, t);
   
   const openai = createOpenAIClient(apiKey);
   
@@ -78,7 +80,7 @@ export async function fetchSuggestedWords(
 
     const content = response.choices[0]?.message?.content;
     if (!content) {
-      throw new Error('No content in API response');
+      throw new Error(t('wordSuggestions.noContentInApiResponse'));
     }
 
     return content;
@@ -91,7 +93,7 @@ export async function fetchSuggestedWords(
     return response.split(',').map((word: string) => word.trim()).filter(Boolean);
   } catch (error) {
     if (logger) {
-      logger('Error fetching word suggestions:', error);
+      logger(t('wordSuggestions.errorFetching'), error);
     }
     throw error;
   }

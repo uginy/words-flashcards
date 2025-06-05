@@ -4,6 +4,7 @@ import { systemPrompt, systemPromptForDirectJson } from './prompts';
 import { getOptimalToolsConfig } from './tools';
 import { validateJsonString, attemptJsonFix } from './validators';
 import { processWordsArray } from './processors';
+import { useTranslation } from 'react-i18next';
 import { retryWithBackoff, createOpenAIClient } from './api-client';
 
 export async function enrichWordsWithLLM(
@@ -15,8 +16,10 @@ export async function enrichWordsWithLLM(
   abortController?: AbortController,
   options?: LLMEnrichmentOptions
 ): Promise<Word[]> {
+  const { t } = useTranslation();
+
   if (!apiKey || !modelIdentifier) {
-    throw new Error('API key or model not configured.');
+    throw new Error(t('wordSuggestions.apiNotConfigured'));
   }
   if (hebrewWords.length === 0) {
     return [];
@@ -46,8 +49,8 @@ export async function enrichWordsWithLLM(
   logger(`Retry config: ${JSON.stringify(retryConfig)}`);
 
   showToast({
-    title: "Обработка",
-    description: `Обрабатываем ${hebrewWords.length} слов...`
+    title: t('enrichment.processing'),
+    description: t('enrichment.processingWords', { count: hebrewWords.length })
   });
 
   let effectiveModelSupportsTools: boolean;
@@ -327,8 +330,8 @@ export async function enrichWordsWithLLM(
 
     if (failedWords.length > 0) {
       showToast({
-        title: "Ошибка обработки",
-        description: `Не удалось обработать ${failedWords.length} слов корректно.`,
+        title: t('enrichment.errorProcessing'),
+        description: t('enrichment.failedToProcessWords', { count: failedWords.length }),
         variant: "destructive"
       });
       throw new Error(`Failed to process words: ${failedWords.map(w => w.hebrew).join(', ')}`);
@@ -339,8 +342,8 @@ export async function enrichWordsWithLLM(
     }
 
     showToast({
-      title: "Готово",
-      description: `Успешно обработано ${successfullyProcessed.length} слов.`,
+      title: t('enrichment.done'),
+      description: t('enrichment.successfullyProcessedWords', { count: successfullyProcessed.length }),
       variant: "default"
     });
 
@@ -363,7 +366,7 @@ export async function enrichWordsWithLLM(
     if (error instanceof Error) {
 
       if (error.message.includes('Expected a function call')) {
-        errorMessage = "Модель не поддерживает необходимые функции. Попробуйте другую модель или отключите использование инструментов.";
+        errorMessage = t('enrichment.modelDoesNotSupportFunctions');
         isCriticalError = true;
       }
       else if (error.message === "Provider returned error" && 'metadata' in error) {
@@ -375,18 +378,18 @@ export async function enrichWordsWithLLM(
         const provider = metadata.provider_name || 'Unknown';
 
         if (metadata?.raw?.includes?.("tools field exceeds max depth limit")) {
-          errorMessage = `Модель ${provider} не поддерживает расширенные функции. Выберите другую модель.`;
+          errorMessage = t('enrichment.providerAdvancedFunctionsError', { provider });
           isCriticalError = true;
         } else if (metadata?.raw) {
           try {
             const rawError = JSON.parse(metadata.raw);
-            errorMessage = `Ошибка от ${provider}: ${rawError.detail || rawError.message || error.message}`;
+            errorMessage = t('enrichment.providerError', { provider, message: rawError.detail || rawError.message || error.message });
           } catch {
-            errorMessage = `Ошибка от ${provider}: ${error.message}`;
+            errorMessage = t('enrichment.providerError', { provider, message: error.message });
           }
           isCriticalError = true;
         } else {
-          errorMessage = `Ошибка от ${provider}: ${error.message}`;
+          errorMessage = t('enrichment.providerError', { provider, message: error.message });
           isCriticalError = true;
         }
       }
@@ -399,20 +402,20 @@ export async function enrichWordsWithLLM(
         isCriticalError = true;
       }
       else if (error.message.includes('Failed to process words:')) {
-        errorMessage = "Некоторые слова не удалось обработать. Проверьте их корректность и попробуйте снова.";
+        errorMessage = t('enrichment.failedToProcessSomeWords');
         isCriticalError = false;
       }
       else {
-        errorMessage = "Произошла непредвиденная ошибка при обработке слов. Попробуйте позже.";
+        errorMessage = t('enrichment.unexpectedError');
         isCriticalError = true;
       }
       throw new Error(error.message)
     }
-    errorMessage = "Неизвестная ошибка при обработке слов";
+    errorMessage = t('enrichment.unknownError');
     isCriticalError = true;
 
     showToast({
-      title: isCriticalError ? "Критическая ошибка" : "Ошибка",
+      title: isCriticalError ? t('enrichment.criticalError') : t('enrichment.errorProcessing'),
       description: errorMessage,
       variant: "destructive"
     });
@@ -423,8 +426,8 @@ export async function enrichWordsWithLLM(
 
     // Fallback: return minimal word entries with user-friendly message
     showToast({
-      title: "Частичная обработка",
-      description: "Слова добавлены с минимальной информацией. Попробуйте обработать их позже.",
+      title: t('enrichment.partialProcessing'),
+      description: t('enrichment.wordsAddedWithMinimalInfo'),
       variant: "warning"
     });
 

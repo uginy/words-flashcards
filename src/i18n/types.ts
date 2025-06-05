@@ -106,6 +106,151 @@ export interface TranslationResources {
       notStarted: string;
     };
   };
+  settings: {
+    title: string;
+    tableSettings: string;
+    recordsPerPage: string;
+    recordsPerPagePlaceholder: string;
+    recordsText: string;
+    llmSettings: string;
+    apiKeyLabel: string;
+    apiKeyHint: string;
+    modelSelectLabel: string;
+    searchModelPlaceholder: string;
+    noModelsFound: string;
+    refreshButton: string;
+    refreshingButton: string;
+    showFreeOnlyLabel: string;
+    noModelsError: string;
+    saveButton: string;
+    settingsSaved: string;
+    settingsSavedDescription: string;
+    modelsFetchError: string;
+    modelsFetchErrorDesc: string;
+    costWarning: string;
+  };
+  wordInput: {
+    title: string;
+    importedWordsDetected: string;
+    importWordsButton: string;
+    instructions: string;
+    backgroundProcessingInfo: string;
+    placeholder: string;
+    useSampleButton: string;
+    clearButton: string;
+    addWordsButton: string;
+    apiNotConfigured: string;
+    processingError: string;
+    importSuccess: string;
+    importSuccessDescription: string;
+    errorTitle: string;
+  };
+  dialogs: {
+    generateTitle: string;
+    generateButton: string;
+    generatingButton: string;
+    noWordsAvailable: string;
+    addWordsFirst: string;
+    generationError: string;
+    dialogsListTitle: string;
+    noDialogsAvailable: string;
+    startGenerating: string;
+    deleteDialogTitle: string;
+    deleteDialogDescription: string;
+    deleteButton: string;
+    cancelButton: string;
+    dialogDeleted: string;
+    participantsNotConfigured: string;
+    participantNamesRequired: string;
+    difficultyLevel: string;
+    participantCount: string;
+    participants: string;
+    dialogParticipants: string;
+    participantName: string;
+  };
+  statistics: {
+    title: string;
+    totalWords: string;
+    learnedWords: string;
+    learningProgress: string;
+    averageLevel: string;
+    categoryBreakdown: string;
+    levelDistribution: string;
+    noDataAvailable: string;
+    remainingWords: string;
+    needReview: string;
+  };
+  conjugation: {
+    title: string;
+    editTitle: string;
+    addTitle: string;
+    pronounLabel: string;
+    formLabel: string;
+    addConjugationButton: string;
+    saveButton: string;
+    cancelButton: string;
+    deleteButton: string;
+    conjugationSaved: string;
+    conjugationDeleted: string;
+    validation: {
+      pronounRequired: string;
+      formRequired: string;
+    };
+  };
+  examples: {
+    title: string;
+    editTitle: string;
+    addTitle: string;
+    hebrewLabel: string;
+    russianLabel: string;
+    addExampleButton: string;
+    saveButton: string;
+    cancelButton: string;
+    deleteButton: string;
+    exampleSaved: string;
+    exampleDeleted: string;
+    validation: {
+      hebrewRequired: string;
+      russianRequired: string;
+    };
+  };
+  suggestions: {
+    generateSuggestions: string;
+    generating: string;
+    noSuggestions: string;
+    error: string;
+    selectCategory: string;
+    categories: {
+      verb: string;
+      noun: string;
+      adjective: string;
+      phrase: string;
+      mixed: string;
+    };
+  };
+  confirmations: {
+    deleteWord: string;
+    deleteWordDescription: string;
+    resetProgress: string;
+    resetProgressDescription: string;
+    clearAllWords: string;
+    clearAllWordsDescription: string;
+    confirmButton: string;
+    cancelButton: string;
+  };
+  editWord: {
+    title: string;
+    hebrewLabel: string;
+    russianLabel: string;
+    categoryLabel: string;
+    saveButton: string;
+    cancelButton: string;
+    wordSaved: string;
+    validation: {
+      hebrewRequired: string;
+      russianRequired: string;
+    };
+  };
 }
 
 // Supported languages

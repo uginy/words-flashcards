@@ -1,6 +1,7 @@
 import type React from 'react';
 import { Volume2, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useTranslation } from 'react-i18next';
 import { cn } from '@/lib/utils';
 import type { DialogCard as DialogCardType, DialogParticipant } from '../types';
 
@@ -23,6 +24,8 @@ export const DialogCard: React.FC<DialogCardProps> = ({
   isPlaying = false,
   className
 }) => {
+
+  const { t } = useTranslation();
   const handlePlay = () => {
     onPlay?.();
   };
@@ -82,7 +85,7 @@ export const DialogCard: React.FC<DialogCardProps> = ({
             isPlaying && "bg-primary text-primary-foreground",
             isActive && "ring-2 ring-primary ring-offset-2"
           )}
-          aria-label="Воспроизвести реплику"
+          aria-label={t('dialogs.playUtterance')}
         >
           <Volume2 className={cn(
             "w-4 h-4",

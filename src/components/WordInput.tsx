@@ -1,5 +1,6 @@
 import { DEFAULT_OPENROUTER_API_KEY, DEFAULT_OPENROUTER_MODEL } from '../config/openrouter';
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { WordSuggestions } from './WordSuggestions';
 import { useToast } from '../hooks/use-toast';
 import { useWordsStore } from '../store/wordsStore';
@@ -8,6 +9,7 @@ import { useWordsStore } from '../store/wordsStore';
 
 
 const WordInput: React.FC = () => {
+  const { t } = useTranslation();
   const startBackgroundWordProcessing = useWordsStore(state => state.startBackgroundWordProcessing);
   const { toast } = useToast();
 
@@ -48,8 +50,8 @@ const WordInput: React.FC = () => {
       localStorage.removeItem('importedWords');
       setImportedWordsText(null);
       toast({
-        title: "Успех!",
-        description: 'Импортированные слова загружены в форму. Нажмите "Добавить" для завершения импорта.',
+        title: t('wordInput.importSuccess'),
+        description: t('wordInput.importSuccessDescription'),
       });
     }
   };
@@ -62,7 +64,7 @@ const WordInput: React.FC = () => {
     const model = localStorage.getItem('openRouterModel') || DEFAULT_OPENROUTER_MODEL;
     
     if (!apiKey || !model || apiKey === "YOUR_DEFAULT_API_KEY_HERE" || model === "YOUR_DEFAULT_MODEL_ID_HERE") {
-      setError('OpenRouter API key or model не настроены. Укажите их в Settings.');
+      setError(t('wordInput.apiNotConfigured'));
       return;
     }
 
@@ -71,7 +73,7 @@ const WordInput: React.FC = () => {
       clearDraftInputText();
       setError(null);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Ошибка запуска фоновой обработки');
+      setError(err instanceof Error ? err.message : t('wordInput.processingError'));
     }
   };
 
@@ -96,20 +98,20 @@ const WordInput: React.FC = () => {
     <div className="w-full mx-auto mt-6">
       {importedWordsText && (
         <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-          <p className="text-blue-800 mb-2">Обнаружены импортированные слова!</p>
+          <p className="text-blue-800 mb-2">{t('wordInput.importedWordsDetected')}</p>
           <button
             type="button"
             onClick={handleImportWords}
             className="w-full py-2 px-4 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors"
           >
-            Импортировать слова
+            {t('wordInput.importWordsButton')}
           </button>
         </div>
       )}
 
       <div className="bg-white rounded-lg shadow-md p-4">
         <div className="flex justify-between items-center mb-2">
-          <h3 className="text-lg font-medium text-gray-800">Добавить слова</h3>
+          <h3 className="text-lg font-medium text-gray-800">{t('wordInput.title')}</h3>
         </div>
 
         <WordSuggestions
@@ -127,19 +129,17 @@ const WordInput: React.FC = () => {
         <div>
           {error && (
             <div className="mb-3 p-3 bg-red-100 text-red-700 border border-red-400 rounded-md">
-              <p className="font-semibold">Ошибка:</p>
+              <p className="font-semibold">{t('wordInput.errorTitle')}</p>
               <p>{error}</p>
             </div>
           )}
           <div className="mb-3">
             <label htmlFor="wordInput" className="block text-sm font-medium text-gray-700 mb-1">
-              Добавляйте список слов на иврите или русском языке, каждое слово должно быть на новой строке.
-              Мы сами проанализируем его и корректно добавим в базу.
+              {t('wordInput.instructions')}
             </label>
             <div className="mb-2 p-3 bg-blue-50 border border-blue-200 rounded-md">
               <p className="text-sm text-blue-800">
-                💡 <strong>Фоновая обработка:</strong> Слова будут обрабатываться в фоновом режиме.
-                Процесс будет продолжаться даже при переходе на другие страницы приложения!
+                {t('wordInput.backgroundProcessingInfo')}
               </p>
             </div>
             <textarea
@@ -150,7 +150,7 @@ const WordInput: React.FC = () => {
               onChange={(e) => setDraftInputText(e.target.value)}
               onPaste={handlePaste}
               dir="auto" // Changed to auto to better support mixed LTR/RTL for instructions and RTL for Hebrew
-              placeholder="Введите слова на русском или иврите, каждое слово на новой строке..."
+              placeholder={t('wordInput.placeholder')}
             />
           </div>
 
@@ -164,7 +164,7 @@ const WordInput: React.FC = () => {
                   setError(null); // Clear error when using sample
                 }}
               >
-                Использовать пример
+                {t('wordInput.useSampleButton')}
               </button>
               <span className="text-gray-400">|</span>
               <button
@@ -175,7 +175,7 @@ const WordInput: React.FC = () => {
                   setError(null); // Clear error when clearing input
                 }}
               >
-                Очистить
+                {t('wordInput.clearButton')}
               </button>
             </div>
 
@@ -186,7 +186,7 @@ const WordInput: React.FC = () => {
                 className="w-full sm:w-auto py-2 px-4 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors disabled:opacity-50"
                 disabled={!draftInputText.trim()}
               >
-                🔄 Добавить слова
+                {t('wordInput.addWordsButton')}
               </button>
             </div>
           </div>
