@@ -2,6 +2,7 @@ import type { TTSProvider, TTSConfig, TTSOptions, TTSVoice, TTSCacheEntry } from
 import { SystemTTSProvider } from './providers/SystemTTSProvider';
 import { MicrosoftTTSProvider } from './providers/MicrosoftTTSProvider';
 import { LanguageDetector } from './LanguageDetector';
+import { getMicrosoftApiKey } from '../../utils/apiKeys';
 
 export class TTSManager {
   private static instance: TTSManager | null = null;
@@ -218,12 +219,12 @@ export class TTSManager {
   }
 
   private updateProviders(): void {
-    // Update Microsoft provider if config changed
-    if (this.config.microsoftApiKey && this.config.microsoftRegion) {
-      const microsoftProvider = new MicrosoftTTSProvider(
-        this.config.microsoftApiKey,
-        this.config.microsoftRegion
-      );
+    // Update Microsoft provider - use fallback API key if user hasn't set one
+    const apiKey = this.config.microsoftApiKey || getMicrosoftApiKey();
+    const region = this.config.microsoftRegion || 'westeurope';
+    
+    if (apiKey && region) {
+      const microsoftProvider = new MicrosoftTTSProvider(apiKey, region);
       this.registerProvider(microsoftProvider);
     }
   }

@@ -5,7 +5,8 @@ import type { Word, WordsState, BackgroundTask } from '../types';
 import { saveToLocalStorage, loadFromLocalStorage } from '../utils/storage';
 import { parseAndTranslateWords } from '../utils/translation';
 import { enrichWordsWithLLM, refineWordWithLLM, translateToHebrew } from '../services/openrouter';
-import { DEFAULT_OPENROUTER_API_KEY, DEFAULT_OPENROUTER_MODEL } from '../config/openrouter';
+import { DEFAULT_OPENROUTER_MODEL } from '../config/openrouter';
+import { getOpenRouterApiKey } from '../utils/apiKeys';
 
 const initialState: WordsState = {
   words: [],
@@ -111,7 +112,7 @@ async function processWordsInBackground(
     }));
 
 
-    const apiKey = localStorage.getItem('openRouterApiKey') || DEFAULT_OPENROUTER_API_KEY;
+    const apiKey = getOpenRouterApiKey();
     const model = localStorage.getItem('openRouterModel') || DEFAULT_OPENROUTER_MODEL;
     
     if (!apiKey || !model || apiKey === "YOUR_DEFAULT_API_KEY_HERE" || model === "YOUR_DEFAULT_MODEL_ID_HERE") {
@@ -960,7 +961,7 @@ export const useWordsStore = create<WordsStore>((set, get) => {
         return;
       }
 
-      const apiKey = localStorage.getItem('openRouterApiKey') || DEFAULT_OPENROUTER_API_KEY;
+      const apiKey = getOpenRouterApiKey();
       const model = localStorage.getItem('openRouterModel') || DEFAULT_OPENROUTER_MODEL;
       
       if (!apiKey || !model || apiKey === "YOUR_DEFAULT_API_KEY_HERE" || model === "YOUR_DEFAULT_MODEL_ID_HERE") {
