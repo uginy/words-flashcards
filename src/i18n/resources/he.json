@@ -104,5 +104,150 @@
       "level1": "רמה 1",
       "notStarted": "לא התחיל"
     }
+  },
+  "settings": {
+    "title": "הגדרות",
+    "tableSettings": "הגדרות טבלה",
+    "recordsPerPage": "רשומות בעמוד",
+    "recordsPerPagePlaceholder": "בחר מספר רשומות",
+    "recordsText": "רשומות",
+    "llmSettings": "הגדרות LLM (OpenRouter)",
+    "apiKeyLabel": "מפתח API של OpenRouter",
+    "apiKeyHint": "מפתח ה-API שלך נשמר מקומית ב-localStorage של הדפדפן.",
+    "modelSelectLabel": "בחר מודל LLM",
+    "searchModelPlaceholder": "חפש מודל...",
+    "noModelsFound": "לא נמצאו מודלים",
+    "refreshButton": "רענן",
+    "refreshingButton": "מרענן...",
+    "showFreeOnlyLabel": "הצג רק מודלים עם עלות $0 לפרומפט/השלמה",
+    "noModelsError": "לא נטענו מודלים. ודא שמפתח ה-API נכון ונסה לרענן.",
+    "saveButton": "שמור הגדרות",
+    "settingsSaved": "הגדרות נשמרו",
+    "settingsSavedDescription": "כל הההגדרות נשמרו בהצלחה!",
+    "modelsFetchError": "שגיאה",
+    "modelsFetchErrorDesc": "נכשל בטעינת מודלים. בדוק את הקונסול לפרטים.",
+    "costWarning": "הערה: שימוש ב-LLM עלול לגרור עלויות. אנא בדוק את המחירים של OpenRouter לפרטים. אפליקציה זו אינה אחראית לכל חיובים."
+  },
+  "wordInput": {
+    "title": "הוסף מילים",
+    "importedWordsDetected": "זוהו מילים מיובאות!",
+    "importWordsButton": "יבא מילים",
+    "instructions": "הוסף רשימת מילים בעברית או ברוסית, כל מילה צריכה להיות בשורה חדשה. אנחנו ננתח אותה ונוסיף אותה נכון למסד הנתונים.",
+    "backgroundProcessingInfo": "💡 עיבוד ברקע: מילים יעובדו ברקע. התהליך ימשיך גם כאשר תנווט לעמודים אחרים באפליקציה!",
+    "placeholder": "הכנס מילים ברוסית או בעברית, כל מילה בשורה חדשה...",
+    "useSampleButton": "השתמש בדוגמה",
+    "clearButton": "נקה",
+    "addWordsButton": "🔄 הוסף מילים",
+    "apiNotConfigured": "מפתח API של OpenRouter או מודל לא מוגדרים. אנא הגדר אותם בהגדרות.",
+    "processingError": "שגיאה בהפעלת עיבוד רקע",
+    "importSuccess": "הצלחה!",
+    "importSuccessDescription": "מילים מיובאות נטענו לטופס. לחץ \"הוסף\" להשלמת הייבוא.",
+    "errorTitle": "שגיאה:"
+  },
+  "dialogs": {
+    "generateTitle": "מחולל דיאלוגים",
+    "generateButton": "צור דיאלוג",
+    "generatingButton": "יוצר...",
+    "noWordsAvailable": "אין מילים זמינות ליצירת דיאלוג",
+    "addWordsFirst": "הוסף מילים כדי להתחיל ליצור דיאלוגים.",
+    "generationError": "שגיאה ביצירת דיאלוג",
+    "dialogsListTitle": "רשימת דיאלוגים",
+    "noDialogsAvailable": "אין דיאלוגים זמינים",
+    "startGenerating": "התחל ליצור דיאלוגים למעלה.",
+    "deleteDialogTitle": "מחק דיאלוג?",
+    "deleteDialogDescription": "פעולה זו לא ניתנת לביטול.",
+    "deleteButton": "מחק",
+    "cancelButton": "ביטול",
+    "dialogDeleted": "דיאלוג נמחק",
+    "participantsNotConfigured": "לא כל המשתתפים מוגדרים",
+    "participantNamesRequired": "כל המשתתפים חייבים שמות",
+    "difficultyLevel": "רמת קושי",
+    "participantCount": "מספר משתתפים",
+    "participants": "משתתפים",
+    "dialogParticipants": "משתתפי הדיאלוג",
+    "participantName": "שם המשתתף"
+  },
+  "statistics": {
+    "title": "סטטיסטיקת לימוד",
+    "totalWords": "סך המילים",
+    "learnedWords": "מילים שנלמדו",
+    "learningProgress": "התקדמות לימוד",
+    "averageLevel": "רמה ממוצעת",
+    "categoryBreakdown": "פילוח לפי קטגוריות",
+    "levelDistribution": "פילוח לפי רמות",
+    "noDataAvailable": "אין נתונים זמינים",
+    "remainingWords": "נותרו",
+    "needReview": "מילים דורשות חזרה"
+  },
+  "conjugation": {
+    "title": "נטיות",
+    "editTitle": "ערוך נטייה",
+    "addTitle": "הוסף נטייה",
+    "pronounLabel": "כינוי",
+    "formLabel": "צורה",
+    "addConjugationButton": "הוסף נטייה",
+    "saveButton": "שמור",
+    "cancelButton": "ביטול",
+    "deleteButton": "מחק",
+    "conjugationSaved": "נטייה נשמרה",
+    "conjugationDeleted": "נטייה נמחקה",
+    "validation": {
+      "pronounRequired": "כינוי נדרש",
+      "formRequired": "צורה נדרשת"
+    }
+  },
+  "examples": {
+    "title": "דוגמאות",
+    "editTitle": "ערוך דוגמה",
+    "addTitle": "הוסף דוגמה",
+    "hebrewLabel": "עברית",
+    "russianLabel": "רוסית",
+    "addExampleButton": "הוסף דוגמה",
+    "saveButton": "שמור",
+    "cancelButton": "ביטול",
+    "deleteButton": "מחק",
+    "exampleSaved": "דוגמה נשמרה",
+    "exampleDeleted": "דוגמה נמחקה",
+    "validation": {
+      "hebrewRequired": "טקסט בעברית נדרש",
+      "russianRequired": "תרגום לרוסית נדרש"
+    }
+  },
+  "suggestions": {
+    "generateSuggestions": "צור הצעות מילים",
+    "generating": "יוצר...",
+    "noSuggestions": "אין הצעות",
+    "error": "שגיאה ביצירת הצעות",
+    "selectCategory": "בחר קטגוריה",
+    "categories": {
+      "verb": "פעלים",
+      "noun": "שמות עצם",
+      "adjective": "תוארים",
+      "phrase": "ביטויים",
+      "mixed": "מעורב"
+    }
+  },
+  "confirmations": {
+    "deleteWord": "מחק מילה?",
+    "deleteWordDescription": "פעולה זו לא ניתנת לביטול.",
+    "resetProgress": "אפס התקדמות?",
+    "resetProgressDescription": "פעולה זו תאפס את כל התקדמות הלימוד עבור מילה זו.",
+    "clearAllWords": "מחק את כל המילים?",
+    "clearAllWordsDescription": "פעולה זו לא ניתנת לביטול. כל המילים יימחקו מהאוסף שלך.",
+    "confirmButton": "אשר",
+    "cancelButton": "ביטול"
+  },
+  "editWord": {
+    "title": "ערוך מילה",
+    "hebrewLabel": "מילה בעברית",
+    "russianLabel": "תרגום לרוסית",
+    "categoryLabel": "קטגוריה",
+    "saveButton": "שמור",
+    "cancelButton": "ביטול",
+    "wordSaved": "המילה עודכנה בהצלחה",
+    "validation": {
+      "hebrewRequired": "מילה בעברית נדרשת",
+      "russianRequired": "תרגום לרוסית נדרש"
+    }
   }
 }

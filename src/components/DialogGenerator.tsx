@@ -1,5 +1,6 @@
 import type React from 'react';
 import { useState, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Plus, Minus, Loader2, Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -27,6 +28,7 @@ interface DialogGeneratorProps {
 }
 
 export const DialogGenerator: React.FC<DialogGeneratorProps> = ({ className, setViewMode }) => {
+  const { t } = useTranslation();
   const { words } = useWordsStore();
   const { generateDialog, isBackgroundProcessing } = useDialogsStore();
   const { toast } = useToast();
@@ -106,8 +108,8 @@ export const DialogGenerator: React.FC<DialogGeneratorProps> = ({ className, set
   const handleGenerate = async () => {
     if (participants.length !== participantCount) {
       toast({
-        title: 'Ошибка',
-        description: 'Не все участники настроены',
+        title: t('common.error'),
+        description: t('dialogs.participantsNotConfigured'),
         variant: 'error'
       });
       return;
@@ -117,8 +119,8 @@ export const DialogGenerator: React.FC<DialogGeneratorProps> = ({ className, set
     for (const participant of participants) {
       if (!participant.name.trim()) {
         toast({
-          title: 'Ошибка',
-          description: 'Все участники должны иметь имена',
+          title: t('common.error'),
+          description: t('dialogs.participantNamesRequired'),
           variant: 'error'
         });
         return;
@@ -147,12 +149,12 @@ export const DialogGenerator: React.FC<DialogGeneratorProps> = ({ className, set
     <div className={cn("space-y-6 p-6 bg-background rounded-lg border", className)}>
       <div className="flex items-center gap-2">
         <Settings className="w-5 h-5" />
-        <h3 className="text-lg font-semibold">Генератор диалогов</h3>
+        <h3 className="text-lg font-semibold">{t('dialogs.generateTitle')}</h3>
       </div>
 
       {/* Level selection */}
       <div className="space-y-2">
-        <label className="text-sm font-medium">Уровень сложности</label>
+        <label className="text-sm font-medium">{t('dialogs.difficultyLevel')}</label>
         <Select value={level} onValueChange={(value: DialogLevel) => setLevel(value)}>
           <SelectTrigger>
             <SelectValue />
@@ -169,34 +171,34 @@ export const DialogGenerator: React.FC<DialogGeneratorProps> = ({ className, set
 
       {/* Participant count */}
       <div className="space-y-2">
-        <label className="text-sm font-medium">Количество участников</label>
+        <label className="text-sm font-medium">{t('dialogs.participantCount')}</label>
         <div className="flex gap-2">
           <Button
             variant={participantCount === 2 ? "default" : "outline"}
             size="sm"
             onClick={() => updateParticipantCount(2)}
           >
-            2 участника
+            2 {t('dialogs.participants')}
           </Button>
           <Button
             variant={participantCount === 3 ? "default" : "outline"}
             size="sm"
             onClick={() => updateParticipantCount(3)}
           >
-            3 участника
+            3 {t('dialogs.participants')}
           </Button>
         </div>
       </div>
 
       {/* Participants configuration */}
       <div className="space-y-3">
-        <label className="text-sm font-medium">Участники диалога</label>
+        <label className="text-sm font-medium">{t('dialogs.dialogParticipants')}</label>
         {participants.map((participant, index) => (
           <div key={participant.id} className="flex items-center gap-3 p-3 border rounded-lg">
             <span className="text-sm font-medium min-w-0">#{index + 1}</span>
             
             <Input
-              placeholder="Имя участника"
+              placeholder={t('dialogs.participantName')}
               value={participant.name}
               onChange={(e) => updateParticipant(index, 'name', e.target.value)}
               className="flex-1"
