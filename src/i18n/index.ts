@@ -37,6 +37,23 @@ const languageDetectorOptions = {
   
   // Only detect from these languages
   checkWhitelist: true,
+  
+  // Convert language codes to our supported languages
+  convertDetectedLanguage: (lng: string) => {
+    // Handle common language variations
+    const languageMap: Record<string, string> = {
+      'en-US': 'en',
+      'en-GB': 'en',
+      'en-CA': 'en',
+      'en-AU': 'en',
+      'ru-RU': 'ru',
+      'he-IL': 'he',
+      iw: 'he', // Hebrew ISO 639-1 alternative code
+    };
+    
+    // Return mapped language or the original if no mapping found
+    return languageMap[lng] || lng.split('-')[0];
+  },
 };
 
 i18n
@@ -49,7 +66,7 @@ i18n
     detection: languageDetectorOptions,
     
     // Fallback language
-    fallbackLng: 'ru',
+    fallbackLng: 'en',
     
     // Debug mode (disable in production)
     debug: process.env.NODE_ENV === 'development',
@@ -82,7 +99,7 @@ i18n.on('languageChanged', (lng: string) => {
 });
 
 // Set initial direction
-const currentLanguage = i18n.language || 'ru';
+const currentLanguage = i18n.language || 'en';
 const initialDirection = RTL_LANGUAGES.includes(currentLanguage) ? 'rtl' : 'ltr';
 document.documentElement.setAttribute('dir', initialDirection);
 document.documentElement.setAttribute('lang', currentLanguage);

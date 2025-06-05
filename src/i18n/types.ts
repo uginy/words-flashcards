@@ -287,7 +287,7 @@ export const LANGUAGES: Record<SupportedLanguage, LanguageConfig> = {
 };
 
 // Default language
-export const DEFAULT_LANGUAGE: SupportedLanguage = 'ru';
+export const DEFAULT_LANGUAGE: SupportedLanguage = 'en';
 
 // RTL languages list
 export const RTL_LANGUAGES: SupportedLanguage[] = ['he'];
