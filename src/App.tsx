@@ -9,6 +9,7 @@ import BackgroundTasksIndicator from './components/BackgroundTasksIndicator';
 import { useWordsStore, getStats } from './store/wordsStore';
 import Settings from './components/Settings';
 import { DialogsTab } from './components/DialogsTab';
+import LanguageSwitcher from './components/LanguageSwitcher';
 import {
   Select,
   SelectTrigger,
@@ -314,6 +315,11 @@ function App() {
       <Toaster />
       <BackgroundTasksIndicator />
       <Layout tabs={tabs} activeTab={activeTab} onTabChange={setActiveTab}>
+        {/* Language Switcher at the top */}
+        <div className="mb-4 p-4 bg-gray-50 rounded-lg">
+          <LanguageSwitcher />
+        </div>
+        
         {activeTab === 'add' ? (
           <div ref={wordInputRef}>
             <WordInput />
