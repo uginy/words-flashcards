@@ -204,7 +204,7 @@ const WordTable: FC<WordTableProps> = ({ onEditWord }) => {
                       size="icon"
                       className="h-9 w-9"
                     >
-                      <Download className="h-4 w-4" />
+                      <Upload className="h-4 w-4" />
                     </Button>
                   </TooltipTrigger>
                   <TooltipContent>
@@ -229,7 +229,7 @@ const WordTable: FC<WordTableProps> = ({ onEditWord }) => {
                         size="icon"
                         className="h-9 w-9"
                       >
-                        <Upload className="h-4 w-4" />
+                        <Download className="h-4 w-4" />
                       </Button>
                     </div>
                   </TooltipTrigger>
