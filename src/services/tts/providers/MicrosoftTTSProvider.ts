@@ -6,12 +6,24 @@ class MicrosoftSSMLBuilder implements SSMLBuilder {
     speechPitch?: string;
     speechVolume?: string;
     voiceStyle?: string;
+    voiceStyleDegree?: number;
     voiceRole?: string;
+    selectedMaleVoice?: string;
+    selectedFemaleVoice?: string;
   }) {}
 
   buildSSML(text: string, options: TTSOptions): string {
     const lang = options.lang || 'he-IL';
-    const voiceName = this.getVoiceName(lang, options.voice, options.gender);
+    let voiceName: string;
+
+    if (options.gender === 'male' && this.config?.selectedMaleVoice) {
+      voiceName = this.config.selectedMaleVoice;
+    } else if (options.gender === 'female' && this.config?.selectedFemaleVoice) {
+      voiceName = this.config.selectedFemaleVoice;
+    } else {
+      // Fallback to default selection if specific gender voice not set or gender not specified
+      voiceName = this.getVoiceName(lang, options.voice, options.gender);
+    }
     
     // Use direct SSML string values from config
     const rate = this.config?.speechRate || 'medium';
@@ -22,6 +34,9 @@ class MicrosoftSSMLBuilder implements SSMLBuilder {
     let voiceElement = `<voice name="${voiceName}"`;
     if (this.config?.voiceStyle) {
       voiceElement += `>\n    <mstts:express-as style="${this.config.voiceStyle}"`;
+      if (this.config?.voiceStyleDegree && this.config.voiceStyleDegree !== 1) {
+        voiceElement += ` styledegree="${this.config.voiceStyleDegree}"`;
+      }
       if (this.config?.voiceRole) {
         voiceElement += ` role="${this.config.voiceRole}"`;
       }
@@ -35,7 +50,7 @@ class MicrosoftSSMLBuilder implements SSMLBuilder {
         ${this.escapeXml(text)}
       </prosody>`;
     
-    let closingTags = `\n  </voice>`;
+    let closingTags = '\n  </voice>';
     if (this.config?.voiceStyle) {
       closingTags = `\n    </mstts:express-as>${closingTags}`;
     }
@@ -57,7 +72,7 @@ class MicrosoftSSMLBuilder implements SSMLBuilder {
     // Prioritize gender selection over voice hint for reliable gender-based voice selection
     if (gender) {
       const genderVoice = languageVoices[gender];
-      console.log(`Selected voice for gender ${gender}:`, genderVoice);
+      // console.log(`Selected voice for gender ${gender}:`, genderVoice);
       return genderVoice;
     }
 
@@ -66,13 +81,13 @@ class MicrosoftSSMLBuilder implements SSMLBuilder {
       const allVoices = [languageVoices.male, languageVoices.female];
       const matchedVoice = allVoices.find(v => v.includes(voiceHint));
       if (matchedVoice) {
-        console.log('Selected voice by hint:', matchedVoice);
+        // console.log('Selected voice by hint:', matchedVoice);
         return matchedVoice;
       }
     }
 
     // Default to female voice
-    console.log('Using default female voice:', languageVoices.female);
+    // console.log('Using default female voice:', languageVoices.female);
     return languageVoices.female;
   }
 
@@ -100,7 +115,10 @@ export class MicrosoftTTSProvider implements TTSProvider {
       speechPitch?: string;
       speechVolume?: string;
       voiceStyle?: string;
+      voiceStyleDegree?: number;
       voiceRole?: string;
+      selectedMaleVoice?: string;
+      selectedFemaleVoice?: string;
     }
   ) {
     this.ssmlBuilder = new MicrosoftSSMLBuilder(config);
@@ -111,7 +129,10 @@ export class MicrosoftTTSProvider implements TTSProvider {
     speechPitch?: string;
     speechVolume?: string;
     voiceStyle?: string;
+    voiceStyleDegree?: number;
     voiceRole?: string;
+    selectedMaleVoice?: string;
+    selectedFemaleVoice?: string;
   }): void {
     this.ssmlBuilder = new MicrosoftSSMLBuilder(config);
   }
@@ -131,11 +152,11 @@ export class MicrosoftTTSProvider implements TTSProvider {
     try {
       // Build SSML
       const ssml = this.ssmlBuilder.buildSSML(text, options);
-      console.log('Generated SSML:', ssml);
+      // console.log('Generated SSML:', ssml);
       
       // Make TTS request
       const audioBuffer = await this.synthesizeSpeech(ssml);
-      console.log('TTS request successful, received audio buffer');
+      // console.log('TTS request successful, received audio buffer');
       
       // Play audio (won't throw on autoplay issues)
       await this.playAudio(audioBuffer);
@@ -164,27 +185,27 @@ export class MicrosoftTTSProvider implements TTSProvider {
   }
 
   stop(): void {
-    console.log('🛑 MicrosoftTTSProvider.stop() called');
+    // console.log('🛑 MicrosoftTTSProvider.stop() called');
     
     // Cancel current playback controller
     if (this.currentPlaybackController) {
-      console.log('🛑 Microsoft: Aborting playback controller');
+      // console.log('🛑 Microsoft: Aborting playback controller');
       this.currentPlaybackController.abort();
       this.currentPlaybackController = null;
     } else {
-      console.log('🛑 Microsoft: No playback controller to abort');
+      // console.log('🛑 Microsoft: No playback controller to abort');
     }
     
     if (this.currentAudio) {
-      console.log('🛑 Microsoft: Stopping audio element');
+      // console.log('🛑 Microsoft: Stopping audio element');
       this.currentAudio.pause();
       this.currentAudio.currentTime = 0;
       this.currentAudio = null;
     } else {
-      console.log('🛑 Microsoft: No audio element to stop');
+      // console.log('🛑 Microsoft: No audio element to stop');
     }
     
-    console.log('🛑 MicrosoftTTSProvider.stop() completed');
+    // console.log('🛑 MicrosoftTTSProvider.stop() completed');
   }
 
   pause(): void {
@@ -217,8 +238,8 @@ export class MicrosoftTTSProvider implements TTSProvider {
 
   private async synthesizeSpeech(ssml: string): Promise<ArrayBuffer> {
     const url = `https://${this.region}.tts.speech.microsoft.com/cognitiveservices/v1`;
-    console.log('TTS request to:', url);
-    console.log('SSML payload:', ssml);
+    // console.log('TTS request to:', url);
+    // console.log('SSML payload:', ssml);
     
     const response = await fetch(url, {
       method: 'POST',
@@ -250,7 +271,7 @@ export class MicrosoftTTSProvider implements TTSProvider {
       throw new Error(`TTS synthesis failed: ${response.status} - ${errorDetails}`);
     }
 
-    console.log('TTS synthesis successful');
+    // console.log('TTS synthesis successful');
     return response.arrayBuffer();
   }
 

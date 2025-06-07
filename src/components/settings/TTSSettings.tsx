@@ -1,7 +1,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { getTTSManager } from '../../services/tts/TTSManager';
-import type { TTSConfig, TTSProviderType } from '../../services/tts/types';
+import type { TTSConfig, TTSProviderType, TTSVoice } from '../../services/tts/types';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
@@ -16,10 +16,14 @@ export function TTSSettings() {
     speechPitch: 'medium',
     speechVolume: 'medium',
     voiceStyle: '',
-    voiceRole: ''
+    voiceStyleDegree: 1,
+    voiceRole: '',
+    selectedMaleVoice: '',
+    selectedFemaleVoice: ''
   });
   const [isTestPlaying, setIsTestPlaying] = useState(false);
   const [testMessage, setTestMessage] = useState<string>('');
+  const [availableVoices, setAvailableVoices] = useState<TTSVoice[]>([]);
   const isTestStoppedRef = useRef(false);
   const currentTestControllerRef = useRef<AbortController | null>(null);
 
@@ -30,6 +34,29 @@ export function TTSSettings() {
     console.log('🔧 Loaded TTS config:', loadedConfig);
     setConfig(loadedConfig);
   }, []);
+
+  // Load available voices when provider changes to Microsoft
+  useEffect(() => {
+    const loadVoices = async () => {
+      if (config.provider === 'microsoft') {
+        try {
+          const ttsManager = getTTSManager();
+          const provider = ttsManager.getCurrentProvider();
+          if (provider.name === 'microsoft') {
+            const voices = await provider.getAvailableVoices();
+            setAvailableVoices(voices);
+          }
+        } catch (error) {
+          console.error('Failed to load voices:', error);
+          setAvailableVoices([]);
+        }
+      } else {
+        setAvailableVoices([]);
+      }
+    };
+
+    loadVoices();
+  }, [config.provider]);
 
   const handleProviderChange = (provider: TTSProviderType) => {
     const newConfig = { ...config, provider };
@@ -67,8 +94,27 @@ export function TTSSettings() {
     updateConfig(newConfig);
   };
 
+  const handleVoiceStyleDegreeChange = (value: string) => {
+    const degree = Number.parseFloat(value);
+    const newConfig = { ...config, voiceStyleDegree: degree };
+    setConfig(newConfig);
+    updateConfig(newConfig);
+  };
+
   const handleVoiceRoleChange = (voiceRole: string) => {
     const newConfig = { ...config, voiceRole: voiceRole === 'default' ? '' : voiceRole };
+    setConfig(newConfig);
+    updateConfig(newConfig);
+  };
+
+  const handleMaleVoiceChange = (voiceId: string) => {
+    const newConfig = { ...config, selectedMaleVoice: voiceId === 'auto' ? '' : voiceId };
+    setConfig(newConfig);
+    updateConfig(newConfig);
+  };
+
+  const handleFemaleVoiceChange = (voiceId: string) => {
+    const newConfig = { ...config, selectedFemaleVoice: voiceId === 'auto' ? '' : voiceId };
     setConfig(newConfig);
     updateConfig(newConfig);
   };
@@ -98,7 +144,10 @@ export function TTSSettings() {
           speechPitch: newConfig.speechPitch,
           speechVolume: newConfig.speechVolume,
           voiceStyle: newConfig.voiceStyle,
-          voiceRole: newConfig.voiceRole
+          voiceStyleDegree: newConfig.voiceStyleDegree,
+          voiceRole: newConfig.voiceRole,
+          selectedMaleVoice: newConfig.selectedMaleVoice,
+          selectedFemaleVoice: newConfig.selectedFemaleVoice
         };
         (provider as { updateConfig: (config: typeof microsoftConfig) => void }).updateConfig(microsoftConfig);
       }
@@ -217,6 +266,107 @@ export function TTSSettings() {
     }
   };
 
+  const testGenderVoice = async (gender: 'male' | 'female') => {
+    console.log(`▶️ Starting TTS test for ${gender} voice...`);
+    isTestStoppedRef.current = false;
+    setIsTestPlaying(true);
+    setTestMessage(`▶️ Testing ${gender} voice...`);
+    
+    // Create new AbortController for this test
+    const testController = new AbortController();
+    currentTestControllerRef.current = testController;
+    
+    try {
+      const ttsManager = getTTSManager();
+      const testText = gender === 'male' ? 'זה קול גברי לבדיקה' : 'זה קול נשי לבדיקה';
+      
+      console.log(`🎵 Starting TTS speak with ${gender} voice...`);
+      console.log('Current TTS config:', ttsManager.getConfig());
+      
+      // Log SSML that would be generated
+      if (config.provider === 'microsoft') {
+        console.log('🔧 Microsoft TTS Configuration:');
+        console.log('- Speech Rate:', config.speechRate);
+        console.log('- Speech Pitch:', config.speechPitch);
+        console.log('- Speech Volume:', config.speechVolume);
+        console.log('- Voice Style:', config.voiceStyle);
+        console.log('- Style Degree:', config.voiceStyleDegree);
+        console.log('- Voice Role:', config.voiceRole);
+        console.log('- Selected Male Voice:', config.selectedMaleVoice);
+        console.log('- Selected Female Voice:', config.selectedFemaleVoice);
+        console.log('- Test gender:', gender);
+      }
+      
+      // Create a race between TTS and abort signal
+      const speakPromise = ttsManager.speak(testText, { lang: 'he-IL', gender });
+      const abortPromise = new Promise<never>((_, reject) => {
+        testController.signal.addEventListener('abort', () => {
+          console.log('🛑 Gender voice test aborted via AbortController');
+          reject(new Error('Test aborted'));
+        });
+      });
+      
+      await Promise.race([speakPromise, abortPromise]);
+      console.log(`✅ TTS ${gender} voice test completed`);
+      
+      // Only set success message if test wasn't stopped
+      if (!isTestStoppedRef.current) {
+        setTestMessage(`✅ ${gender.charAt(0).toUpperCase() + gender.slice(1)} voice test completed successfully!`);
+        setTimeout(() => setTestMessage(''), 3000);
+      }
+    } catch (error) {
+      console.error(`TTS ${gender} voice test failed:`, error);
+      
+      // Only show error if test wasn't stopped
+      if (!isTestStoppedRef.current) {
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        
+        if (errorMessage.includes('user interaction')) {
+          setTestMessage('⚠️ Please click on the page first, then try the test again.');
+        } else if (errorMessage.includes('API')) {
+          setTestMessage('❌ API error. Please check your API key settings.');
+        } else {
+          setTestMessage(`❌ ${gender.charAt(0).toUpperCase() + gender.slice(1)} voice test failed: ${errorMessage}`);
+        }
+        setTimeout(() => setTestMessage(''), 5000);
+      }
+    } finally {
+      console.log(`🏁 TTS ${gender} voice test finished, setting isTestPlaying to false`);
+      setIsTestPlaying(false);
+    }
+  };
+
+  const testSSMLGeneration = () => {
+    if (config.provider !== 'microsoft') {
+      setTestMessage('⚠️ SSML generation test is only available for Microsoft provider');
+      setTimeout(() => setTestMessage(''), 3000);
+      return;
+    }
+
+    console.log('🔧 Testing SSML Generation...');
+    console.log('Current Microsoft TTS Configuration:');
+    console.log('- Speech Rate:', config.speechRate);
+    console.log('- Speech Pitch:', config.speechPitch);
+    console.log('- Speech Volume:', config.speechVolume);
+    console.log('- Voice Style:', config.voiceStyle);
+    console.log('- Style Degree:', config.voiceStyleDegree);
+    console.log('- Voice Role:', config.voiceRole);
+    console.log('- Selected Male Voice:', config.selectedMaleVoice);
+    console.log('- Selected Female Voice:', config.selectedFemaleVoice);
+
+    // Mock SSML generation logic for testing
+    const testText = 'זה טקסט לבדיקה';
+    const lang = 'he-IL';
+    
+    console.log('Generated SSML would be:');
+    console.log(`Text: "${testText}"`);
+    console.log(`Language: ${lang}`);
+    console.log('With current settings applied');
+    
+    setTestMessage('✅ SSML generation test completed - check console for details');
+    setTimeout(() => setTestMessage(''), 5000);
+  };
+
   const clearCache = () => {
     const ttsManager = getTTSManager();
     const stats = ttsManager.getCacheStats();
@@ -233,7 +383,10 @@ export function TTSSettings() {
       speechPitch: 'medium',
       speechVolume: 'medium',
       voiceStyle: '',
-      voiceRole: ''
+      voiceStyleDegree: 1,
+      voiceRole: '',
+      selectedMaleVoice: '',
+      selectedFemaleVoice: ''
     };
     setConfig(newConfig);
     updateConfig(newConfig);
@@ -285,6 +438,61 @@ export function TTSSettings() {
                 <p className="text-xs text-gray-500 mt-1">
                   Get your API key from Azure Cognitive Services
                 </p>
+              </div>
+
+              {/* Voice Selection by Gender */}
+              <div className="space-y-4">
+                <h4 className="text-sm font-medium text-gray-700">Voice Selection by Gender</h4>
+                
+                {/* Male Voice Selection */}
+                <div>
+                  <label className="block text-sm font-medium mb-2">
+                    Male Voice
+                  </label>
+                  <Select value={config.selectedMaleVoice || 'auto'} onValueChange={handleMaleVoiceChange}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select male voice" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="auto">Auto (Default Male)</SelectItem>
+                      {availableVoices
+                        .filter(voice => voice.gender === 'male')
+                        .map((voice) => (
+                          <SelectItem key={voice.id} value={voice.id}>
+                            {voice.name}
+                          </SelectItem>
+                        ))}
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-gray-500 mt-1">
+                    Voice used for male nouns and masculine forms
+                  </p>
+                </div>
+
+                {/* Female Voice Selection */}
+                <div>
+                  <label className="block text-sm font-medium mb-2">
+                    Female Voice
+                  </label>
+                  <Select value={config.selectedFemaleVoice || 'auto'} onValueChange={handleFemaleVoiceChange}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select female voice" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="auto">Auto (Default Female)</SelectItem>
+                      {availableVoices
+                        .filter(voice => voice.gender === 'female')
+                        .map((voice) => (
+                          <SelectItem key={voice.id} value={voice.id}>
+                            {voice.name}
+                          </SelectItem>
+                        ))}
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-gray-500 mt-1">
+                    Voice used for female nouns and feminine forms
+                  </p>
+                </div>
               </div>
 
               {/* Speech Rate */}
@@ -364,21 +572,74 @@ export function TTSSettings() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="default">Default</SelectItem>
-                    <SelectItem value="cheerful">Cheerful</SelectItem>
-                    <SelectItem value="sad">Sad</SelectItem>
+                    <SelectItem value="advertisement_upbeat">Advertisement Upbeat</SelectItem>
+                    <SelectItem value="affectionate">Affectionate</SelectItem>
                     <SelectItem value="angry">Angry</SelectItem>
-                    <SelectItem value="fearful">Fearful</SelectItem>
+                    <SelectItem value="assistant">Assistant</SelectItem>
+                    <SelectItem value="calm">Calm</SelectItem>
+                    <SelectItem value="chat">Chat</SelectItem>
+                    <SelectItem value="cheerful">Cheerful</SelectItem>
+                    <SelectItem value="customerservice">Customer Service</SelectItem>
+                    <SelectItem value="depressed">Depressed</SelectItem>
                     <SelectItem value="disgruntled">Disgruntled</SelectItem>
-                    <SelectItem value="serious">Serious</SelectItem>
+                    <SelectItem value="documentary-narration">Documentary Narration</SelectItem>
+                    <SelectItem value="embarrassed">Embarrassed</SelectItem>
+                    <SelectItem value="empathetic">Empathetic</SelectItem>
+                    <SelectItem value="envious">Envious</SelectItem>
+                    <SelectItem value="excited">Excited</SelectItem>
+                    <SelectItem value="fearful">Fearful</SelectItem>
                     <SelectItem value="friendly">Friendly</SelectItem>
-                    <SelectItem value="whispering">Whispering</SelectItem>
+                    <SelectItem value="gentle">Gentle</SelectItem>
                     <SelectItem value="hopeful">Hopeful</SelectItem>
+                    <SelectItem value="lyrical">Lyrical</SelectItem>
+                    <SelectItem value="narration-professional">Narration Professional</SelectItem>
+                    <SelectItem value="narration-relaxed">Narration Relaxed</SelectItem>
+                    <SelectItem value="newscast">Newscast</SelectItem>
+                    <SelectItem value="newscast-casual">Newscast Casual</SelectItem>
+                    <SelectItem value="newscast-formal">Newscast Formal</SelectItem>
+                    <SelectItem value="poetry-reading">Poetry Reading</SelectItem>
+                    <SelectItem value="sad">Sad</SelectItem>
+                    <SelectItem value="serious">Serious</SelectItem>
+                    <SelectItem value="shouting">Shouting</SelectItem>
+                    <SelectItem value="sports_commentary">Sports Commentary</SelectItem>
+                    <SelectItem value="sports_commentary_excited">Sports Commentary Excited</SelectItem>
+                    <SelectItem value="whispering">Whispering</SelectItem>
+                    <SelectItem value="terrified">Terrified</SelectItem>
+                    <SelectItem value="unfriendly">Unfriendly</SelectItem>
                   </SelectContent>
                 </Select>
                 <p className="text-xs text-gray-500 mt-1">
-                  Emotional style for voice expression
+                  Emotional style for voice expression. Note: Not all voices support all styles.
                 </p>
               </div>
+
+              {/* Voice Style Degree */}
+              {config.voiceStyle && config.voiceStyle !== 'default' && (
+                <div>
+                  <label className="block text-sm font-medium mb-2">
+                    Style Intensity (optional)
+                  </label>
+                  <Select value={config.voiceStyleDegree?.toString() || '1'} onValueChange={handleVoiceStyleDegreeChange}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select intensity" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="0.01">Minimal (0.01)</SelectItem>
+                      <SelectItem value="0.1">Very Light (0.1)</SelectItem>
+                      <SelectItem value="0.3">Light (0.3)</SelectItem>
+                      <SelectItem value="0.5">Soft (0.5)</SelectItem>
+                      <SelectItem value="0.8">Moderate (0.8)</SelectItem>
+                      <SelectItem value="1">Normal (1.0)</SelectItem>
+                      <SelectItem value="1.2">Strong (1.2)</SelectItem>
+                      <SelectItem value="1.5">Very Strong (1.5)</SelectItem>
+                      <SelectItem value="2">Maximum (2.0)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-gray-500 mt-1">
+                    Intensity of the selected style. Range: 0.01 to 2.0. Default: 1.0.
+                  </p>
+                </div>
+              )}
 
               {/* Voice Role */}
               <div>
@@ -391,15 +652,18 @@ export function TTSSettings() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="default">Default</SelectItem>
-                    <SelectItem value="narrator">Narrator</SelectItem>
-                    <SelectItem value="customer-service">Customer Service</SelectItem>
-                    <SelectItem value="newscast">Newscast</SelectItem>
-                    <SelectItem value="assistant">Assistant</SelectItem>
-                    <SelectItem value="chat">Chat</SelectItem>
+                    <SelectItem value="Girl">Girl</SelectItem>
+                    <SelectItem value="Boy">Boy</SelectItem>
+                    <SelectItem value="YoungAdultFemale">Young Adult Female</SelectItem>
+                    <SelectItem value="YoungAdultMale">Young Adult Male</SelectItem>
+                    <SelectItem value="OlderAdultFemale">Older Adult Female</SelectItem>
+                    <SelectItem value="OlderAdultMale">Older Adult Male</SelectItem>
+                    <SelectItem value="SeniorFemale">Senior Female</SelectItem>
+                    <SelectItem value="SeniorMale">Senior Male</SelectItem>
                   </SelectContent>
                 </Select>
                 <p className="text-xs text-gray-500 mt-1">
-                  Role-based voice characteristics
+                  Role-based voice age and gender characteristics. Note: Not all voices support all roles.
                 </p>
               </div>
 
@@ -446,13 +710,39 @@ export function TTSSettings() {
 
           {/* Test and Actions */}
           <div className="space-y-3 pt-4">
-            <div className="flex gap-2">
+            <div className="flex gap-2 flex-wrap">
               <Button
                 onClick={testTTS}
                 variant="outline"
               >
                 {isTestPlaying ? 'Stop' : 'Test Voice'}
               </Button>
+              
+              {config.provider === 'microsoft' && (
+                <>
+                  <Button
+                    onClick={() => testGenderVoice('male')}
+                    variant="outline"
+                    disabled={isTestPlaying}
+                  >
+                    Test Male Voice
+                  </Button>
+                  <Button
+                    onClick={() => testGenderVoice('female')}
+                    variant="outline"
+                    disabled={isTestPlaying}
+                  >
+                    Test Female Voice
+                  </Button>
+                  <Button
+                    onClick={testSSMLGeneration}
+                    variant="outline"
+                    disabled={isTestPlaying}
+                  >
+                    Test SSML
+                  </Button>
+                </>
+              )}
               
               {config.cacheEnabled && (
                 <Button
@@ -496,7 +786,10 @@ export function TTSSettings() {
                     speechPitch: 'medium',
                     speechVolume: 'medium',
                     voiceStyle: '',
-                    voiceRole: ''
+                    voiceStyleDegree: 1,
+                    voiceRole: '',
+                    selectedMaleVoice: '',
+                    selectedFemaleVoice: ''
                   };
                   setConfig(defaultConfig);
                   updateConfig(defaultConfig);

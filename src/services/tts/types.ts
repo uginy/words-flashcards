@@ -11,7 +11,10 @@ export interface TTSConfig {
   speechPitch?: string; // 'x-low', 'low', 'medium', 'high', 'x-high'
   speechVolume?: string; // 'x-soft', 'soft', 'medium', 'loud', 'x-loud'
   voiceStyle?: string; // emotional styles like 'cheerful', 'sad', etc.
-  voiceRole?: string; // role-play styles like 'narrator', 'customer-service', etc.
+  voiceStyleDegree?: number; // intensity of the style: 0.01 to 2 (default: 1)
+  voiceRole?: string; // role-play styles like 'Girl', 'Boy', 'YoungAdultFemale', etc.
+  selectedMaleVoice?: string; // selected male voice ID for the provider
+  selectedFemaleVoice?: string; // selected female voice ID for the provider
 }
 
 export interface TTSOptions {

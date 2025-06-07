@@ -243,6 +243,15 @@ export class TTSManager {
         if (config.voiceRole === undefined) {
           config.voiceRole = '';
         }
+        if (config.selectedMaleVoice === undefined) {
+          config.selectedMaleVoice = '';
+        }
+        if (config.selectedFemaleVoice === undefined) {
+          config.selectedFemaleVoice = '';
+        }
+        if (config.voiceStyleDegree === undefined) {
+          config.voiceStyleDegree = 1;
+        }
         return config;
       } catch (error) {
         console.error('Failed to parse TTS config:', error);
@@ -259,7 +268,10 @@ export class TTSManager {
       speechPitch: 'medium',
       speechVolume: 'medium',
       voiceStyle: '',
-      voiceRole: ''
+      voiceRole: '',
+      selectedMaleVoice: '',
+      selectedFemaleVoice: '',
+      voiceStyleDegree: 1
     };
   }
 
@@ -275,7 +287,10 @@ export class TTSManager {
         speechPitch: this.config.speechPitch,
         speechVolume: this.config.speechVolume,
         voiceStyle: this.config.voiceStyle,
-        voiceRole: this.config.voiceRole
+        voiceStyleDegree: this.config.voiceStyleDegree,
+        voiceRole: this.config.voiceRole,
+        selectedMaleVoice: this.config.selectedMaleVoice,
+        selectedFemaleVoice: this.config.selectedFemaleVoice
       };
       
       const microsoftProvider = new MicrosoftTTSProvider(
