@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { getTTSManager } from '../../services/tts/TTSManager';
 import type { TTSConfig, TTSProviderType } from '../../services/tts/types';
 import { Button } from '../ui/button';
@@ -12,19 +12,23 @@ export function TTSSettings() {
     fallbackToSystem: true,
     cacheEnabled: false,
     microsoftRegion: 'westeurope',
-    speechRate: 1.0,
-    speechPitch: 1.0,
-    speechVolume: 1.0,
+    speechRate: 'medium',
+    speechPitch: 'medium',
+    speechVolume: 'medium',
     voiceStyle: '',
     voiceRole: ''
   });
   const [isTestPlaying, setIsTestPlaying] = useState(false);
   const [testMessage, setTestMessage] = useState<string>('');
+  const isTestStoppedRef = useRef(false);
+  const currentTestControllerRef = useRef<AbortController | null>(null);
 
   useEffect(() => {
     // Load current config
     const ttsManager = getTTSManager();
-    setConfig(ttsManager.getConfig());
+    const loadedConfig = ttsManager.getConfig();
+    console.log('🔧 Loaded TTS config:', loadedConfig);
+    setConfig(loadedConfig);
   }, []);
 
   const handleProviderChange = (provider: TTSProviderType) => {
@@ -40,19 +44,19 @@ export function TTSSettings() {
   };
 
   const handleSpeechRateChange = (value: string) => {
-    const newConfig = { ...config, speechRate: Number.parseFloat(value) };
+    const newConfig = { ...config, speechRate: value };
     setConfig(newConfig);
     updateConfig(newConfig);
   };
 
   const handleSpeechPitchChange = (value: string) => {
-    const newConfig = { ...config, speechPitch: Number.parseFloat(value) };
+    const newConfig = { ...config, speechPitch: value };
     setConfig(newConfig);
     updateConfig(newConfig);
   };
 
   const handleSpeechVolumeChange = (value: string) => {
-    const newConfig = { ...config, speechVolume: Number.parseFloat(value) };
+    const newConfig = { ...config, speechVolume: value };
     setConfig(newConfig);
     updateConfig(newConfig);
   };
@@ -106,7 +110,53 @@ export function TTSSettings() {
       // Stop current test
       console.log('🛑 Stopping TTS test...');
       const ttsManager = getTTSManager();
+      
+      // Log current provider
+      const currentProvider = ttsManager.getCurrentProvider();
+      console.log('🛑 Current TTS provider:', currentProvider.name);
+      
+      // Stop the TTS manager
       ttsManager.stop();
+      
+      // Additional stop methods for different providers
+      if (currentProvider.name === 'system') {
+        console.log('🛑 Additional system TTS stop...');
+        if ('speechSynthesis' in window) {
+          window.speechSynthesis.cancel();
+          console.log('🛑 speechSynthesis.cancel() called');
+        }
+      }
+      
+      // Abort the current test controller
+      if (currentTestControllerRef.current) {
+        console.log('🛑 Aborting test controller');
+        currentTestControllerRef.current.abort();
+        currentTestControllerRef.current = null;
+      }
+      
+      // Force stop all audio elements on the page (including newly created ones)
+      const stopAllAudio = () => {
+        const audioElements = document.querySelectorAll('audio');
+        audioElements.forEach((audio, index) => {
+          console.log(`🛑 Stopping audio element ${index}`);
+          audio.pause();
+          audio.currentTime = 0;
+          // Also remove the element to prevent further playback
+          audio.remove();
+        });
+      };
+      
+      // Stop current audio
+      stopAllAudio();
+      
+      // Keep stopping audio for a short period to catch newly created elements
+      const stopInterval = setInterval(stopAllAudio, 100);
+      setTimeout(() => {
+        clearInterval(stopInterval);
+        console.log('🛑 Stopped monitoring for new audio elements');
+      }, 1000);
+      
+      isTestStoppedRef.current = true;
       setIsTestPlaying(false);
       setTestMessage('🛑 Test stopped');
       setTimeout(() => setTestMessage(''), 3000);
@@ -114,37 +164,56 @@ export function TTSSettings() {
     }
     
     console.log('▶️ Starting TTS test...');
+    isTestStoppedRef.current = false; // Reset stop flag
     setIsTestPlaying(true);
-    setTestMessage('');
+    setTestMessage('▶️ Playing test audio...');
+    
+    // Create new AbortController for this test
+    const testController = new AbortController();
+    currentTestControllerRef.current = testController;
     
     try {
       const ttsManager = getTTSManager();
-      const testText = 'שלום עולם! זה בדיקת קול מפורטת של מערכת הסינתזה של דיבור. אנו בודקים את איכות הקול, המהירות, הטון והעוצמה. הטקסט הזה ארוך יותר כדי לבדוק כיצד המערכת מתמודדת עם טקסט מורכב ומפורט. זה יעזור לנו להעריך את כל ההגדרות החדשות שהוספנו למערכת.';
+      const testText = 'שלום עולם! זה בדיקת קול';
       
       console.log('🎵 Starting TTS speak...');
-      await ttsManager.speak(testText, { lang: 'he-IL' });
+      
+      // Create a race between TTS and abort signal
+      const speakPromise = ttsManager.speak(testText, { lang: 'he-IL' });
+      const abortPromise = new Promise<never>((_, reject) => {
+        testController.signal.addEventListener('abort', () => {
+          console.log('🛑 Test aborted via AbortController');
+          reject(new Error('Test aborted'));
+        });
+      });
+      
+      await Promise.race([speakPromise, abortPromise]);
       console.log('✅ TTS speak completed');
       
-      // Only set success message if we're still in playing state (not stopped)
-      if (isTestPlaying) {
+      // Only set success message if test wasn't stopped
+      if (!isTestStoppedRef.current) {
         setTestMessage('✅ Test completed successfully!');
+        setTimeout(() => setTestMessage(''), 3000);
       }
     } catch (error) {
       console.error('TTS test failed:', error);
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       
-      if (errorMessage.includes('user interaction')) {
-        setTestMessage('⚠️ Please click on the page first, then try the test again.');
-      } else if (errorMessage.includes('API')) {
-        setTestMessage('❌ API error. Please check your API key settings.');
-      } else {
-        setTestMessage(`❌ Test failed: ${errorMessage}`);
+      // Only show error if test wasn't stopped
+      if (!isTestStoppedRef.current) {
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        
+        if (errorMessage.includes('user interaction')) {
+          setTestMessage('⚠️ Please click on the page first, then try the test again.');
+        } else if (errorMessage.includes('API')) {
+          setTestMessage('❌ API error. Please check your API key settings.');
+        } else {
+          setTestMessage(`❌ Test failed: ${errorMessage}`);
+        }
+        setTimeout(() => setTestMessage(''), 5000);
       }
     } finally {
       console.log('🏁 TTS test finished, setting isTestPlaying to false');
       setIsTestPlaying(false);
-      // Clear message after 5 seconds
-      setTimeout(() => setTestMessage(''), 5000);
     }
   };
 
@@ -160,9 +229,9 @@ export function TTSSettings() {
   const resetToDefaults = () => {
     const newConfig = {
       ...config,
-      speechRate: 1.0,
-      speechPitch: 1.0,
-      speechVolume: 1.0,
+      speechRate: 'medium',
+      speechPitch: 'medium',
+      speechVolume: 'medium',
       voiceStyle: '',
       voiceRole: ''
     };
@@ -221,63 +290,67 @@ export function TTSSettings() {
               {/* Speech Rate */}
               <div>
                 <label className="block text-sm font-medium mb-2">
-                  Speech Rate: {config.speechRate?.toFixed(1) || '1.0'}x
+                  Speech Rate
                 </label>
-                <input
-                  type="range"
-                  min="0.5"
-                  max="2.0"
-                  step="0.1"
-                  value={config.speechRate || 1.0}
-                  onChange={(e) => handleSpeechRateChange(e.target.value)}
-                  className="w-full"
-                />
-                <div className="flex justify-between text-xs text-gray-500 mt-1">
-                  <span>Slow (0.5x)</span>
-                  <span>Normal (1.0x)</span>
-                  <span>Fast (2.0x)</span>
-                </div>
+                <Select value={config.speechRate || 'medium'} onValueChange={(value) => handleSpeechRateChange(value)}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select speech rate" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="x-slow">Very Slow (x-slow)</SelectItem>
+                    <SelectItem value="slow">Slow</SelectItem>
+                    <SelectItem value="medium">Normal (medium)</SelectItem>
+                    <SelectItem value="fast">Fast</SelectItem>
+                    <SelectItem value="x-fast">Very Fast (x-fast)</SelectItem>
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-gray-500 mt-1">
+                  Speech speed using Microsoft SSML values
+                </p>
               </div>
 
               {/* Speech Pitch */}
               <div>
                 <label className="block text-sm font-medium mb-2">
-                  Speech Pitch: {config.speechPitch?.toFixed(1) || '1.0'}x
+                  Speech Pitch
                 </label>
-                <input
-                  type="range"
-                  min="0.5"
-                  max="2.0"
-                  step="0.1"
-                  value={config.speechPitch || 1.0}
-                  onChange={(e) => handleSpeechPitchChange(e.target.value)}
-                  className="w-full"
-                />
-                <div className="flex justify-between text-xs text-gray-500 mt-1">
-                  <span>Low (0.5x)</span>
-                  <span>Normal (1.0x)</span>
-                  <span>High (2.0x)</span>
-                </div>
+                <Select value={config.speechPitch || 'medium'} onValueChange={(value) => handleSpeechPitchChange(value)}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select speech pitch" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="x-low">Very Low (x-low)</SelectItem>
+                    <SelectItem value="low">Low</SelectItem>
+                    <SelectItem value="medium">Normal (medium)</SelectItem>
+                    <SelectItem value="high">High</SelectItem>
+                    <SelectItem value="x-high">Very High (x-high)</SelectItem>
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-gray-500 mt-1">
+                  Voice pitch using Microsoft SSML values
+                </p>
               </div>
 
               {/* Speech Volume */}
               <div>
                 <label className="block text-sm font-medium mb-2">
-                  Speech Volume: {Math.round((config.speechVolume || 1.0) * 100)}%
+                  Speech Volume
                 </label>
-                <input
-                  type="range"
-                  min="0.1"
-                  max="1.0"
-                  step="0.1"
-                  value={config.speechVolume || 1.0}
-                  onChange={(e) => handleSpeechVolumeChange(e.target.value)}
-                  className="w-full"
-                />
-                <div className="flex justify-between text-xs text-gray-500 mt-1">
-                  <span>Quiet (10%)</span>
-                  <span>Normal (100%)</span>
-                </div>
+                <Select value={config.speechVolume || 'medium'} onValueChange={(value) => handleSpeechVolumeChange(value)}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select speech volume" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="x-soft">Very Soft (x-soft)</SelectItem>
+                    <SelectItem value="soft">Soft</SelectItem>
+                    <SelectItem value="medium">Normal (medium)</SelectItem>
+                    <SelectItem value="loud">Loud</SelectItem>
+                    <SelectItem value="x-loud">Very Loud (x-loud)</SelectItem>
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-gray-500 mt-1">
+                  Voice volume using Microsoft SSML values
+                </p>
               </div>
 
               {/* Voice Style */}
@@ -396,6 +469,46 @@ export function TTSSettings() {
                 {testMessage}
               </div>
             )}
+          </div>
+
+          {/* Save Settings */}
+          <div className="pt-6 border-t">
+            <div className="flex gap-3">
+              <Button
+                onClick={() => {
+                  updateConfig(config);
+                  setTestMessage('✅ All TTS settings saved successfully!');
+                  setTimeout(() => setTestMessage(''), 3000);
+                }}
+                variant="default"
+                size="default"
+              >
+                Save TTS Settings
+              </Button>
+              <Button
+                onClick={() => {
+                  const defaultConfig = {
+                    provider: 'system' as TTSProviderType,
+                    fallbackToSystem: true,
+                    cacheEnabled: false,
+                    microsoftRegion: 'westeurope',
+                    speechRate: 'medium',
+                    speechPitch: 'medium',
+                    speechVolume: 'medium',
+                    voiceStyle: '',
+                    voiceRole: ''
+                  };
+                  setConfig(defaultConfig);
+                  updateConfig(defaultConfig);
+                  setTestMessage('✅ All TTS settings reset to defaults');
+                  setTimeout(() => setTestMessage(''), 3000);
+                }}
+                variant="outline"
+                size="default"
+              >
+                Reset All TTS Settings
+              </Button>
+            </div>
           </div>
         </div>
       </div>

@@ -227,6 +227,22 @@ export class TTSManager {
         if (!config.microsoftRegion) {
           config.microsoftRegion = 'westeurope';
         }
+        // Ensure speech parameters have default values
+        if (config.speechRate === undefined) {
+          config.speechRate = 'medium';
+        }
+        if (config.speechPitch === undefined) {
+          config.speechPitch = 'medium';
+        }
+        if (config.speechVolume === undefined) {
+          config.speechVolume = 'medium';
+        }
+        if (config.voiceStyle === undefined) {
+          config.voiceStyle = '';
+        }
+        if (config.voiceRole === undefined) {
+          config.voiceRole = '';
+        }
         return config;
       } catch (error) {
         console.error('Failed to parse TTS config:', error);
@@ -238,7 +254,12 @@ export class TTSManager {
       provider: 'system',
       fallbackToSystem: true,
       cacheEnabled: false,
-      microsoftRegion: 'westeurope'
+      microsoftRegion: 'westeurope',
+      speechRate: 'medium',
+      speechPitch: 'medium',
+      speechVolume: 'medium',
+      voiceStyle: '',
+      voiceRole: ''
     };
   }
 

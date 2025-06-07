@@ -2,9 +2,9 @@ import type { TTSProvider, TTSOptions, TTSVoice, SSMLBuilder } from '../types';
 
 class MicrosoftSSMLBuilder implements SSMLBuilder {
   constructor(private config?: {
-    speechRate?: number;
-    speechPitch?: number;
-    speechVolume?: number;
+    speechRate?: string;
+    speechPitch?: string;
+    speechVolume?: string;
     voiceStyle?: string;
     voiceRole?: string;
   }) {}
@@ -13,29 +13,10 @@ class MicrosoftSSMLBuilder implements SSMLBuilder {
     const lang = options.lang || 'he-IL';
     const voiceName = this.getVoiceName(lang, options.voice, options.gender);
     
-    // Use config values or fallback to options, then defaults
-    const rateValue = this.config?.speechRate ?? options.rate ?? 1.0;
-    const pitchValue = this.config?.speechPitch ?? options.pitch ?? 1.0;
-    const volumeValue = this.config?.speechVolume ?? options.volume ?? 1.0;
-    
-    // Convert to Microsoft-compatible format
-    // Microsoft rate: x-slow, slow, medium, fast, x-fast OR percentage
-    // Our scale: 0.5 = slow, 1.0 = normal, 2.0 = fast
-    let rate: string;
-    if (rateValue <= 0.6) {
-      rate = 'x-slow';
-    } else if (rateValue <= 0.8) {
-      rate = 'slow';
-    } else if (rateValue >= 1.8) {
-      rate = 'x-fast';
-    } else if (rateValue >= 1.3) {
-      rate = 'fast';
-    } else {
-      rate = 'medium';
-    }
-    
-    const pitch = pitchValue === 1.0 ? 'medium' : (pitchValue > 1.0 ? `+${Math.round((pitchValue - 1) * 50)}%` : `${Math.round((pitchValue - 1) * 50)}%`);
-    const volume = volumeValue === 1.0 ? 'medium' : `${Math.round(volumeValue * 100)}%`;
+    // Use direct SSML string values from config
+    const rate = this.config?.speechRate || 'medium';
+    const pitch = this.config?.speechPitch || 'medium';
+    const volume = this.config?.speechVolume || 'medium';
     
     // Build voice element with optional style and role
     let voiceElement = `<voice name="${voiceName}"`;
@@ -115,9 +96,9 @@ export class MicrosoftTTSProvider implements TTSProvider {
     private apiKey: string,
     private region = 'westeurope',
     config?: {
-      speechRate?: number;
-      speechPitch?: number;
-      speechVolume?: number;
+      speechRate?: string;
+      speechPitch?: string;
+      speechVolume?: string;
       voiceStyle?: string;
       voiceRole?: string;
     }
@@ -126,9 +107,9 @@ export class MicrosoftTTSProvider implements TTSProvider {
   }
 
   updateConfig(config: {
-    speechRate?: number;
-    speechPitch?: number;
-    speechVolume?: number;
+    speechRate?: string;
+    speechPitch?: string;
+    speechVolume?: string;
     voiceStyle?: string;
     voiceRole?: string;
   }): void {
