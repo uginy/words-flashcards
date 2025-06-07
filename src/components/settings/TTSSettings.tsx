@@ -31,7 +31,6 @@ export function TTSSettings() {
     // Load current config
     const ttsManager = getTTSManager();
     const loadedConfig = ttsManager.getConfig();
-    console.log('🔧 Loaded TTS config:', loadedConfig);
     setConfig(loadedConfig);
   }, []);
 
@@ -47,7 +46,6 @@ export function TTSSettings() {
             setAvailableVoices(voices);
           }
         } catch (error) {
-          console.error('Failed to load voices:', error);
           setAvailableVoices([]);
         }
       } else {
@@ -157,100 +155,59 @@ export function TTSSettings() {
   const testTTS = async () => {
     if (isTestPlaying) {
       // Stop current test
-      console.log('🛑 Stopping TTS test...');
       const ttsManager = getTTSManager();
-      
-      // Log current provider
       const currentProvider = ttsManager.getCurrentProvider();
-      console.log('🛑 Current TTS provider:', currentProvider.name);
-      
-      // Stop the TTS manager
       ttsManager.stop();
-      
-      // Additional stop methods for different providers
       if (currentProvider.name === 'system') {
-        console.log('🛑 Additional system TTS stop...');
         if ('speechSynthesis' in window) {
           window.speechSynthesis.cancel();
-          console.log('🛑 speechSynthesis.cancel() called');
         }
       }
-      
-      // Abort the current test controller
       if (currentTestControllerRef.current) {
-        console.log('🛑 Aborting test controller');
         currentTestControllerRef.current.abort();
         currentTestControllerRef.current = null;
       }
-      
-      // Force stop all audio elements on the page (including newly created ones)
       const stopAllAudio = () => {
         const audioElements = document.querySelectorAll('audio');
-        audioElements.forEach((audio, index) => {
-          console.log(`🛑 Stopping audio element ${index}`);
+        for (const audio of audioElements) {
           audio.pause();
           audio.currentTime = 0;
-          // Also remove the element to prevent further playback
           audio.remove();
-        });
+        }
       };
-      
-      // Stop current audio
       stopAllAudio();
-      
-      // Keep stopping audio for a short period to catch newly created elements
       const stopInterval = setInterval(stopAllAudio, 100);
       setTimeout(() => {
         clearInterval(stopInterval);
-        console.log('🛑 Stopped monitoring for new audio elements');
       }, 1000);
-      
       isTestStoppedRef.current = true;
       setIsTestPlaying(false);
       setTestMessage('🛑 Test stopped');
       setTimeout(() => setTestMessage(''), 3000);
       return;
     }
-    
-    console.log('▶️ Starting TTS test...');
-    isTestStoppedRef.current = false; // Reset stop flag
+    isTestStoppedRef.current = false;
     setIsTestPlaying(true);
     setTestMessage('▶️ Playing test audio...');
-    
-    // Create new AbortController for this test
     const testController = new AbortController();
     currentTestControllerRef.current = testController;
-    
     try {
       const ttsManager = getTTSManager();
       const testText = 'שלום עולם! זה בדיקת קול';
-      
-      console.log('🎵 Starting TTS speak...');
-      
-      // Create a race between TTS and abort signal
       const speakPromise = ttsManager.speak(testText, { lang: 'he-IL' });
       const abortPromise = new Promise<never>((_, reject) => {
         testController.signal.addEventListener('abort', () => {
-          console.log('🛑 Test aborted via AbortController');
           reject(new Error('Test aborted'));
         });
       });
-      
       await Promise.race([speakPromise, abortPromise]);
-      console.log('✅ TTS speak completed');
-      
-      // Only set success message if test wasn't stopped
       if (!isTestStoppedRef.current) {
         setTestMessage('✅ Test completed successfully!');
         setTimeout(() => setTestMessage(''), 3000);
       }
     } catch (error) {
-      console.error('TTS test failed:', error);
-      
-      // Only show error if test wasn't stopped
       if (!isTestStoppedRef.current) {
         const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-        
         if (errorMessage.includes('user interaction')) {
           setTestMessage('⚠️ Please click on the page first, then try the test again.');
         } else if (errorMessage.includes('API')) {
@@ -261,66 +218,33 @@ export function TTSSettings() {
         setTimeout(() => setTestMessage(''), 5000);
       }
     } finally {
-      console.log('🏁 TTS test finished, setting isTestPlaying to false');
       setIsTestPlaying(false);
     }
   };
 
   const testGenderVoice = async (gender: 'male' | 'female') => {
-    console.log(`▶️ Starting TTS test for ${gender} voice...`);
     isTestStoppedRef.current = false;
     setIsTestPlaying(true);
     setTestMessage(`▶️ Testing ${gender} voice...`);
-    
-    // Create new AbortController for this test
     const testController = new AbortController();
     currentTestControllerRef.current = testController;
-    
     try {
       const ttsManager = getTTSManager();
       const testText = gender === 'male' ? 'זה קול גברי לבדיקה' : 'זה קול נשי לבדיקה';
-      
-      console.log(`🎵 Starting TTS speak with ${gender} voice...`);
-      console.log('Current TTS config:', ttsManager.getConfig());
-      
-      // Log SSML that would be generated
-      if (config.provider === 'microsoft') {
-        console.log('🔧 Microsoft TTS Configuration:');
-        console.log('- Speech Rate:', config.speechRate);
-        console.log('- Speech Pitch:', config.speechPitch);
-        console.log('- Speech Volume:', config.speechVolume);
-        console.log('- Voice Style:', config.voiceStyle);
-        console.log('- Style Degree:', config.voiceStyleDegree);
-        console.log('- Voice Role:', config.voiceRole);
-        console.log('- Selected Male Voice:', config.selectedMaleVoice);
-        console.log('- Selected Female Voice:', config.selectedFemaleVoice);
-        console.log('- Test gender:', gender);
-      }
-      
-      // Create a race between TTS and abort signal
       const speakPromise = ttsManager.speak(testText, { lang: 'he-IL', gender });
       const abortPromise = new Promise<never>((_, reject) => {
         testController.signal.addEventListener('abort', () => {
-          console.log('🛑 Gender voice test aborted via AbortController');
           reject(new Error('Test aborted'));
         });
       });
-      
       await Promise.race([speakPromise, abortPromise]);
-      console.log(`✅ TTS ${gender} voice test completed`);
-      
-      // Only set success message if test wasn't stopped
       if (!isTestStoppedRef.current) {
         setTestMessage(`✅ ${gender.charAt(0).toUpperCase() + gender.slice(1)} voice test completed successfully!`);
         setTimeout(() => setTestMessage(''), 3000);
       }
     } catch (error) {
-      console.error(`TTS ${gender} voice test failed:`, error);
-      
-      // Only show error if test wasn't stopped
       if (!isTestStoppedRef.current) {
         const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-        
         if (errorMessage.includes('user interaction')) {
           setTestMessage('⚠️ Please click on the page first, then try the test again.');
         } else if (errorMessage.includes('API')) {
@@ -331,7 +255,6 @@ export function TTSSettings() {
         setTimeout(() => setTestMessage(''), 5000);
       }
     } finally {
-      console.log(`🏁 TTS ${gender} voice test finished, setting isTestPlaying to false`);
       setIsTestPlaying(false);
     }
   };
@@ -343,28 +266,9 @@ export function TTSSettings() {
       return;
     }
 
-    console.log('🔧 Testing SSML Generation...');
-    console.log('Current Microsoft TTS Configuration:');
-    console.log('- Speech Rate:', config.speechRate);
-    console.log('- Speech Pitch:', config.speechPitch);
-    console.log('- Speech Volume:', config.speechVolume);
-    console.log('- Voice Style:', config.voiceStyle);
-    console.log('- Style Degree:', config.voiceStyleDegree);
-    console.log('- Voice Role:', config.voiceRole);
-    console.log('- Selected Male Voice:', config.selectedMaleVoice);
-    console.log('- Selected Female Voice:', config.selectedFemaleVoice);
-
     // Mock SSML generation logic for testing
-    const testText = 'זה טקסט לבדיקה';
-    const lang = 'he-IL';
-    
-    console.log('Generated SSML would be:');
-    console.log(`Text: "${testText}"`);
-    console.log(`Language: ${lang}`);
-    console.log('With current settings applied');
-    
-    setTestMessage('✅ SSML generation test completed - check console for details');
-    setTimeout(() => setTestMessage(''), 5000);
+    setTestMessage('✅ SSML generation test completed');
+    setTimeout(() => setTestMessage(''), 3000);
   };
 
   const clearCache = () => {

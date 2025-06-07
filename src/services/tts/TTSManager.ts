@@ -72,7 +72,7 @@ export class TTSManager {
       }
       
     } catch (error) {
-      console.error(`TTS error with ${this.currentProvider.name}:`, error);
+      // Only log to error reporting system if needed
       
       // Fallback to system provider if enabled
       if (this.config.fallbackToSystem && this.currentProvider.name !== 'system') {
@@ -89,31 +89,18 @@ export class TTSManager {
   }
 
   stop(): void {
-    console.log('🛑 TTSManager.stop() called');
-    
     // Stop provider
-    console.log('🛑 Stopping current provider:', this.currentProvider.name);
     this.currentProvider.stop();
-    
     // Stop any manager-level audio playback
     if (this.currentPlaybackController) {
-      console.log('🛑 Aborting playback controller');
       this.currentPlaybackController.abort();
       this.currentPlaybackController = null;
-    } else {
-      console.log('🛑 No playback controller to abort');
     }
-    
     if (this.currentAudio) {
-      console.log('🛑 Stopping current audio element');
       this.currentAudio.pause();
       this.currentAudio.currentTime = 0;
       this.currentAudio = null;
-    } else {
-      console.log('🛑 No audio element to stop');
     }
-    
-    console.log('🛑 TTSManager.stop() completed');
   }
 
   pause(): void {
@@ -254,7 +241,7 @@ export class TTSManager {
         }
         return config;
       } catch (error) {
-        console.error('Failed to parse TTS config:', error);
+        // Failed to parse config, fallback to default
       }
     }
     
@@ -312,9 +299,7 @@ export class TTSManager {
       const systemProvider = this.providers.get('system');
       if (systemProvider) {
         this.currentProvider = systemProvider;
-        if (this.config.provider !== 'system') {
-          console.warn(`Provider ${this.config.provider} not available, falling back to system`);
-        }
+        // If provider not available, fallback to system
       } else {
         throw new Error('No TTS providers available');
       }
@@ -371,12 +356,10 @@ export class TTSManager {
 
       audio.onerror = () => {
         cleanup();
-        console.warn('Cached audio playback error - continuing anyway');
         resolve();
       };
 
-      audio.play().catch((error: Error) => {
-        console.warn('Audio play error:', error.message);
+      audio.play().catch(() => {
         cleanup();
         resolve();
       });
@@ -454,12 +437,10 @@ export class TTSManager {
 
       audio.onerror = () => {
         cleanup();
-        console.warn('Audio playback error - continuing anyway');
         resolve();
       };
 
-      audio.play().catch((error: Error) => {
-        console.warn('Audio play error:', error.message);
+      audio.play().catch(() => {
         cleanup();
         resolve();
       });

@@ -72,7 +72,6 @@ class MicrosoftSSMLBuilder implements SSMLBuilder {
     // Prioritize gender selection over voice hint for reliable gender-based voice selection
     if (gender) {
       const genderVoice = languageVoices[gender];
-      // console.log(`Selected voice for gender ${gender}:`, genderVoice);
       return genderVoice;
     }
 
@@ -81,13 +80,11 @@ class MicrosoftSSMLBuilder implements SSMLBuilder {
       const allVoices = [languageVoices.male, languageVoices.female];
       const matchedVoice = allVoices.find(v => v.includes(voiceHint));
       if (matchedVoice) {
-        // console.log('Selected voice by hint:', matchedVoice);
         return matchedVoice;
       }
     }
 
     // Default to female voice
-    // console.log('Using default female voice:', languageVoices.female);
     return languageVoices.female;
   }
 
@@ -152,11 +149,9 @@ export class MicrosoftTTSProvider implements TTSProvider {
     try {
       // Build SSML
       const ssml = this.ssmlBuilder.buildSSML(text, options);
-      // console.log('Generated SSML:', ssml);
       
       // Make TTS request
       const audioBuffer = await this.synthesizeSpeech(ssml);
-      // console.log('TTS request successful, received audio buffer');
       
       // Play audio (won't throw on autoplay issues)
       await this.playAudio(audioBuffer);
@@ -167,8 +162,7 @@ export class MicrosoftTTSProvider implements TTSProvider {
         throw new Error(`Microsoft TTS error: ${error.message}`);
       }
       
-      // For other errors (like autoplay), just log and continue
-      console.warn('Microsoft TTS warning:', error instanceof Error ? error.message : 'Unknown error');
+      // For other errors (like autoplay), just continue silently
     }
   }
 
@@ -185,27 +179,20 @@ export class MicrosoftTTSProvider implements TTSProvider {
   }
 
   stop(): void {
-    // console.log('🛑 MicrosoftTTSProvider.stop() called');
+
     
     // Cancel current playback controller
     if (this.currentPlaybackController) {
-      // console.log('🛑 Microsoft: Aborting playback controller');
       this.currentPlaybackController.abort();
       this.currentPlaybackController = null;
-    } else {
-      // console.log('🛑 Microsoft: No playback controller to abort');
     }
     
     if (this.currentAudio) {
-      // console.log('🛑 Microsoft: Stopping audio element');
       this.currentAudio.pause();
       this.currentAudio.currentTime = 0;
       this.currentAudio = null;
-    } else {
-      // console.log('🛑 Microsoft: No audio element to stop');
     }
-    
-    // console.log('🛑 MicrosoftTTSProvider.stop() completed');
+
   }
 
   pause(): void {
@@ -238,8 +225,6 @@ export class MicrosoftTTSProvider implements TTSProvider {
 
   private async synthesizeSpeech(ssml: string): Promise<ArrayBuffer> {
     const url = `https://${this.region}.tts.speech.microsoft.com/cognitiveservices/v1`;
-    // console.log('TTS request to:', url);
-    // console.log('SSML payload:', ssml);
     
     const response = await fetch(url, {
       method: 'POST',
@@ -261,17 +246,9 @@ export class MicrosoftTTSProvider implements TTSProvider {
         errorDetails = await response.text();
       }
       
-      console.error('TTS synthesis failed:', {
-        status: response.status,
-        statusText: response.statusText,
-        headers: Object.fromEntries(response.headers.entries()),
-        error: errorDetails
-      });
-      
       throw new Error(`TTS synthesis failed: ${response.status} - ${errorDetails}`);
     }
 
-    // console.log('TTS synthesis successful');
     return response.arrayBuffer();
   }
 
@@ -309,20 +286,17 @@ export class MicrosoftTTSProvider implements TTSProvider {
 
       audio.onerror = () => {
         cleanup();
-        console.warn('Audio playback error - continuing anyway');
         resolve(); // Don't reject on audio errors
       };
 
       // Try to play with autoplay protection handling
       audio.play().catch((error: Error) => {
         if (error.name === 'NotAllowedError') {
-          console.warn('Autoplay prevented - audio ready but not playing due to browser policy');
           cleanup();
           resolve(); // Don't treat autoplay prevention as an error
         } else {
-          console.warn('Audio play error:', error.message);
           cleanup();
-          resolve(); // Don't reject, just log and continue
+          resolve(); // Don't reject, just continue
         }
       });
     });
