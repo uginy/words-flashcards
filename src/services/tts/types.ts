@@ -6,6 +6,12 @@ export interface TTSConfig {
   cacheEnabled: boolean;
   microsoftApiKey?: string;
   microsoftRegion?: string;
+  // Microsoft TTS specific options
+  speechRate?: number; // 0.5 to 2.0, default 1.0
+  speechPitch?: number; // 0.5 to 2.0, default 1.0  
+  speechVolume?: number; // 0.0 to 1.0, default 1.0
+  voiceStyle?: string; // emotional styles like 'cheerful', 'sad', etc.
+  voiceRole?: string; // role-play styles like 'narrator', 'customer-service', etc.
 }
 
 export interface TTSOptions {

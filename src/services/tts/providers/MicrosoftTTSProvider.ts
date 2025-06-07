@@ -1,23 +1,66 @@
 import type { TTSProvider, TTSOptions, TTSVoice, SSMLBuilder } from '../types';
 
 class MicrosoftSSMLBuilder implements SSMLBuilder {
+  constructor(private config?: {
+    speechRate?: number;
+    speechPitch?: number;
+    speechVolume?: number;
+    voiceStyle?: string;
+    voiceRole?: string;
+  }) {}
+
   buildSSML(text: string, options: TTSOptions): string {
     const lang = options.lang || 'he-IL';
     const voiceName = this.getVoiceName(lang, options.voice, options.gender);
-    // Convert rate and pitch to readable values
-    const rateValue = options.rate || 1.0;
-    const pitchValue = options.pitch || 1.0;
     
-    // Use "medium" for default speed, or calculate percentage for custom speed
-    const rate = rateValue === 1.0 ? 'medium' : `${Math.round(rateValue * 100)}%`;
-    const pitch = pitchValue === 1.0 ? 'medium' : `${Math.round(pitchValue * 100)}%`;
+    // Use config values or fallback to options, then defaults
+    const rateValue = this.config?.speechRate ?? options.rate ?? 1.0;
+    const pitchValue = this.config?.speechPitch ?? options.pitch ?? 1.0;
+    const volumeValue = this.config?.speechVolume ?? options.volume ?? 1.0;
+    
+    // Convert to Microsoft-compatible format
+    // Microsoft rate: x-slow, slow, medium, fast, x-fast OR percentage
+    // Our scale: 0.5 = slow, 1.0 = normal, 2.0 = fast
+    let rate: string;
+    if (rateValue <= 0.6) {
+      rate = 'x-slow';
+    } else if (rateValue <= 0.8) {
+      rate = 'slow';
+    } else if (rateValue >= 1.8) {
+      rate = 'x-fast';
+    } else if (rateValue >= 1.3) {
+      rate = 'fast';
+    } else {
+      rate = 'medium';
+    }
+    
+    const pitch = pitchValue === 1.0 ? 'medium' : (pitchValue > 1.0 ? `+${Math.round((pitchValue - 1) * 50)}%` : `${Math.round((pitchValue - 1) * 50)}%`);
+    const volume = volumeValue === 1.0 ? 'medium' : `${Math.round(volumeValue * 100)}%`;
+    
+    // Build voice element with optional style and role
+    let voiceElement = `<voice name="${voiceName}"`;
+    if (this.config?.voiceStyle) {
+      voiceElement += `>\n    <mstts:express-as style="${this.config.voiceStyle}"`;
+      if (this.config?.voiceRole) {
+        voiceElement += ` role="${this.config.voiceRole}"`;
+      }
+      voiceElement += '>';
+    } else {
+      voiceElement += '>';
+    }
+    
+    const prosodyContent = `
+      <prosody rate="${rate}" pitch="${pitch}" volume="${volume}">
+        ${this.escapeXml(text)}
+      </prosody>`;
+    
+    let closingTags = `\n  </voice>`;
+    if (this.config?.voiceStyle) {
+      closingTags = `\n    </mstts:express-as>${closingTags}`;
+    }
     
     return `<speak xmlns="http://www.w3.org/2001/10/synthesis" xmlns:mstts="http://www.w3.org/2001/mstts" version="1.0" xml:lang="${lang}">
-  <voice name="${voiceName}">
-    <prosody rate="${rate}" pitch="${pitch}">
-      ${this.escapeXml(text)}
-    </prosody>
-  </voice>
+  ${voiceElement}${prosodyContent}${closingTags}
 </speak>`.trim();
   }
 
@@ -64,13 +107,33 @@ class MicrosoftSSMLBuilder implements SSMLBuilder {
 
 export class MicrosoftTTSProvider implements TTSProvider {
   readonly name = 'microsoft' as const;
-  private ssmlBuilder = new MicrosoftSSMLBuilder();
+  private ssmlBuilder: MicrosoftSSMLBuilder;
   private currentAudio: HTMLAudioElement | null = null;
+  private currentPlaybackController: AbortController | null = null;
 
   constructor(
     private apiKey: string,
-    private region = 'westeurope'
-  ) {}
+    private region = 'westeurope',
+    config?: {
+      speechRate?: number;
+      speechPitch?: number;
+      speechVolume?: number;
+      voiceStyle?: string;
+      voiceRole?: string;
+    }
+  ) {
+    this.ssmlBuilder = new MicrosoftSSMLBuilder(config);
+  }
+
+  updateConfig(config: {
+    speechRate?: number;
+    speechPitch?: number;
+    speechVolume?: number;
+    voiceStyle?: string;
+    voiceRole?: string;
+  }): void {
+    this.ssmlBuilder = new MicrosoftSSMLBuilder(config);
+  }
 
   get isAvailable(): boolean {
     return Boolean(this.apiKey && this.region);
@@ -120,11 +183,27 @@ export class MicrosoftTTSProvider implements TTSProvider {
   }
 
   stop(): void {
+    console.log('🛑 MicrosoftTTSProvider.stop() called');
+    
+    // Cancel current playback controller
+    if (this.currentPlaybackController) {
+      console.log('🛑 Microsoft: Aborting playback controller');
+      this.currentPlaybackController.abort();
+      this.currentPlaybackController = null;
+    } else {
+      console.log('🛑 Microsoft: No playback controller to abort');
+    }
+    
     if (this.currentAudio) {
+      console.log('🛑 Microsoft: Stopping audio element');
       this.currentAudio.pause();
       this.currentAudio.currentTime = 0;
       this.currentAudio = null;
+    } else {
+      console.log('🛑 Microsoft: No audio element to stop');
     }
+    
+    console.log('🛑 MicrosoftTTSProvider.stop() completed');
   }
 
   pause(): void {
@@ -196,6 +275,9 @@ export class MicrosoftTTSProvider implements TTSProvider {
 
   private async playAudio(audioBuffer: ArrayBuffer): Promise<void> {
     return new Promise((resolve) => {
+      const controller = new AbortController();
+      this.currentPlaybackController = controller;
+      
       const blob = new Blob([audioBuffer], { type: 'audio/mpeg' });
       const audioUrl = URL.createObjectURL(blob);
       
@@ -207,7 +289,16 @@ export class MicrosoftTTSProvider implements TTSProvider {
         if (this.currentAudio === audio) {
           this.currentAudio = null;
         }
+        if (this.currentPlaybackController === controller) {
+          this.currentPlaybackController = null;
+        }
       };
+
+      // Listen for abort signal
+      controller.signal.addEventListener('abort', () => {
+        cleanup();
+        resolve(); // Resolve instead of reject to avoid errors in UI
+      });
 
       audio.onended = () => {
         cleanup();

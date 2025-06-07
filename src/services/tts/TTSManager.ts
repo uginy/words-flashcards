@@ -10,6 +10,8 @@ export class TTSManager {
   private cache = new Map<string, TTSCacheEntry>();
   private languageDetector = new LanguageDetector();
   private config: TTSConfig;
+  private currentAudio: HTMLAudioElement | null = null;
+  private currentPlaybackController: AbortController | null = null;
 
   private constructor() {
     // Initialize with default config
@@ -40,6 +42,9 @@ export class TTSManager {
     if (!text.trim()) {
       return;
     }
+
+    // Stop any current playback first
+    this.stop();
 
     // Auto-detect language if not provided
     if (!options.lang) {
@@ -84,7 +89,31 @@ export class TTSManager {
   }
 
   stop(): void {
+    console.log('🛑 TTSManager.stop() called');
+    
+    // Stop provider
+    console.log('🛑 Stopping current provider:', this.currentProvider.name);
     this.currentProvider.stop();
+    
+    // Stop any manager-level audio playback
+    if (this.currentPlaybackController) {
+      console.log('🛑 Aborting playback controller');
+      this.currentPlaybackController.abort();
+      this.currentPlaybackController = null;
+    } else {
+      console.log('🛑 No playback controller to abort');
+    }
+    
+    if (this.currentAudio) {
+      console.log('🛑 Stopping current audio element');
+      this.currentAudio.pause();
+      this.currentAudio.currentTime = 0;
+      this.currentAudio = null;
+    } else {
+      console.log('🛑 No audio element to stop');
+    }
+    
+    console.log('🛑 TTSManager.stop() completed');
   }
 
   pause(): void {
@@ -220,9 +249,18 @@ export class TTSManager {
   private updateProviders(): void {
     // Update Microsoft provider if config changed
     if (this.config.microsoftApiKey && this.config.microsoftRegion) {
+      const microsoftConfig = {
+        speechRate: this.config.speechRate,
+        speechPitch: this.config.speechPitch,
+        speechVolume: this.config.speechVolume,
+        voiceStyle: this.config.voiceStyle,
+        voiceRole: this.config.voiceRole
+      };
+      
       const microsoftProvider = new MicrosoftTTSProvider(
         this.config.microsoftApiKey,
-        this.config.microsoftRegion
+        this.config.microsoftRegion,
+        microsoftConfig
       );
       this.registerProvider(microsoftProvider);
     }
@@ -265,22 +303,47 @@ export class TTSManager {
 
   private async playFromCache(cached: TTSCacheEntry): Promise<void> {
     // For cached audio data, create and play audio element
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve) => {
+      const controller = new AbortController();
+      this.currentPlaybackController = controller;
+      
       const blob = new Blob([cached.audioData], { type: 'audio/mpeg' });
       const audioUrl = URL.createObjectURL(blob);
       const audio = new Audio(audioUrl);
+      this.currentAudio = audio;
+
+      const cleanup = () => {
+        URL.revokeObjectURL(audioUrl);
+        if (this.currentAudio === audio) {
+          this.currentAudio = null;
+        }
+        if (this.currentPlaybackController === controller) {
+          this.currentPlaybackController = null;
+        }
+      };
+
+      // Listen for abort signal
+      controller.signal.addEventListener('abort', () => {
+        cleanup();
+        resolve();
+      });
 
       audio.onended = () => {
-        URL.revokeObjectURL(audioUrl);
+        cleanup();
         resolve();
       };
 
       audio.onerror = () => {
-        URL.revokeObjectURL(audioUrl);
-        reject(new Error('Cached audio playback failed'));
+        cleanup();
+        console.warn('Cached audio playback error - continuing anyway');
+        resolve();
       };
 
-      audio.play().catch(reject);
+      audio.play().catch((error: Error) => {
+        console.warn('Audio play error:', error.message);
+        cleanup();
+        resolve();
+      });
     });
   }
 
@@ -323,14 +386,30 @@ export class TTSManager {
   }
 
   private async playAudioBuffer(audioBuffer: ArrayBuffer): Promise<void> {
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve) => {
+      const controller = new AbortController();
+      this.currentPlaybackController = controller;
+      
       const blob = new Blob([audioBuffer], { type: 'audio/mpeg' });
       const audioUrl = URL.createObjectURL(blob);
       const audio = new Audio(audioUrl);
+      this.currentAudio = audio;
 
       const cleanup = () => {
         URL.revokeObjectURL(audioUrl);
+        if (this.currentAudio === audio) {
+          this.currentAudio = null;
+        }
+        if (this.currentPlaybackController === controller) {
+          this.currentPlaybackController = null;
+        }
       };
+
+      // Listen for abort signal
+      controller.signal.addEventListener('abort', () => {
+        cleanup();
+        resolve();
+      });
 
       audio.onended = () => {
         cleanup();
@@ -339,10 +418,15 @@ export class TTSManager {
 
       audio.onerror = () => {
         cleanup();
-        reject(new Error('Audio playback failed'));
+        console.warn('Audio playback error - continuing anyway');
+        resolve();
       };
 
-      audio.play().catch(reject);
+      audio.play().catch((error: Error) => {
+        console.warn('Audio play error:', error.message);
+        cleanup();
+        resolve();
+      });
     });
   }
 }
