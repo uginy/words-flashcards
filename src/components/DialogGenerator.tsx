@@ -6,9 +6,11 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { EmojiAvatar } from './EmojiAvatar';
 import { useDialogsStore } from '@/store/dialogsStore';
 import { useWordsStore } from '../store/wordsStore';
 import { useToast } from '@/hooks/use-toast';
+import { generateSimpleEmojiAvatar } from '@/utils/avatarGenerator';
 import { cn } from '@/lib/utils';
 import type { DialogLevel, DialogParticipant, DialogGenerationSettings, ParticipantGender } from '../types';
 
@@ -38,12 +40,14 @@ export const DialogGenerator: React.FC<DialogGeneratorProps> = ({ className, set
     {
       id: '1',
       name: 'דוד',
-      gender: 'male'
+      gender: 'male',
+      avatar: generateSimpleEmojiAvatar('דוד', 'male')
     },
     {
       id: '2', 
       name: 'שרה',
-      gender: 'female'
+      gender: 'female',
+      avatar: generateSimpleEmojiAvatar('שרה', 'female')
     }
   ]);
   const [selectedWords, setSelectedWords] = useState<string[]>([]);
@@ -73,19 +77,36 @@ export const DialogGenerator: React.FC<DialogGeneratorProps> = ({ className, set
     if (count === 2) {
       setParticipants(prev => prev.slice(0, 2));
     } else if (count === 3 && participants.length === 2) {
-      setParticipants(prev => [...prev, {
+      const newParticipant = {
         id: '3',
         name: 'משה',
-        gender: 'male'
-      }]);
+        gender: 'male' as const,
+        avatar: generateSimpleEmojiAvatar('משה', 'male')
+      };
+      setParticipants(prev => [...prev, newParticipant]);
     }
   };
 
   // Update participant
   const updateParticipant = (index: number, field: keyof DialogParticipant, value: string) => {
-    setParticipants(prev => prev.map((participant, i) => 
-      i === index ? { ...participant, [field]: value } : participant
-    ));
+    setParticipants(prev => prev.map((participant, i) => {
+      if (i === index) {
+        const updated = { ...participant, [field]: value };
+        
+        // Generate new avatar if name or gender changed
+        if (field === 'name' || field === 'gender') {
+          const name = field === 'name' ? value : participant.name;
+          const gender = field === 'gender' ? value as typeof participant.gender : participant.gender;
+          
+          if (name.trim()) {
+            updated.avatar = generateSimpleEmojiAvatar(name, gender);
+          }
+        }
+        
+        return updated;
+      }
+      return participant;
+    }));
   };
 
   // Toggle word selection
@@ -193,7 +214,10 @@ export const DialogGenerator: React.FC<DialogGeneratorProps> = ({ className, set
         <label className="text-sm font-medium">Участники диалога</label>
         {participants.map((participant, index) => (
           <div key={participant.id} className="flex items-center gap-3 p-3 border rounded-lg">
-            <span className="text-sm font-medium min-w-0">#{index + 1}</span>
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-medium min-w-0">#{index + 1}</span>
+              <EmojiAvatar participant={participant} size="md" style="circle" />
+            </div>
             
             <Input
               placeholder="Имя участника"

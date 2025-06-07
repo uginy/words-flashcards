@@ -1,6 +1,7 @@
 import type { Dialog, DialogGenerationSettings, DialogCard, Word } from '../../types';
 import { createOpenAIClient, retryWithBackoff } from './api-client';
 import { processDialogResponse, buildDialogPrompt } from '../dialogGeneration';
+import { generateSimpleEmojiAvatar } from '../../utils/avatarGenerator';
 import type { RetryConfig } from './types';
 
 /**
@@ -160,12 +161,18 @@ function transformToDialog(dialogData: unknown, settings: DialogGenerationSettin
   // Sort cards by order
   dialogCards.sort((a, b) => a.order - b.order);
 
+  // Ensure participants have avatars
+  const participantsWithAvatars = settings.participants.map(participant => ({
+    ...participant,
+    avatar: participant.avatar || generateSimpleEmojiAvatar(participant.name, participant.gender)
+  }));
+
   const dialog: Dialog = {
     id: dialogId,
     title,
     titleRu,
     level: settings.level,
-    participants: settings.participants,
+    participants: participantsWithAvatars,
     cards: dialogCards,
     isLearned: false,
     learningStage: 0,

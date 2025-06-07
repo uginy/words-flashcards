@@ -1,6 +1,7 @@
 import type React from 'react';
-import { Volume2, User } from 'lucide-react';
+import { Volume2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { EmojiAvatar } from './EmojiAvatar';
 import { cn } from '@/lib/utils';
 import type { DialogCard as DialogCardType, DialogParticipant } from '../types';
 
@@ -38,17 +39,12 @@ export const DialogCard: React.FC<DialogCardProps> = ({
     >
       {/* Participant indicator */}
       <div className="flex flex-col items-center gap-1 min-w-0">
-        <div className={cn(
-          "w-8 h-8 rounded-full flex items-center justify-center text-xs font-medium",
-          participant.gender === 'male' 
-            ? "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200"
-            : "bg-pink-100 text-pink-800 dark:bg-pink-900 dark:text-pink-200"
-        )}>
-          <User className="w-4 h-4" />
-        </div>
-        <span className="text-xs text-muted-foreground text-center break-words">
-          {participant.name}
-        </span>
+        <EmojiAvatar
+          participant={participant} 
+          size="md"
+          showName={true}
+          style="circle"
+        />
       </div>
 
       {/* Content */}

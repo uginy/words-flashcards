@@ -10,6 +10,7 @@ import type {
   ToastFunction
 } from '../types';
 import { generateDialog } from '../services/dialogGeneration';
+import { generateSimpleEmojiAvatar } from '../utils/avatarGenerator';
 import { DEFAULT_OPENROUTER_API_KEY, DEFAULT_OPENROUTER_MODEL } from '../config/openrouter';
 
 const DIALOGS_STORAGE_KEY = 'flashcards-dialogs';
@@ -104,6 +105,7 @@ interface DialogsStore {
   getCurrentDialog: () => Dialog | undefined;
   replaceAllDialogs: (dialogs: Dialog[], toast: ToastFunction) => void;
   clearAllDialogs: (toast: ToastFunction) => void;
+  generateMissingAvatars: () => void;
   
   // Navigation methods
   nextDialog: () => void;
@@ -542,6 +544,20 @@ export const useDialogsStore = create<DialogsStore>((set, get) => {
               }
             : dialog
         );
+        syncToStorage(newDialogs);
+        return { dialogs: newDialogs };
+      });
+    },
+
+    generateMissingAvatars: () => {
+      set(state => {
+        const newDialogs = state.dialogs.map(dialog => ({
+          ...dialog,
+          participants: dialog.participants.map(participant => ({
+            ...participant,
+            avatar: participant.avatar || generateSimpleEmojiAvatar(participant.name, participant.gender)
+          }))
+        }));
         syncToStorage(newDialogs);
         return { dialogs: newDialogs };
       });

@@ -1,10 +1,11 @@
 import type React from 'react';
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { Search, Play, Trash2, Edit, MoreVertical, Users, MessageSquare } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { EmojiAvatar } from './EmojiAvatar';
 import { useDialogsStore } from '@/store/dialogsStore';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
@@ -23,8 +24,19 @@ export const DialogsList: React.FC<DialogsListProps> = ({
   onDialogEdit,
   className
 }) => {
-  const { dialogs, deleteDialog, getDialogStats } = useDialogsStore();
+  const { dialogs, deleteDialog, getDialogStats, generateMissingAvatars } = useDialogsStore();
   const { toast } = useToast();
+
+  // Generate avatars for dialogs that don't have them
+  useEffect(() => {
+    const hasDialogsWithoutAvatars = dialogs.some(dialog => 
+      dialog.participants.some(participant => !participant.avatar)
+    );
+    
+    if (hasDialogsWithoutAvatars) {
+      generateMissingAvatars();
+    }
+  }, [dialogs, generateMissingAvatars]);
 
   // Filter state
   const [searchQuery, setSearchQuery] = useState('');
@@ -301,6 +313,22 @@ export const DialogsList: React.FC<DialogsListProps> = ({
                 <span className="bg-secondary px-2 py-0.5 rounded">
                   {dialog.level}
                 </span>
+              </div>
+
+              {/* Participants avatars */}
+              <div className="flex items-center gap-2 mb-3">
+                <span className="text-xs text-muted-foreground">Участники:</span>
+                <div className="flex -space-x-2">
+                  {dialog.participants.map((participant) => (
+                    <EmojiAvatar
+                      key={participant.id}
+                      participant={participant}
+                      size="sm"
+                      style="circle"
+                      className="border-2 border-background"
+                    />
+                  ))}
+                </div>
               </div>
 
               {/* Status and date */}

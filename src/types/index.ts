@@ -56,6 +56,7 @@ export interface DialogParticipant {
   id: string;
   name: string;
   gender: ParticipantGender;
+  avatar?: string; // SVG string or base64 image data
   voiceSettings?: {
     pitch: number;
     rate: number;
