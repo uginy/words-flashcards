@@ -1,29 +1,27 @@
-import { DEFAULT_OPENROUTER_API_URL } from "@/config/openrouter";
-import { fetchSuggestedWordsWithOllama } from "./ollama/word-suggestions";
-import { loadLLMSettings } from "@/config/llm-settings";
+import { createOllamaClient } from './api-client';
+import { DEFAULT_OLLAMA_API_URL, DEFAULT_OLLAMA_MODEL, DEFAULT_OLLAMA_TEMPERATURE } from '../../config/ollama';
 
 interface SuggestWordsParams {
   category: string;
   level: string;
-  apiKey: string;
-  modelIdentifier: string;
   count: number;
+  baseUrl?: string;
+  model?: string;
+  temperature?: number;
 }
 
-interface SuggestWordsUniversalParams {
-  category: string;
-  level: string;
-  count: number;
-}
-
-// Original OpenRouter implementation (kept for backward compatibility)
-export const fetchSuggestedWords = async ({
+export const fetchSuggestedWordsWithOllama = async ({
   category,
   level,
-  apiKey,
-  modelIdentifier,
-  count
+  count,
+  baseUrl = DEFAULT_OLLAMA_API_URL,
+  model = DEFAULT_OLLAMA_MODEL,
+  temperature = DEFAULT_OLLAMA_TEMPERATURE
 }: SuggestWordsParams): Promise<string[]> => {
+  if (count <= 0 || count > 40) {
+    throw new Error('Количество слов должно быть от 1 до 40');
+  }
+
   // Special handling for phrases category
   const isPhrases = category.includes('Фразы') || category.includes('פרזות');
   
@@ -78,82 +76,66 @@ export const fetchSuggestedWords = async ({
 Ответ дай ТОЛЬКО в виде списка слов на иврите, разделенных запятыми, без нумерации и пояснений.`;
 
   try {
-    const response = await fetch(DEFAULT_OPENROUTER_API_URL, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${apiKey}`,
-        'HTTP-Referer': window.location.origin,
-      },
-      body: JSON.stringify({
-        model: modelIdentifier,
-        messages: [
-          {
-            role: 'user',
-            content: prompt
-          }
-        ]
-      })
-    });
-
-    if (!response.ok) {
-      if (response.status === 401) {
-        throw new Error(
-          'Authentication failed. Please check your OpenRouter API key. It might be invalid, missing, or your credits might have run out.'
-        );
-      }
-      throw new Error(`API request failed with status ${response.status}`);
+    // Create Ollama client
+    const ollamaClient = createOllamaClient(baseUrl);
+    
+    // Check if Ollama service is available
+    const isHealthy = await ollamaClient.checkHealth();
+    if (!isHealthy) {
+      throw new Error('Ollama service is not available. Please make sure Ollama is running.');
     }
 
-    const data = await response.json();
-    const content = data.choices[0]?.message?.content;
+    // Make API call to Ollama
+    const response = await ollamaClient.chat({
+      model: model,
+      messages: [
+        {
+          role: 'user',
+          content: prompt
+        }
+      ],
+      temperature: temperature
+    });
+
+    if (!response?.message?.content) {
+      throw new Error('Invalid response from Ollama: No content in message');
+    }
+
+    const content = response.message.content.trim();
 
     if (!content) {
-      throw new Error('No content in API response');
+      throw new Error('Empty response from Ollama');
     }
 
-    // Разделяем ответ на массив слов и очищаем от пробелов
-    return content.split(',').map((word: string) => word.trim()).filter(Boolean);
+    // Parse the response and extract words/phrases
+    // Split by commas and clean up each word
+    const words = content
+      .split(',')
+      .map((word: string) => word.trim())
+      .filter((word: string) => word.length > 0)
+      .slice(0, count); // Ensure we don't exceed requested count
+
+    if (words.length === 0) {
+      throw new Error('No valid words found in Ollama response');
+    }
+
+    return words;
 
   } catch (error) {
-    console.error('Error fetching word suggestions:', error);
-    throw error;
-  }
-};
-
-// Universal function that automatically detects the current provider and uses the appropriate service
-export const fetchSuggestedWordsUniversal = async ({
-  category,
-  level,
-  count
-}: SuggestWordsUniversalParams): Promise<string[]> => {
-  const llmSettings = loadLLMSettings();
-  
-  if (llmSettings.provider === 'ollama') {
-    // Use Ollama
-    if (!llmSettings.ollama.apiUrl || !llmSettings.ollama.selectedModel) {
-      throw new Error('Ollama не настроен. Укажите URL и модель в настройках.');
+    console.error('Error fetching word suggestions from Ollama:', error);
+    
+    if (error instanceof Error) {
+      if (error.message.includes('Ollama service is not available')) {
+        throw new Error(`Ollama недоступен. Убедитесь, что Ollama запущен по адресу: ${baseUrl}`);
+      }
+      if (error.message.includes('model not found') || error.message.includes('404')) {
+        throw new Error(`Модель "${model}" не найдена. Установите модель: ollama pull ${model}`);
+      }
+      if (error.message.includes('connection refused') || error.message.includes('ECONNREFUSED')) {
+        throw new Error('Не удается подключиться к Ollama. Проверьте, что Ollama запущен и доступен по указанному URL.');
+      }
     }
     
-    return await fetchSuggestedWordsWithOllama({
-      category,
-      level,
-      count,
-      baseUrl: llmSettings.ollama.apiUrl,
-      model: llmSettings.ollama.selectedModel
-    });
+    throw error;
   }
-  
-  // Use OpenRouter
-  if (!llmSettings.openrouter.apiKey || !llmSettings.openrouter.selectedModel) {
-    throw new Error('OpenRouter не настроен. Укажите API ключ и модель в настройках.');
-  }
-  
-  return await fetchSuggestedWords({
-    category,
-    level,
-    apiKey: llmSettings.openrouter.apiKey,
-    modelIdentifier: llmSettings.openrouter.selectedModel,
-    count
-  });
 };

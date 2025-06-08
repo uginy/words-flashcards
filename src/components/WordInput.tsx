@@ -1,8 +1,8 @@
-import { DEFAULT_OPENROUTER_API_KEY, DEFAULT_OPENROUTER_MODEL } from '../config/openrouter';
 import { useState, useEffect } from 'react';
 import { WordSuggestions } from './WordSuggestions';
 import { useToast } from '../hooks/use-toast';
 import { useWordsStore } from '../store/wordsStore';
+import { useLLMSettings } from '../hooks/useLLMSettings';
 
  
 
@@ -10,6 +10,10 @@ import { useWordsStore } from '../store/wordsStore';
 const WordInput: React.FC = () => {
   const startBackgroundWordProcessing = useWordsStore(state => state.startBackgroundWordProcessing);
   const { toast } = useToast();
+  const {
+    currentProvider,
+    isCurrentProviderConfigured
+  } = useLLMSettings();
 
   // Adapter for toast to map 'destructive' to 'error' and filter allowed variants
   const toastAdapter = (opts: { title: string; description: string; variant?: string }) => {
@@ -58,11 +62,8 @@ const WordInput: React.FC = () => {
     e.preventDefault();
     if (!draftInputText.trim()) return;
 
-    const apiKey = localStorage.getItem('openRouterApiKey') || DEFAULT_OPENROUTER_API_KEY;
-    const model = localStorage.getItem('openRouterModel') || DEFAULT_OPENROUTER_MODEL;
-    
-    if (!apiKey || !model || apiKey === "YOUR_DEFAULT_API_KEY_HERE" || model === "YOUR_DEFAULT_MODEL_ID_HERE") {
-      setError('OpenRouter API key or model не настроены. Укажите их в Settings.');
+    if (!isCurrentProviderConfigured) {
+      setError(`${currentProvider === 'openrouter' ? 'OpenRouter' : 'Ollama'} не настроен. Укажите настройки в разделе ИИ Модель.`);
       return;
     }
 
@@ -110,6 +111,11 @@ const WordInput: React.FC = () => {
       <div className="bg-white rounded-lg shadow-md p-4">
         <div className="flex justify-between items-center mb-2">
           <h3 className="text-lg font-medium text-gray-800">Добавить слова</h3>
+          <div className="text-xs text-gray-500 flex items-center gap-1">
+            {currentProvider === 'openrouter' ? '🌐' : '🏠'} 
+            {currentProvider === 'openrouter' ? 'OpenRouter' : 'Ollama'}
+            {isCurrentProviderConfigured ? ' ✅' : ' ⚠️'}
+          </div>
         </div>
 
         <WordSuggestions
@@ -120,8 +126,6 @@ const WordInput: React.FC = () => {
               setDraftInputText(words);
             }
           }}
-          apiKey={localStorage.getItem('openRouterApiKey') || DEFAULT_OPENROUTER_API_KEY}
-          modelIdentifier={localStorage.getItem('openRouterModel') || DEFAULT_OPENROUTER_MODEL}
         />
 
         <div>

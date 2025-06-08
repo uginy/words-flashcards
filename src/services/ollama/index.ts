@@ -1,5 +1,6 @@
 // Main export file for Ollama service
 export { enrichWordsWithOllama } from './enrichment';
+export { fetchSuggestedWordsWithOllama } from './word-suggestions';
 export { createOllamaClient, retryWithBackoffOllama, OllamaClient } from './api-client';
 export { systemPromptForOllama, directJsonPromptForOllama, simplePromptForOllama } from './prompts';
 

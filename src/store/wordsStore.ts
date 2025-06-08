@@ -5,7 +5,7 @@ import type { Word, WordsState, BackgroundTask } from '../types';
 import { saveToLocalStorage, loadFromLocalStorage } from '../utils/storage';
 import { parseAndTranslateWords } from '../utils/translation';
 import { enrichWordsWithLLM, refineWordWithLLM, translateToHebrew } from '../services/openrouter';
-import { DEFAULT_OPENROUTER_API_KEY, DEFAULT_OPENROUTER_MODEL } from '../config/openrouter';
+import { loadLLMSettings, type LLMSettings } from '../config/llm-settings';
 
 const initialState: WordsState = {
   words: [],
@@ -111,11 +111,19 @@ async function processWordsInBackground(
     }));
 
 
-    const apiKey = localStorage.getItem('openRouterApiKey') || DEFAULT_OPENROUTER_API_KEY;
-    const model = localStorage.getItem('openRouterModel') || DEFAULT_OPENROUTER_MODEL;
+    // Load current LLM settings
+    const llmSettings = loadLLMSettings();
     
-    if (!apiKey || !model || apiKey === "YOUR_DEFAULT_API_KEY_HERE" || model === "YOUR_DEFAULT_MODEL_ID_HERE") {
-      throw new Error('OpenRouter API key or model не настроены');
+    if (llmSettings.provider === 'openrouter') {
+      if (!llmSettings.openrouter.apiKey || !llmSettings.openrouter.selectedModel) {
+        throw new Error('OpenRouter не настроен. Укажите API ключ и модель в настройках.');
+      }
+    } else if (llmSettings.provider === 'ollama') {
+      if (!llmSettings.ollama.apiUrl || !llmSettings.ollama.selectedModel) {
+        throw new Error('Ollama не настроен. Укажите URL и модель в настройках.');
+      }
+    } else {
+      throw new Error('Не выбран провайдер ИИ в настройках.');
     }
 
     const existingWords = get().words;
@@ -215,7 +223,11 @@ async function processWordsInBackground(
         });
 
         const formattedInput = wordsToTranslate.join('\n');
-        const translations = await translateToHebrew(formattedInput, apiKey, model);
+        const translations = await translateToHebrew(
+          formattedInput, 
+          llmSettings.openrouter.apiKey, 
+          llmSettings.openrouter.selectedModel
+        );
         
         // Check if task was cancelled after translation
         const postTranslationState = get();
@@ -244,11 +256,11 @@ async function processWordsInBackground(
 
         // Continue processing with Hebrew words
         // console.log(`🔄 DEBUG: Processing translated Hebrew words (${translatedWords.length} words)`);
-        await processHebrewWords(taskId, translatedWords, existingWords, apiKey, model, toast, set, get);
+        await processHebrewWords(taskId, translatedWords, existingWords, llmSettings, toast, set, get);
       } else {
         // Process Hebrew words directly
         // console.log(`🔄 DEBUG: Processing Hebrew words directly (${wordsToTranslate.length} words)`);
-        await processHebrewWords(taskId, wordsToTranslate, existingWords, apiKey, model, toast, set, get);
+        await processHebrewWords(taskId, wordsToTranslate, existingWords, llmSettings, toast, set, get);
       }
     }
 
@@ -280,8 +292,7 @@ async function processHebrewWords(
   taskId: string,
   hebrewWords: string[],
   existingWords: Word[],
-  apiKey: string,
-  model: string,
+  llmSettings: LLMSettings,
   toast: ToastFn,
   set: (partial: Partial<WordsStore> | ((state: WordsStore) => Partial<WordsStore>)) => void,
   get: () => WordsStore
@@ -385,6 +396,79 @@ async function processHebrewWords(
         enableDetailedLogging: true,
         validateJsonResponse: true
       };
+      
+      // Get API credentials based on current provider
+      let apiKey: string;
+      let model: string;
+      
+      if (llmSettings.provider === 'openrouter') {
+        apiKey = llmSettings.openrouter.apiKey;
+        model = llmSettings.openrouter.selectedModel;
+      } else {
+        // For Ollama, use Ollama enrichment
+        const { enrichWordsWithOllama } = await import('../services/ollama');
+        
+        const result = await enrichWordsWithOllama(
+          chunk,
+          {
+            baseUrl: llmSettings.ollama.apiUrl,
+            model: llmSettings.ollama.selectedModel,
+            retryConfig: {
+              maxRetries: 3,
+              baseDelay: 1500,
+              maxDelay: 15000,
+              backoffMultiplier: 2.5
+            },
+            enableDetailedLogging: true,
+            validateJsonResponse: true,
+            abortController: currentTask?.abortController
+          }
+        );
+        
+        // console.log(`📥 DEBUG: Ollama result for chunk ${i + 1}:`, result);
+        
+        const valid = result; // Ollama enrichment already returns Word[] format
+        // console.log(`✅ DEBUG: Valid words from chunk ${i + 1}: ${valid.length}`, valid.map(w => w.hebrew));
+        
+        if (valid.length > 0) {
+          allValidWords = allValidWords.concat(valid);
+          // console.log(`📝 DEBUG: Total valid words so far: ${allValidWords.length}`);
+          
+          // Add words to store immediately
+          set((state: WordsStore) => ({
+            ...state,
+            words: [...state.words, ...valid]
+          }));
+          // console.log(`💾 DEBUG: Added ${valid.length} words to store`);
+        }
+
+        // Track failed words in this chunk
+        const chunkFailed = chunk.filter(w => !valid.some(v => v.hebrew === w));
+        allFailedWords = allFailedWords.concat(chunkFailed);
+        // console.log(`❌ DEBUG: Failed words from chunk ${i + 1}: ${chunkFailed.length}`, chunkFailed);
+
+        processedCount += chunk.length;
+        // console.log(`📊 DEBUG: Progress - processed: ${processedCount}/${uniqueWords.length}`);
+        
+        // Update progress with detailed statistics
+        set((state: WordsStore) => ({
+          ...state,
+          backgroundTasks: state.backgroundTasks.map((task: BackgroundTask) =>
+            task.id === taskId ? {
+              ...task,
+              processedItems: processedCount,
+              progress: Math.round((processedCount / uniqueWords.length) * 75) + 25, // Reserve last 25% for completion
+              added: allValidWords.length,
+              skipped: skippedCount,
+              failed: allFailedWords.length,
+              result: allValidWords,
+              failedWords: allFailedWords
+            } : task
+          )
+        }));
+        
+        continue; // Skip the OpenRouter code below
+      }
       
       const result = await enrichWordsWithLLM(
         chunk,
@@ -960,13 +1044,13 @@ export const useWordsStore = create<WordsStore>((set, get) => {
         return;
       }
 
-      const apiKey = localStorage.getItem('openRouterApiKey') || DEFAULT_OPENROUTER_API_KEY;
-      const model = localStorage.getItem('openRouterModel') || DEFAULT_OPENROUTER_MODEL;
+      // Load current LLM settings for refinement
+      const llmSettings = loadLLMSettings();
       
-      if (!apiKey || !model || apiKey === "YOUR_DEFAULT_API_KEY_HERE" || model === "YOUR_DEFAULT_MODEL_ID_HERE") {
+      if (llmSettings.provider !== 'openrouter' || !llmSettings.openrouter.apiKey || !llmSettings.openrouter.selectedModel) {
         toast?.({
           title: 'Ошибка',
-          description: 'OpenRouter API key или модель не настроены',
+          description: 'OpenRouter не настроен для уточнения слов. Проверьте настройки.',
           variant: 'destructive',
         });
         return;
@@ -984,10 +1068,16 @@ export const useWordsStore = create<WordsStore>((set, get) => {
       });
 
       try {
-        const refinedWord = await refineWordWithLLM(word, apiKey, model, toast, {
-          enableDetailedLogging: true,
-          validateJsonResponse: true
-        });
+        const refinedWord = await refineWordWithLLM(
+          word, 
+          llmSettings.openrouter.apiKey, 
+          llmSettings.openrouter.selectedModel, 
+          toast, 
+          {
+            enableDetailedLogging: true,
+            validateJsonResponse: true
+          }
+        );
 
         // Update word in store
         set(state => ({

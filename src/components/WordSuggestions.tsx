@@ -3,13 +3,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { useToast } from '../hooks/use-toast';
-import { fetchSuggestedWords } from '../services/openrouter';
+import { fetchSuggestedWordsUniversal } from '../services/wordSuggestions';
 import { useWordsStore } from '../store/wordsStore';
 
 interface WordSuggestionsProps {
   onWordsReceived: (words: string) => void;
-  apiKey: string;
-  modelIdentifier: string;
+  // apiKey and modelIdentifier are no longer needed since we use universal function
 }
 
 const LEVELS = [
@@ -34,8 +33,6 @@ const getLevelLabel = (value: string) => LEVELS?.find(el => el.value === value)?
 
 export const WordSuggestions: React.FC<WordSuggestionsProps> = ({
   onWordsReceived,
-  apiKey,
-  modelIdentifier,
 }) => {
   const [level, setLevel] = useState(() => LEVELS.find(l => l.default)?.value || LEVELS[0].value);
   const [category, setCategory] = useState(CATEGORIES[0].value);
@@ -47,16 +44,14 @@ export const WordSuggestions: React.FC<WordSuggestionsProps> = ({
   const handleSuggestWords = async () => {
     setIsLoading(true);
     try {
-      // Получаем все предложенные слова от LLM
-      const allSuggestedWords = await fetchSuggestedWords({
+      // Use universal function that automatically detects provider
+      const allSuggestedWords = await fetchSuggestedWordsUniversal({
         category: getCatLabel(category),
         level: getLevelLabel(level),
-        apiKey,
-        modelIdentifier,
         count: wordCount,
       });
 
-      // Проверяем дубликаты с существующими словами
+      // Check for duplicates with existing words
       const existingWords = words.map(word => word.hebrew);
       const uniqueWords = allSuggestedWords.filter(word => 
         !existingWords.includes(word)
@@ -67,7 +62,7 @@ export const WordSuggestions: React.FC<WordSuggestionsProps> = ({
       if (uniqueWords.length > 0) {
         onWordsReceived(uniqueWords.join('\n'));
         
-        // Формируем сообщение с учетом дубликатов
+        // Format message accounting for duplicates
         let description = `${uniqueWords.length} слов предложено и вставлено в поле для дальнейшей обработки`;
         if (duplicatesCount > 0) {
           description += `. Исключено ${duplicatesCount} дубликатов из ${allSuggestedWords.length} предложенных`;
