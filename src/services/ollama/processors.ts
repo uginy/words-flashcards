@@ -26,7 +26,7 @@ export function processWordsArrayOllama(llmItems: LLMBatchResponseItem[], origin
       continue;
     }
 
-    // Process conjugations
+    // Process conjugations with validation to filter out non-Hebrew conjugations
     const llmConjugations = llmItem.conjugations;
     let finalWordConjugations: {
       past: { [key: string]: string } | null;
@@ -35,15 +35,55 @@ export function processWordsArrayOllama(llmItems: LLMBatchResponseItem[], origin
       imperative: { [key: string]: string } | null;
     } | null | undefined;
 
+    // Helper function to check if text contains Hebrew characters
+    const hasHebrewCharacters = (text: string): boolean => {
+      return /[\u0590-\u05FF]/.test(text);
+    };
+
+    // Helper function to check if text contains Cyrillic characters (Russian)
+    const hasCyrillicCharacters = (text: string): boolean => {
+      return /[\u0400-\u04FF]/.test(text);
+    };
+
+    // Helper function to validate and clean conjugation object
+    const validateConjugationObject = (obj: { [key: string]: string } | null): { [key: string]: string } | null => {
+      if (!obj || typeof obj !== 'object') return null;
+      
+      const cleaned: { [key: string]: string } = {};
+      let hasValidConjugations = false;
+      
+      for (const [pronoun, conjugation] of Object.entries(obj)) {
+        if (typeof conjugation === 'string' && conjugation.trim()) {
+          const cleanConjugation = conjugation.trim();
+          // Only accept conjugations that contain Hebrew and don't contain Cyrillic
+          if (hasHebrewCharacters(cleanConjugation) && !hasCyrillicCharacters(cleanConjugation)) {
+            cleaned[pronoun] = cleanConjugation;
+            hasValidConjugations = true;
+          } else {
+            console.warn(`Filtered out invalid conjugation for ${pronoun}: "${cleanConjugation}" (contains non-Hebrew characters)`);
+          }
+        }
+      }
+      
+      return hasValidConjugations ? cleaned : null;
+    };
+
     if (llmConjugations === null) {
       finalWordConjugations = null;
     } else if (llmConjugations && typeof llmConjugations === 'object') {
       finalWordConjugations = {
-        past: llmConjugations.past || null,
-        present: llmConjugations.present || null,
-        future: llmConjugations.future || null,
-        imperative: llmConjugations.imperative || null,
+        past: validateConjugationObject(llmConjugations.past),
+        present: validateConjugationObject(llmConjugations.present),
+        future: validateConjugationObject(llmConjugations.future),
+        imperative: validateConjugationObject(llmConjugations.imperative),
       };
+      
+      // If all conjugation objects are null, set the whole thing to null
+      const hasAnyValidConjugations = Object.values(finalWordConjugations).some(tense => tense !== null);
+      if (!hasAnyValidConjugations) {
+        console.warn(`All conjugations filtered out for word "${originalWord}" - setting conjugations to null`);
+        finalWordConjugations = null;
+      }
     } else {
       finalWordConjugations = undefined;
     }

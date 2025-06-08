@@ -1,6 +1,6 @@
 import type { Word, ToastFunction, RetryConfig, LLMBatchResponseItem } from '../openrouter/types';
 import { DEFAULT_RETRY_CONFIG } from '../openrouter/config';
-import { systemPromptForOllama, directJsonPromptForOllama, simplePromptForOllama } from './prompts';
+import { systemPromptForOllama, directJsonPromptForOllama, simplePromptForOllama, strictHebrewPromptForOllama } from './prompts';
 import { validateJsonString, attemptJsonFix } from '../openrouter/validators';
 import { processWordsArrayOllama } from './processors';
 import { retryWithBackoffOllama, createOllamaClient } from './api-client';
@@ -64,10 +64,23 @@ export async function enrichWordsWithOllama(
     throw new Error('Ollama service is not available. Please make sure Ollama is running on the specified URL.');
   }
 
-  // Select appropriate prompt based on options
-  const systemPrompt = useSimplePrompt ? simplePromptForOllama : 
-                      (model.includes('llama3.2') || model.includes('qwen')) ? 
-                        directJsonPromptForOllama : systemPromptForOllama;
+  // Select appropriate prompt based on options and model type
+  let systemPrompt: string;
+  
+  if (useSimplePrompt) {
+    systemPrompt = simplePromptForOllama;
+    logger("Using simple prompt for basic processing");
+  } else if (model.includes('gemma') || model.includes('phi') || model.includes('mistral')) {
+    // Models that tend to mix languages in conjugations need strict prompts
+    systemPrompt = strictHebrewPromptForOllama;
+    logger("Using strict Hebrew prompt for conjugation-prone model");
+  } else if (model.includes('llama3.2') || model.includes('qwen')) {
+    systemPrompt = directJsonPromptForOllama;
+    logger("Using direct JSON prompt for structured models");
+  } else {
+    systemPrompt = systemPromptForOllama;
+    logger("Using standard system prompt");
+  }
 
   const userContent = `Process the following Hebrew words/phrases: ${hebrewWords.join(', ')}`;
 
