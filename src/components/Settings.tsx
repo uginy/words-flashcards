@@ -49,7 +49,13 @@ const Settings: React.FC = () => {
   const [showFreeOnly, setShowFreeOnly] = useState<boolean>(true);
 
   // Ollama state
-  const { models: ollamaModels, isLoading: isLoadingOllamaModels, fetchModels: fetchOllamaModels } = useOllamaModels();
+  const { 
+    models: ollamaModels, 
+    isLoading: isLoadingOllamaModels, 
+    fetchModels: fetchOllamaModels,
+    clearError: clearOllamaError,
+    isServerUnavailable: isOllamaServerUnavailable 
+  } = useOllamaModels();
 
   useEffect(() => {
     const tableSettings = loadTableSettings();
@@ -67,17 +73,26 @@ const Settings: React.FC = () => {
 
   // Auto-fetch Ollama models when tab opens and URL is configured
   useEffect(() => {
-    if (llmProviderTab === 'ollama' && llmSettings.ollama.apiUrl && ollamaModels.length === 0 && !isLoadingOllamaModels) {
+    if (llmProviderTab === 'ollama' && 
+        llmSettings.ollama.apiUrl && 
+        ollamaModels.length === 0 && 
+        !isLoadingOllamaModels &&
+        !isOllamaServerUnavailable) {
       fetchOllamaModels(llmSettings.ollama.apiUrl);
     }
-  }, [llmProviderTab, llmSettings.ollama.apiUrl, ollamaModels.length, isLoadingOllamaModels, fetchOllamaModels]);
+  }, [llmProviderTab, llmSettings.ollama.apiUrl, ollamaModels.length, isLoadingOllamaModels, isOllamaServerUnavailable, fetchOllamaModels]);
 
   // Auto-fetch Ollama models when user opens LLM settings tab and Ollama is the default provider
   useEffect(() => {
-    if (activeTab === 'llm' && llmSettings.provider === 'ollama' && llmSettings.ollama.apiUrl && ollamaModels.length === 0 && !isLoadingOllamaModels) {
+    if (activeTab === 'llm' && 
+        llmSettings.provider === 'ollama' && 
+        llmSettings.ollama.apiUrl && 
+        ollamaModels.length === 0 && 
+        !isLoadingOllamaModels &&
+        !isOllamaServerUnavailable) {
       fetchOllamaModels(llmSettings.ollama.apiUrl);
     }
-  }, [activeTab, llmSettings.provider, llmSettings.ollama.apiUrl, ollamaModels.length, isLoadingOllamaModels, fetchOllamaModels]);
+  }, [activeTab, llmSettings.provider, llmSettings.ollama.apiUrl, ollamaModels.length, isLoadingOllamaModels, isOllamaServerUnavailable, fetchOllamaModels]);
 
   useEffect(() => {
     let models = availableModels;
@@ -138,8 +153,11 @@ const Settings: React.FC = () => {
     // Update provider in settings when tab changes
     setLLMSettings(prev => ({ ...prev, provider: tab }));
     
-    // Auto-fetch models when switching to Ollama tab
-    if (tab === 'ollama' && llmSettings.ollama.apiUrl && ollamaModels.length === 0) {
+    // Auto-fetch models when switching to Ollama tab only if server is available
+    if (tab === 'ollama' && 
+        llmSettings.ollama.apiUrl && 
+        ollamaModels.length === 0 &&
+        !isOllamaServerUnavailable) {
       fetchOllamaModels(llmSettings.ollama.apiUrl);
     }
   };
@@ -149,6 +167,11 @@ const Settings: React.FC = () => {
       ...prev,
       ollama: { ...prev.ollama, apiUrl }
     }));
+    
+    // Clear previous errors when URL changes
+    if (apiUrl !== llmSettings.ollama.apiUrl) {
+      clearOllamaError();
+    }
   };
 
   const handleOllamaModelChange = (selectedModel: string) => {
@@ -302,14 +325,20 @@ const Settings: React.FC = () => {
                 </div>
                 <button
                   type="button"
-                  onClick={() => fetchOllamaModels(llmSettings.ollama.apiUrl)}
+                  onClick={() => fetchOllamaModels(llmSettings.ollama.apiUrl, true)}
                   disabled={!llmSettings.ollama.apiUrl || isLoadingOllamaModels}
                   className="px-3 py-2 text-sm bg-green-500 text-white rounded-md hover:bg-green-600 disabled:bg-green-300 shrink-0 w-full sm:w-auto"
                 >
                   {isLoadingOllamaModels ? 'Загрузка...' : 'Проверить'}
                 </button>
               </div>
-              {ollamaModels.length === 0 && !isLoadingOllamaModels && llmSettings.ollama.apiUrl && (
+              {isOllamaServerUnavailable && (
+                <div className="text-xs text-orange-600 mt-2 p-2 bg-orange-50 rounded border border-orange-200">
+                  <p className="font-medium">⚠️ Сервер Ollama недоступен</p>
+                  <p className="mt-1">Проверьте подключение или нажмите "Проверить" для повторной попытки.</p>
+                </div>
+              )}
+              {ollamaModels.length === 0 && !isLoadingOllamaModels && llmSettings.ollama.apiUrl && !isOllamaServerUnavailable && (
                 <p className="text-xs text-red-500 mt-1">
                   Модели не найдены. Убедитесь, что Ollama запущен и URL правильный.
                 </p>

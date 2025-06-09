@@ -19,6 +19,11 @@ export class OllamaClient {
     format?: 'json';
     signal?: AbortSignal;
   }) {
+    const timeoutSignal = AbortSignal.timeout(this.timeout);
+    const combinedSignal = options.signal ? 
+      AbortSignal.any([options.signal, timeoutSignal]) : 
+      timeoutSignal;
+
     const response = await fetch(`${this.baseUrl}/chat`, {
       method: 'POST',
       headers: {
@@ -35,7 +40,7 @@ export class OllamaClient {
           num_predict: 4000,
         }
       }),
-      signal: options.signal,
+      signal: combinedSignal,
     });
 
     if (!response.ok) {
@@ -54,6 +59,11 @@ export class OllamaClient {
     format?: 'json';
     signal?: AbortSignal;
   }) {
+    const timeoutSignal = AbortSignal.timeout(this.timeout);
+    const combinedSignal = options.signal ? 
+      AbortSignal.any([options.signal, timeoutSignal]) : 
+      timeoutSignal;
+
     const response = await fetch(`${this.baseUrl}/generate`, {
       method: 'POST',
       headers: {
@@ -70,7 +80,7 @@ export class OllamaClient {
           num_predict: 4000,
         }
       }),
-      signal: options.signal,
+      signal: combinedSignal,
     });
 
     if (!response.ok) {
@@ -82,7 +92,9 @@ export class OllamaClient {
   }
 
   async listModels() {
-    const response = await fetch(`${this.baseUrl}/tags`);
+    const response = await fetch(`${this.baseUrl}/tags`, {
+      signal: AbortSignal.timeout(this.timeout)
+    });
     
     if (!response.ok) {
       throw new Error(`Failed to list Ollama models: ${response.status}`);
@@ -98,6 +110,7 @@ export class OllamaClient {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({ name: model }),
+      signal: AbortSignal.timeout(this.timeout)
     });
 
     if (!response.ok) {

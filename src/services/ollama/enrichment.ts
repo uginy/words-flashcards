@@ -58,10 +58,25 @@ export async function enrichWordsWithOllama(
 
   // Check Ollama health first
   const ollamaClient = createOllamaClient(baseUrl);
-  const isHealthy = await ollamaClient.checkHealth();
   
-  if (!isHealthy) {
-    throw new Error('Ollama service is not available. Please make sure Ollama is running on the specified URL.');
+  try {
+    const isHealthy = await ollamaClient.checkHealth();
+    
+    if (!isHealthy) {
+      showToast({
+        title: "Ошибка подключения",
+        description: "Ollama сервер недоступен. Проверьте настройки подключения.",
+        variant: "destructive"
+      });
+      throw new Error('Ollama service is not available. Please make sure Ollama is running on the specified URL.');
+    }
+  } catch (error) {
+    showToast({
+      title: "Ошибка подключения",
+      description: "Не удается подключиться к серверу Ollama.",
+      variant: "destructive"
+    });
+    throw error;
   }
 
   // Select appropriate prompt based on options and model type
