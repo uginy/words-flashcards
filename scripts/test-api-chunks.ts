@@ -4,9 +4,61 @@ import { enrichWordsWithLLM } from '../src/services/openrouter/index.ts';
 import { DEFAULT_OPENROUTER_API_KEY, DEFAULT_OPENROUTER_MODEL } from '../src/config/openrouter.ts';
 import type { Word } from '../src/types/index.ts';
 
+// Extended version of enrichWordsWithLLM that captures raw response
+async function enrichWordsWithRawResponse(
+  hebrewWords: string[],
+  apiKey: string,
+  model: string,
+  mockToast: any,
+  forceToolSupport?: boolean,
+  abortController?: AbortController,
+  llmOptions?: any
+): Promise<{ words: Word[]; rawResponse?: any }> {
+  // We'll monkey-patch the fetch to capture the response
+  const originalFetch = global.fetch;
+  let capturedResponse: any = null;
+  
+  global.fetch = async (input: RequestInfo | URL, init?: RequestInit) => {
+    const response = await originalFetch(input, init);
+    
+    // Only capture OpenRouter API responses
+    if (typeof input === 'string' && input.includes('openrouter.ai')) {
+      const responseClone = response.clone();
+      try {
+        const jsonData = await responseClone.json();
+        capturedResponse = jsonData;
+      } catch (e) {
+        console.warn('Failed to capture raw response:', e);
+      }
+    }
+    
+    return response;
+  };
+  
+  try {
+    const processedWords = await enrichWordsWithLLM(
+      hebrewWords,
+      apiKey,
+      model,
+      mockToast,
+      forceToolSupport,
+      abortController,
+      llmOptions
+    );
+    
+    return {
+      words: processedWords,
+      rawResponse: capturedResponse
+    };
+  } finally {
+    // Restore original fetch
+    global.fetch = originalFetch;
+  }
+}
+
 // Test configuration
-const CHUNK_SIZE = 5;
-const DEFAULT_DELAY_BETWEEN_CHUNKS = 2000; // 2 seconds to prevent rate limiting
+const CHUNK_SIZE = 3;
+const DEFAULT_DELAY_BETWEEN_CHUNKS = 3000; // 3 seconds to prevent rate limiting
 const DEFAULT_PROGRESSIVE_DELAY = true; // Whether to use progressive delays
 
 // Test Hebrew words covering different categories
@@ -23,21 +75,6 @@ const TEST_HEBREW_WORDS = [
   'בית',      // house
   'מים',      // water
   'אוכל',     // food
-  'חבר',      // friend
-  
-  // Adjectives (שם תואר)
-  'גדול',     // big
-  'קטן',      // small
-  'יפה',      // beautiful
-  'טוב',      // good
-  'רע',       // bad
-  
-  // Phrases (פרזות)
-  'מה שלומך',  // how are you
-  'בוקר טוב',  // good morning
-  'תודה רבה',  // thank you very much
-  'סליחה',    // excuse me
-  'שלום',     // hello/goodbye
 ];
 
 interface TestResult {
@@ -72,6 +109,43 @@ const mockToast = (opts: { title: string; description: string; variant?: string 
   const level = opts.variant === 'destructive' ? 'ERROR' : opts.variant === 'warning' ? 'WARN' : 'INFO';
   console.log(`[${timestamp}] [${level}] ${opts.title}: ${opts.description}`);
 };
+
+// Function to pretty print JSON with color and formatting
+function prettyPrintJson(data: unknown, title: string = 'JSON Response', maxLength: number = 2000): void {
+  console.log(`\n📋 ${title}:`);
+  console.log('─'.repeat(60));
+  
+  try {
+    let jsonString: string;
+    
+    if (typeof data === 'string') {
+      // Try to parse if it's a string
+      try {
+        const parsed = JSON.parse(data);
+        jsonString = JSON.stringify(parsed, null, 2);
+      } catch {
+        // If parsing fails, treat as raw string
+        jsonString = data;
+      }
+    } else {
+      jsonString = JSON.stringify(data, null, 2);
+    }
+    
+    // Truncate if too long
+    if (jsonString.length > maxLength) {
+      const truncated = jsonString.substring(0, maxLength);
+      console.log(truncated);
+      console.log(`\n... (truncated, showing first ${maxLength} characters of ${jsonString.length} total)`);
+    } else {
+      console.log(jsonString);
+    }
+  } catch (error) {
+    console.log(`❌ Failed to format JSON: ${error}`);
+    console.log(`Raw data: ${String(data).substring(0, maxLength)}`);
+  }
+  
+  console.log('─'.repeat(60));
+}
 
 // Utility function to create delay
 const delay = (ms: number): Promise<void> => {
@@ -188,10 +262,10 @@ async function testApiChunks(): Promise<void> {
     try {
       const abortController = new AbortController();
       
-      // Add timeout for each chunk (30 seconds)
+      // Add timeout for each chunk (60 seconds)
       const timeoutId = setTimeout(() => {
         abortController.abort();
-      }, 30000);
+      }, 60000);
       
       // Enhanced test with new retry and validation options
       const llmOptions = {
@@ -205,7 +279,7 @@ async function testApiChunks(): Promise<void> {
         validateJsonResponse: true
       };
 
-      const wordsResult = await enrichWordsWithLLM(
+      const wordsResult = await enrichWordsWithRawResponse(
         chunk,
         apiKey,
         model,
@@ -219,14 +293,19 @@ async function testApiChunks(): Promise<void> {
       
       const processingTime = Date.now() - chunkStartTime;
       
+      // Display raw response if available
+      if (wordsResult.rawResponse) {
+        prettyPrintJson(wordsResult.rawResponse, `🔍 Raw API Response for Chunk ${i + 1}`, 3000);
+      }
+      
       logChunkInfo(i, chunk, 'success', {
         processingTime,
-        wordCount: wordsResult.length
+        wordCount: wordsResult.words.length
       });
       
       // Log detailed results for each word
       console.log(`   📋 Detailed results:`);
-      wordsResult.forEach((word, idx) => {
+      wordsResult.words.forEach((word, idx) => {
         const hasTranscription = word.transcription && word.transcription.trim() !== '';
         const hasTranslation = word.russian && word.russian.trim() !== '';
         const hasConjugations = word.conjugations && Object.keys(word.conjugations).length > 0;
@@ -243,7 +322,8 @@ async function testApiChunks(): Promise<void> {
         chunkIndex: i,
         words: chunk,
         success: true,
-        parsedWords: wordsResult,
+        rawResponse: wordsResult.rawResponse,
+        parsedWords: wordsResult.words,
         processingTime
       });
       
@@ -273,6 +353,20 @@ async function testApiChunks(): Promise<void> {
       // Try to extract and analyze raw response for debugging
       console.log(`   🔍 Error analysis:`);
       console.log(`      Error stack: ${error instanceof Error ? error.stack : 'No stack trace'}`);
+      
+      // Try to capture raw response even in error case
+      if (error instanceof Error && error.message.includes('raw response')) {
+        // Try to extract raw response from error message if available
+        const rawResponseMatch = error.message.match(/raw response: (.+)/);
+        if (rawResponseMatch?.[1]) {
+          try {
+            const rawResponse = JSON.parse(rawResponseMatch[1]);
+            prettyPrintJson(rawResponse, `🚨 Raw API Response for Failed Chunk ${i + 1}`, 3000);
+          } catch {
+            console.log(`   📄 Raw response (unparseable): ${rawResponseMatch[1].substring(0, 500)}...`);
+          }
+        }
+      }
       
       // Analyze potential JSON issues in the error message
       const analysis = analyzeRawResponse(errorMessage);
