@@ -7,14 +7,18 @@ import * as fs from 'fs';
 
 // Test configuration
 const TIMEOUT_MS = 30000; // 30 seconds timeout
-const DELAY_BETWEEN_MODELS = 5000; // 5 seconds delay between models
+const DELAY_BETWEEN_MODELS = 2000; // 5 seconds delay between models
 const TEST_WORDS = ['לאכול', 'ספר', 'גדול']; // Reduced to 3 words for faster testing
 
 // List of models to test (focus on successful ones for demonstration)
 const MODELS_TO_TEST = [
   'meta-llama/llama-4-maverick:free', // Full support
   'meta-llama/llama-4-scout:free',
+  'deepseek/deepseek-chat-v3-0324:free',
+  'mistralai/mistral-small-3.1-24b-instruct:free',
+  'mistralai/devstral-small:free',
   'meta-llama/llama-3.3-8b-instruct:free',
+  'mistralai/mistral-7b-instruct:free',
   'meta-llama/llama-3.3-70b-instruct:free',
 ];
 
