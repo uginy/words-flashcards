@@ -1,0 +1,341 @@
+{
+  "timestamp": "2025-06-10T14:46:32.615Z",
+  "totalModels": 29,
+  "filters": {
+    "MIN_CONTEXT_LENGTH": 4000,
+    "EXCLUDE_PATTERNS": [
+      {},
+      {},
+      {},
+      {},
+      {},
+      {}
+    ],
+    "PREFER_PATTERNS": [
+      {},
+      {}
+    ],
+    "MIN_COMPLETION_TOKENS": 1000
+  },
+  "models": [
+    {
+      "id": "meta-llama/llama-3.2-1b-instruct:free",
+      "name": "Meta: Llama 3.2 1B Instruct (free)",
+      "description": "Llama 3.2 1B is a 1-billion-parameter language model focused on efficiently performing natural language tasks, such as summarization, dialogue, and multilingual text analysis. Its smaller size allows it to operate efficiently in low-resource environments while maintaining strong task performance.\n\nSupporting eight core languages and fine-tunable for more, Llama 1.3B is ideal for businesses or developers seeking lightweight yet powerful AI solutions that can operate in diverse multilingual settings without the high computational demand of larger models.\n\nClick here for the [original model card](https://github.com/meta-llama/llama-models/blob/main/models/llama3_2/MODEL_CARD.md).\n\nUsage of this model is subject to [Meta's Acceptable Use Policy](https://www.llama.com/llama3/use-policy/).",
+      "contextLength": 131072,
+      "isFree": true,
+      "supportsText": true,
+      "isInstruct": true,
+      "maxCompletionTokens": 8192,
+      "reasonIncluded": "good-context, text-support, instruct-type, good-completion, preferred-arch"
+    },
+    {
+      "id": "meta-llama/llama-3.1-8b-instruct:free",
+      "name": "Meta: Llama 3.1 8B Instruct (free)",
+      "description": "Meta's latest class of model (Llama 3.1) launched with a variety of sizes & flavors. This 8B instruct-tuned version is fast and efficient.\n\nIt has demonstrated strong performance compared to leading closed-source models in human evaluations.\n\nTo read more about the model release, [click here](https://ai.meta.com/blog/meta-llama-3-1/). Usage of this model is subject to [Meta's Acceptable Use Policy](https://llama.meta.com/llama3/use-policy/).",
+      "contextLength": 131072,
+      "isFree": true,
+      "supportsText": true,
+      "isInstruct": true,
+      "maxCompletionTokens": 4096,
+      "reasonIncluded": "good-context, text-support, instruct-type, good-completion, preferred-arch"
+    },
+    {
+      "id": "meta-llama/llama-3.3-70b-instruct:free",
+      "name": "Meta: Llama 3.3 70B Instruct (free)",
+      "description": "The Meta Llama 3.3 multilingual large language model (LLM) is a pretrained and instruction tuned generative model in 70B (text in/text out). The Llama 3.3 instruction tuned text only model is optimized for multilingual dialogue use cases and outperforms many of the available open source and closed chat models on common industry benchmarks.\n\nSupported languages: English, German, French, Italian, Portuguese, Hindi, Spanish, and Thai.\n\n[Model Card](https://github.com/meta-llama/llama-models/blob/main/models/llama3_3/MODEL_CARD.md)",
+      "contextLength": 131072,
+      "isFree": true,
+      "supportsText": true,
+      "isInstruct": true,
+      "maxCompletionTokens": 2048,
+      "reasonIncluded": "good-context, text-support, instruct-type, good-completion, preferred-arch"
+    },
+    {
+      "id": "meta-llama/llama-3.1-405b:free",
+      "name": "Meta: Llama 3.1 405B (base) (free)",
+      "description": "Meta's latest class of model (Llama 3.1) launched with a variety of sizes & flavors. This is the base 405B pre-trained version.\n\nIt has demonstrated strong performance compared to leading closed-source models in human evaluations.\n\nTo read more about the model release, [click here](https://ai.meta.com/blog/meta-llama-3/). Usage of this model is subject to [Meta's Acceptable Use Policy](https://llama.meta.com/llama3/use-policy/).",
+      "contextLength": 64000,
+      "isFree": true,
+      "supportsText": true,
+      "isInstruct": true,
+      "maxCompletionTokens": null,
+      "reasonIncluded": "good-context, text-support, instruct-type, good-completion, preferred-arch"
+    },
+    {
+      "id": "qwen/qwen3-8b:free",
+      "name": "Qwen: Qwen3 8B (free)",
+      "description": "Qwen3-8B is a dense 8.2B parameter causal language model from the Qwen3 series, designed for both reasoning-heavy tasks and efficient dialogue. It supports seamless switching between \"thinking\" mode for math, coding, and logical inference, and \"non-thinking\" mode for general conversation. The model is fine-tuned for instruction-following, agent integration, creative writing, and multilingual use across 100+ languages and dialects. It natively supports a 32K token context window and can extend to 131K tokens with YaRN scaling.",
+      "contextLength": 40960,
+      "isFree": true,
+      "supportsText": true,
+      "isInstruct": true,
+      "maxCompletionTokens": 40960,
+      "reasonIncluded": "good-context, text-support, instruct-type, good-completion, preferred-arch"
+    },
+    {
+      "id": "qwen/qwen3-30b-a3b:free",
+      "name": "Qwen: Qwen3 30B A3B (free)",
+      "description": "Qwen3, the latest generation in the Qwen large language model series, features both dense and mixture-of-experts (MoE) architectures to excel in reasoning, multilingual support, and advanced agent tasks. Its unique ability to switch seamlessly between a thinking mode for complex reasoning and a non-thinking mode for efficient dialogue ensures versatile, high-quality performance.\n\nSignificantly outperforming prior models like QwQ and Qwen2.5, Qwen3 delivers superior mathematics, coding, commonsense reasoning, creative writing, and interactive dialogue capabilities. The Qwen3-30B-A3B variant includes 30.5 billion parameters (3.3 billion activated), 48 layers, 128 experts (8 activated per task), and supports up to 131K token contexts with YaRN, setting a new standard among open-source models.",
+      "contextLength": 40960,
+      "isFree": true,
+      "supportsText": true,
+      "isInstruct": true,
+      "maxCompletionTokens": null,
+      "reasonIncluded": "good-context, text-support, instruct-type, good-completion, preferred-arch"
+    },
+    {
+      "id": "qwen/qwq-32b:free",
+      "name": "Qwen: QwQ 32B (free)",
+      "description": "QwQ is the reasoning model of the Qwen series. Compared with conventional instruction-tuned models, QwQ, which is capable of thinking and reasoning, can achieve significantly enhanced performance in downstream tasks, especially hard problems. QwQ-32B is the medium-sized reasoning model, which is capable of achieving competitive performance against state-of-the-art reasoning models, e.g., DeepSeek-R1, o1-mini.",
+      "contextLength": 40000,
+      "isFree": true,
+      "supportsText": true,
+      "isInstruct": true,
+      "maxCompletionTokens": 40000,
+      "reasonIncluded": "good-context, text-support, instruct-type, good-completion, preferred-arch"
+    },
+    {
+      "id": "qwen/qwen-2.5-7b-instruct:free",
+      "name": "Qwen2.5 7B Instruct (free)",
+      "description": "Qwen2.5 7B is the latest series of Qwen large language models. Qwen2.5 brings the following improvements upon Qwen2:\n\n- Significantly more knowledge and has greatly improved capabilities in coding and mathematics, thanks to our specialized expert models in these domains.\n\n- Significant improvements in instruction following, generating long texts (over 8K tokens), understanding structured data (e.g, tables), and generating structured outputs especially JSON. More resilient to the diversity of system prompts, enhancing role-play implementation and condition-setting for chatbots.\n\n- Long-context Support up to 128K tokens and can generate up to 8K tokens.\n\n- Multilingual support for over 29 languages, including Chinese, English, French, Spanish, Portuguese, German, Italian, Russian, Japanese, Korean, Vietnamese, Thai, Arabic, and more.\n\nUsage of this model is subject to [Tongyi Qianwen LICENSE AGREEMENT](https://huggingface.co/Qwen/Qwen1.5-110B-Chat/blob/main/LICENSE).",
+      "contextLength": 32768,
+      "isFree": true,
+      "supportsText": true,
+      "isInstruct": true,
+      "maxCompletionTokens": 32768,
+      "reasonIncluded": "good-context, text-support, instruct-type, good-completion, preferred-arch"
+    },
+    {
+      "id": "mistralai/mistral-7b-instruct:free",
+      "name": "Mistral: Mistral 7B Instruct (free)",
+      "description": "A high-performing, industry-standard 7.3B parameter model, with optimizations for speed and context length.\n\n*Mistral 7B Instruct has multiple version variants, and this is intended to be the latest version.*",
+      "contextLength": 32768,
+      "isFree": true,
+      "supportsText": true,
+      "isInstruct": true,
+      "maxCompletionTokens": 16384,
+      "reasonIncluded": "good-context, text-support, instruct-type, good-completion, preferred-arch"
+    },
+    {
+      "id": "qwen/qwen-2.5-72b-instruct:free",
+      "name": "Qwen2.5 72B Instruct (free)",
+      "description": "Qwen2.5 72B is the latest series of Qwen large language models. Qwen2.5 brings the following improvements upon Qwen2:\n\n- Significantly more knowledge and has greatly improved capabilities in coding and mathematics, thanks to our specialized expert models in these domains.\n\n- Significant improvements in instruction following, generating long texts (over 8K tokens), understanding structured data (e.g, tables), and generating structured outputs especially JSON. More resilient to the diversity of system prompts, enhancing role-play implementation and condition-setting for chatbots.\n\n- Long-context Support up to 128K tokens and can generate up to 8K tokens.\n\n- Multilingual support for over 29 languages, including Chinese, English, French, Spanish, Portuguese, German, Italian, Russian, Japanese, Korean, Vietnamese, Thai, Arabic, and more.\n\nUsage of this model is subject to [Tongyi Qianwen LICENSE AGREEMENT](https://huggingface.co/Qwen/Qwen1.5-110B-Chat/blob/main/LICENSE).",
+      "contextLength": 32768,
+      "isFree": true,
+      "supportsText": true,
+      "isInstruct": true,
+      "maxCompletionTokens": null,
+      "reasonIncluded": "good-context, text-support, instruct-type, good-completion, preferred-arch"
+    },
+    {
+      "id": "meta-llama/llama-3.2-3b-instruct:free",
+      "name": "Meta: Llama 3.2 3B Instruct (free)",
+      "description": "Llama 3.2 3B is a 3-billion-parameter multilingual large language model, optimized for advanced natural language processing tasks like dialogue generation, reasoning, and summarization. Designed with the latest transformer architecture, it supports eight languages, including English, Spanish, and Hindi, and is adaptable for additional languages.\n\nTrained on 9 trillion tokens, the Llama 3.2 3B model excels in instruction-following, complex reasoning, and tool use. Its balanced performance makes it ideal for applications needing accuracy and efficiency in text generation across multilingual settings.\n\nClick here for the [original model card](https://github.com/meta-llama/llama-models/blob/main/models/llama3_2/MODEL_CARD.md).\n\nUsage of this model is subject to [Meta's Acceptable Use Policy](https://www.llama.com/llama3/use-policy/).",
+      "contextLength": 20000,
+      "isFree": true,
+      "supportsText": true,
+      "isInstruct": true,
+      "maxCompletionTokens": 20000,
+      "reasonIncluded": "good-context, text-support, instruct-type, good-completion, preferred-arch"
+    },
+    {
+      "id": "google/gemma-2-9b-it:free",
+      "name": "Google: Gemma 2 9B (free)",
+      "description": "Gemma 2 9B by Google is an advanced, open-source language model that sets a new standard for efficiency and performance in its size class.\n\nDesigned for a wide variety of tasks, it empowers developers and researchers to build innovative applications, while maintaining accessibility, safety, and cost-effectiveness.\n\nSee the [launch announcement](https://blog.google/technology/developers/google-gemma-2/) for more details. Usage of Gemma is subject to Google's [Gemma Terms of Use](https://ai.google.dev/gemma/terms).",
+      "contextLength": 8192,
+      "isFree": true,
+      "supportsText": true,
+      "isInstruct": true,
+      "maxCompletionTokens": 8192,
+      "reasonIncluded": "good-context, text-support, instruct-type, good-completion, preferred-arch"
+    },
+    {
+      "id": "deepseek/deepseek-chat-v3-0324:free",
+      "name": "DeepSeek: DeepSeek V3 0324 (free)",
+      "description": "DeepSeek V3, a 685B-parameter, mixture-of-experts model, is the latest iteration of the flagship chat model family from the DeepSeek team.\n\nIt succeeds the [DeepSeek V3](/deepseek/deepseek-chat-v3) model and performs really well on a variety of tasks.",
+      "contextLength": 163840,
+      "isFree": true,
+      "supportsText": true,
+      "isInstruct": false,
+      "maxCompletionTokens": null,
+      "reasonIncluded": "good-context, text-support, good-completion, preferred-arch"
+    },
+    {
+      "id": "deepseek/deepseek-chat:free",
+      "name": "DeepSeek: DeepSeek V3 (free)",
+      "description": "DeepSeek-V3 is the latest model from the DeepSeek team, building upon the instruction following and coding abilities of the previous versions. Pre-trained on nearly 15 trillion tokens, the reported evaluations reveal that the model outperforms other open-source models and rivals leading closed-source models.\n\nFor model details, please visit [the DeepSeek-V3 repo](https://github.com/deepseek-ai/DeepSeek-V3) for more information, or see the [launch announcement](https://api-docs.deepseek.com/news/news1226).",
+      "contextLength": 163840,
+      "isFree": true,
+      "supportsText": true,
+      "isInstruct": false,
+      "maxCompletionTokens": null,
+      "reasonIncluded": "good-context, text-support, good-completion, preferred-arch"
+    },
+    {
+      "id": "nousresearch/deephermes-3-llama-3-8b-preview:free",
+      "name": "Nous: DeepHermes 3 Llama 3 8B Preview (free)",
+      "description": "DeepHermes 3 Preview is the latest version of our flagship Hermes series of LLMs by Nous Research, and one of the first models in the world to unify Reasoning (long chains of thought that improve answer accuracy) and normal LLM response modes into one model. We have also improved LLM annotation, judgement, and function calling.\n\nDeepHermes 3 Preview is one of the first LLM models to unify both \"intuitive\", traditional mode responses and long chain of thought reasoning responses into a single model, toggled by a system prompt.",
+      "contextLength": 131072,
+      "isFree": true,
+      "supportsText": true,
+      "isInstruct": false,
+      "maxCompletionTokens": null,
+      "reasonIncluded": "good-context, text-support, good-completion, preferred-arch"
+    },
+    {
+      "id": "nvidia/llama-3.1-nemotron-ultra-253b-v1:free",
+      "name": "NVIDIA: Llama 3.1 Nemotron Ultra 253B v1 (free)",
+      "description": "Llama-3.1-Nemotron-Ultra-253B-v1 is a large language model (LLM) optimized for advanced reasoning, human-interactive chat, retrieval-augmented generation (RAG), and tool-calling tasks. Derived from Meta’s Llama-3.1-405B-Instruct, it has been significantly customized using Neural Architecture Search (NAS), resulting in enhanced efficiency, reduced memory usage, and improved inference latency. The model supports a context length of up to 128K tokens and can operate efficiently on an 8x NVIDIA H100 node.\n\nNote: you must include `detailed thinking on` in the system prompt to enable reasoning. Please see [Usage Recommendations](https://huggingface.co/nvidia/Llama-3_1-Nemotron-Ultra-253B-v1#quick-start-and-usage-recommendations) for more.",
+      "contextLength": 131072,
+      "isFree": true,
+      "supportsText": true,
+      "isInstruct": false,
+      "maxCompletionTokens": null,
+      "reasonIncluded": "good-context, text-support, good-completion, preferred-arch"
+    },
+    {
+      "id": "nvidia/llama-3.3-nemotron-super-49b-v1:free",
+      "name": "NVIDIA: Llama 3.3 Nemotron Super 49B v1 (free)",
+      "description": "Llama-3.3-Nemotron-Super-49B-v1 is a large language model (LLM) optimized for advanced reasoning, conversational interactions, retrieval-augmented generation (RAG), and tool-calling tasks. Derived from Meta's Llama-3.3-70B-Instruct, it employs a Neural Architecture Search (NAS) approach, significantly enhancing efficiency and reducing memory requirements. This allows the model to support a context length of up to 128K tokens and fit efficiently on single high-performance GPUs, such as NVIDIA H200.\n\nNote: you must include `detailed thinking on` in the system prompt to enable reasoning. Please see [Usage Recommendations](https://huggingface.co/nvidia/Llama-3_1-Nemotron-Ultra-253B-v1#quick-start-and-usage-recommendations) for more.",
+      "contextLength": 131072,
+      "isFree": true,
+      "supportsText": true,
+      "isInstruct": false,
+      "maxCompletionTokens": null,
+      "reasonIncluded": "good-context, text-support, good-completion, preferred-arch"
+    },
+    {
+      "id": "meta-llama/llama-3.3-8b-instruct:free",
+      "name": "Meta: Llama 3.3 8B Instruct (free)",
+      "description": "A lightweight and ultra-fast variant of Llama 3.3 70B, for use when quick response times are needed most.",
+      "contextLength": 128000,
+      "isFree": true,
+      "supportsText": true,
+      "isInstruct": false,
+      "maxCompletionTokens": 4028,
+      "reasonIncluded": "good-context, text-support, good-completion, preferred-arch"
+    },
+    {
+      "id": "mistralai/mistral-small-24b-instruct-2501:free",
+      "name": "Mistral: Mistral Small 3 (free)",
+      "description": "Mistral Small 3 is a 24B-parameter language model optimized for low-latency performance across common AI tasks. Released under the Apache 2.0 license, it features both pre-trained and instruction-tuned versions designed for efficient local deployment.\n\nThe model achieves 81% accuracy on the MMLU benchmark and performs competitively with larger models like Llama 3.3 70B and Qwen 32B, while operating at three times the speed on equivalent hardware. [Read the blog post about the model here.](https://mistral.ai/news/mistral-small-3/)",
+      "contextLength": 32768,
+      "isFree": true,
+      "supportsText": true,
+      "isInstruct": false,
+      "maxCompletionTokens": null,
+      "reasonIncluded": "good-context, text-support, good-completion, preferred-arch"
+    },
+    {
+      "id": "moonshotai/moonlight-16b-a3b-instruct:free",
+      "name": "Moonshot AI: Moonlight 16B A3B Instruct (free)",
+      "description": "Moonlight-16B-A3B-Instruct is a 16B-parameter Mixture-of-Experts (MoE) language model developed by Moonshot AI. It is optimized for instruction-following tasks with 3B activated parameters per inference. The model advances the Pareto frontier in performance per FLOP across English, coding, math, and Chinese benchmarks. It outperforms comparable models like Llama3-3B and Deepseek-v2-Lite while maintaining efficient deployment capabilities through Hugging Face integration and compatibility with popular inference engines like vLLM12.",
+      "contextLength": 8192,
+      "isFree": true,
+      "supportsText": true,
+      "isInstruct": false,
+      "maxCompletionTokens": null,
+      "reasonIncluded": "good-context, text-support, good-completion, preferred-arch"
+    },
+    {
+      "id": "deepseek/deepseek-r1-0528:free",
+      "name": "DeepSeek: R1 0528 (free)",
+      "description": "May 28th update to the [original DeepSeek R1](/deepseek/deepseek-r1) Performance on par with [OpenAI o1](/openai/o1), but open-sourced and with fully open reasoning tokens. It's 671B parameters in size, with 37B active in an inference pass.\n\nFully open-source model.",
+      "contextLength": 163840,
+      "isFree": true,
+      "supportsText": true,
+      "isInstruct": true,
+      "maxCompletionTokens": null,
+      "reasonIncluded": "good-context, text-support, instruct-type, good-completion"
+    },
+    {
+      "id": "deepseek/deepseek-r1-zero:free",
+      "name": "DeepSeek: DeepSeek R1 Zero (free)",
+      "description": "DeepSeek-R1-Zero is a model trained via large-scale reinforcement learning (RL) without supervised fine-tuning (SFT) as a preliminary step. It's 671B parameters in size, with 37B active in an inference pass.\n\nIt demonstrates remarkable performance on reasoning. With RL, DeepSeek-R1-Zero naturally emerged with numerous powerful and interesting reasoning behaviors.\n\nDeepSeek-R1-Zero encounters challenges such as endless repetition, poor readability, and language mixing. See [DeepSeek R1](/deepseek/deepseek-r1) for the SFT model.\n\n",
+      "contextLength": 163840,
+      "isFree": true,
+      "supportsText": true,
+      "isInstruct": true,
+      "maxCompletionTokens": null,
+      "reasonIncluded": "good-context, text-support, instruct-type, good-completion"
+    },
+    {
+      "id": "deepseek/deepseek-r1:free",
+      "name": "DeepSeek: R1 (free)",
+      "description": "DeepSeek R1 is here: Performance on par with [OpenAI o1](/openai/o1), but open-sourced and with fully open reasoning tokens. It's 671B parameters in size, with 37B active in an inference pass.\n\nFully open-source model & [technical report](https://api-docs.deepseek.com/news/news250120).\n\nMIT licensed: Distill & commercialize freely!",
+      "contextLength": 163840,
+      "isFree": true,
+      "supportsText": true,
+      "isInstruct": true,
+      "maxCompletionTokens": null,
+      "reasonIncluded": "good-context, text-support, instruct-type, good-completion"
+    },
+    {
+      "id": "mistralai/mistral-nemo:free",
+      "name": "Mistral: Mistral Nemo (free)",
+      "description": "A 12B parameter model with a 128k token context length built by Mistral in collaboration with NVIDIA.\n\nThe model is multilingual, supporting English, French, German, Spanish, Italian, Portuguese, Chinese, Japanese, Korean, Arabic, and Hindi.\n\nIt supports function calling and is released under the Apache 2.0 license.",
+      "contextLength": 131072,
+      "isFree": true,
+      "supportsText": true,
+      "isInstruct": true,
+      "maxCompletionTokens": 128000,
+      "reasonIncluded": "good-context, text-support, instruct-type, good-completion"
+    },
+    {
+      "id": "google/gemini-2.5-pro-exp-03-25",
+      "name": "Google: Gemini 2.5 Pro Experimental",
+      "description": "This model has been deprecated by Google in favor of the (paid Preview model)[google/gemini-2.5-pro-preview]\n \nGemini 2.5 Pro is Google’s state-of-the-art AI model designed for advanced reasoning, coding, mathematics, and scientific tasks. It employs “thinking” capabilities, enabling it to reason through responses with enhanced accuracy and nuanced context handling. Gemini 2.5 Pro achieves top-tier performance on multiple benchmarks, including first-place positioning on the LMArena leaderboard, reflecting superior human-preference alignment and complex problem-solving abilities.",
+      "contextLength": 1048576,
+      "isFree": true,
+      "supportsText": true,
+      "isInstruct": false,
+      "maxCompletionTokens": 65535,
+      "reasonIncluded": "good-context, text-support, good-completion"
+    },
+    {
+      "id": "deepseek/deepseek-prover-v2:free",
+      "name": "DeepSeek: DeepSeek Prover V2 (free)",
+      "description": "DeepSeek Prover V2 is a 671B parameter model, speculated to be geared towards logic and mathematics. Likely an upgrade from [DeepSeek-Prover-V1.5](https://huggingface.co/deepseek-ai/DeepSeek-Prover-V1.5-RL) Not much is known about the model yet, as DeepSeek released it on Hugging Face without an announcement or description.",
+      "contextLength": 163840,
+      "isFree": true,
+      "supportsText": true,
+      "isInstruct": false,
+      "maxCompletionTokens": null,
+      "reasonIncluded": "good-context, text-support, good-completion"
+    },
+    {
+      "id": "deepseek/deepseek-v3-base:free",
+      "name": "DeepSeek: DeepSeek V3 Base (free)",
+      "description": "Note that this is a base model mostly meant for testing, you need to provide detailed prompts for the model to return useful responses. \n\nDeepSeek-V3 Base is a 671B parameter open Mixture-of-Experts (MoE) language model with 37B active parameters per forward pass and a context length of 128K tokens. Trained on 14.8T tokens using FP8 mixed precision, it achieves high training efficiency and stability, with strong performance across language, reasoning, math, and coding tasks. \n\nDeepSeek-V3 Base is the pre-trained model behind [DeepSeek V3](/deepseek/deepseek-chat-v3)",
+      "contextLength": 163840,
+      "isFree": true,
+      "supportsText": true,
+      "isInstruct": false,
+      "maxCompletionTokens": null,
+      "reasonIncluded": "good-context, text-support, good-completion"
+    },
+    {
+      "id": "tngtech/deepseek-r1t-chimera:free",
+      "name": "TNG: DeepSeek R1T Chimera (free)",
+      "description": "DeepSeek-R1T-Chimera is created by merging DeepSeek-R1 and DeepSeek-V3 (0324), combining the reasoning capabilities of R1 with the token efficiency improvements of V3. It is based on a DeepSeek-MoE Transformer architecture and is optimized for general text generation tasks.\n\nThe model merges pretrained weights from both source models to balance performance across reasoning, efficiency, and instruction-following tasks. It is released under the MIT license and intended for research and commercial use.",
+      "contextLength": 163840,
+      "isFree": true,
+      "supportsText": true,
+      "isInstruct": false,
+      "maxCompletionTokens": null,
+      "reasonIncluded": "good-context, text-support, good-completion"
+    },
+    {
+      "id": "featherless/qwerky-72b:free",
+      "name": "Qwerky 72B (free)",
+      "description": "Qwerky-72B is a linear-attention RWKV variant of the Qwen 2.5 72B model, optimized to significantly reduce computational cost at scale. Leveraging linear attention, it achieves substantial inference speedups (>1000x) while retaining competitive accuracy on common benchmarks like ARC, HellaSwag, Lambada, and MMLU. It inherits knowledge and language support from Qwen 2.5, supporting approximately 30 languages, making it suitable for efficient inference in large-context applications.",
+      "contextLength": 32768,
+      "isFree": true,
+      "supportsText": true,
+      "isInstruct": false,
+      "maxCompletionTokens": 4096,
+      "reasonIncluded": "good-context, text-support, good-completion"
+    }
+  ]
+}
