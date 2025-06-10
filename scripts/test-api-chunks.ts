@@ -1,8 +1,12 @@
 #!/usr/bin/env node
 
 import { enrichWordsWithLLM } from '../src/services/openrouter/index.ts';
-import { DEFAULT_OPENROUTER_API_KEY, DEFAULT_OPENROUTER_MODEL } from '../src/config/openrouter.ts';
+import { DEFAULT_OPENROUTER_API_KEY, DEFAULT_OPENROUTER_MODEL, DEFAULT_BATCH_SIZE, DEFAULT_BATCH_DELAY } from '../src/config/openrouter.ts';
 import type { Word } from '../src/types/index.ts';
+
+// Test configuration - use values from config as defaults
+const CHUNK_SIZE = DEFAULT_BATCH_SIZE; // Use default batch size for testing
+const DELAY_BETWEEN_CHUNKS = DEFAULT_BATCH_DELAY; // Use default batch delay between chunks
 
 // Extended version of enrichWordsWithLLM that captures raw response
 async function enrichWordsWithRawResponse(
@@ -56,9 +60,7 @@ async function enrichWordsWithRawResponse(
   }
 }
 
-// Test configuration
-const CHUNK_SIZE = 3;
-const DEFAULT_DELAY_BETWEEN_CHUNKS = 3000; // 3 seconds to prevent rate limiting
+// Test configuration - remaining settings
 const DEFAULT_PROGRESSIVE_DELAY = true; // Whether to use progressive delays
 
 // Test Hebrew words covering different categories
@@ -227,7 +229,7 @@ async function testApiChunks(): Promise<void> {
   const apiKey = process.env.OPENROUTER_API_KEY || DEFAULT_OPENROUTER_API_KEY;
   const model = process.env.OPENROUTER_MODEL || DEFAULT_OPENROUTER_MODEL;
   const forceToolSupport = process.env.FORCE_TOOL_SUPPORT === 'true';
-  const delayBetweenChunks = parseInt(process.env.DELAY_BETWEEN_CHUNKS || String(DEFAULT_DELAY_BETWEEN_CHUNKS));
+  const delayBetweenChunks = parseInt(process.env.DELAY_BETWEEN_CHUNKS || String(DELAY_BETWEEN_CHUNKS));
   const useProgressiveDelay = process.env.PROGRESSIVE_DELAY !== 'false'; // Default to true unless explicitly disabled
   const maxDelaySeconds = parseInt(process.env.MAX_DELAY_SECONDS || '10'); // Maximum delay in seconds
   
@@ -525,7 +527,7 @@ Environment Variables:
   OPENROUTER_API_KEY      OpenRouter API key (default: from config)
   OPENROUTER_MODEL        Model identifier (default: from config)
   FORCE_TOOL_SUPPORT      Force tool support mode (true/false)
-  DELAY_BETWEEN_CHUNKS    Base delay between chunks in ms (default: ${DEFAULT_DELAY_BETWEEN_CHUNKS})
+  DELAY_BETWEEN_CHUNKS    Base delay between chunks in ms (default: ${DELAY_BETWEEN_CHUNKS})
   PROGRESSIVE_DELAY       Use progressive delays (true/false, default: ${DEFAULT_PROGRESSIVE_DELAY})
   MAX_DELAY_SECONDS       Maximum delay per chunk in seconds (default: 10)
 

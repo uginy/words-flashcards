@@ -27,6 +27,11 @@ export const useLLMSettings = () => {
     openRouterModel: settings.openrouter.selectedModel,
     ollamaApiUrl: settings.ollama.apiUrl,
     ollamaModel: settings.ollama.selectedModel,
+    // Batching settings
+    batchSize: settings.batching.batchSize,
+    batchDelay: settings.batching.batchDelay,
+    progressiveDelay: settings.batching.progressiveDelay,
+    maxDelaySeconds: settings.batching.maxDelaySeconds,
     // Check if provider is properly configured
     isOpenRouterConfigured: settings.openrouter.apiKey.trim() !== '',
     isOllamaConfigured: settings.ollama.apiUrl.trim() !== '' && settings.ollama.selectedModel.trim() !== '',
