@@ -35,7 +35,7 @@ type LLMProviderTab = 'openrouter' | 'ollama';
 
 const Settings: React.FC = () => {
   const { toast } = useToast();
-  const [activeTab, setActiveTab] = useState<TabType>('table');
+  const [activeTab, setActiveTab] = useState<TabType>('llm');
   const [llmProviderTab, setLLMProviderTab] = useState<LLMProviderTab>('openrouter');
   const [pageSize, setPageSize] = useState<number>(10);
   
@@ -195,10 +195,39 @@ const Settings: React.FC = () => {
     }));
   };
 
+  // Batch settings handlers
+  const handleBatchSizeChange = (batchSize: number) => {
+    setLLMSettings(prev => ({
+      ...prev,
+      batching: { ...prev.batching, batchSize }
+    }));
+  };
+
+  const handleBatchDelayChange = (batchDelay: number) => {
+    setLLMSettings(prev => ({
+      ...prev,
+      batching: { ...prev.batching, batchDelay }
+    }));
+  };
+
+  const handleProgressiveDelayChange = (progressiveDelay: boolean) => {
+    setLLMSettings(prev => ({
+      ...prev,
+      batching: { ...prev.batching, progressiveDelay }
+    }));
+  };
+
+  const handleMaxDelaySecondsChange = (maxDelaySeconds: number) => {
+    setLLMSettings(prev => ({
+      ...prev,
+      batching: { ...prev.batching, maxDelaySeconds }
+    }));
+  };
+
   const tabs = [
-    { id: 'table' as TabType, label: 'Таблица', icon: '📊' },
+    { id: 'llm' as TabType, label: 'ИИ Модель', icon: '🤖' },
     { id: 'tts' as TabType, label: 'Озвучка', icon: '🔊' },
-    { id: 'llm' as TabType, label: 'ИИ Модель', icon: '🤖' }
+    { id: 'table' as TabType, label: 'Таблица', icon: '📊' },
   ];
 
   const llmProviderTabs = [
@@ -438,6 +467,84 @@ const Settings: React.FC = () => {
               </div>
 
               {renderLLMProviderContent()}
+            </div>
+
+            {/* Batch Processing Settings */}
+            <div className="border-t border-gray-200 pt-6">
+              <h4 className="text-md font-medium text-gray-800 mb-4">⚙️ Настройки батчевой обработки</h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label htmlFor="batchSize" className="block text-sm font-medium text-gray-700 mb-1">
+                    Размер пачки (количество слов)
+                  </label>
+                  <input
+                    type="number"
+                    id="batchSize"
+                    min="1"
+                    max="20"
+                    className="w-full px-3 py-2 text-gray-700 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    value={llmSettings.batching.batchSize}
+                    onChange={(e) => handleBatchSizeChange(Number(e.target.value))}
+                  />
+                  <p className="text-xs text-gray-500 mt-1">
+                    Количество слов для обработки за один запрос (1-20)
+                  </p>
+                </div>
+
+                <div>
+                  <label htmlFor="batchDelay" className="block text-sm font-medium text-gray-700 mb-1">
+                    Задержка между запросами (мс)
+                  </label>
+                  <input
+                    type="number"
+                    id="batchDelay"
+                    min="0"
+                    max="10000"
+                    step="100"
+                    className="w-full px-3 py-2 text-gray-700 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    value={llmSettings.batching.batchDelay}
+                    onChange={(e) => handleBatchDelayChange(Number(e.target.value))}
+                  />
+                  <p className="text-xs text-gray-500 mt-1">
+                    Пауза между запросами для предотвращения перегрузки
+                  </p>
+                </div>
+
+                <div>
+                  <label htmlFor="progressiveDelay" className="flex items-center text-sm font-medium text-gray-700">
+                    <input
+                      type="checkbox"
+                      id="progressiveDelay"
+                      className="mr-2"
+                      checked={llmSettings.batching.progressiveDelay}
+                      onChange={(e) => handleProgressiveDelayChange(e.target.checked)}
+                    />
+                    Прогрессивные задержки
+                  </label>
+                  <p className="text-xs text-gray-500 mt-1">
+                    Увеличивать задержки при повторных запросах
+                  </p>
+                </div>
+
+                <div>
+                  <label htmlFor="maxDelaySeconds" className="block text-sm font-medium text-gray-700 mb-1">
+                    Максимальная задержка (сек)
+                  </label>
+                  <input
+                    type="number"
+                    id="maxDelaySeconds"
+                    min="1"
+                    max="300"
+                    className="w-full px-3 py-2 text-gray-700 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    value={llmSettings.batching.maxDelaySeconds}
+                    onChange={(e) => handleMaxDelaySecondsChange(Number(e.target.value))}
+                    disabled={!llmSettings.batching.progressiveDelay}
+                  />
+                  <p className="text-xs text-gray-500 mt-1">
+                    Максимальное время ожидания при прогрессивных задержках
+                  </p>
+                </div>
+              </div>
             </div>
 
             <div className="flex justify-end mt-6">

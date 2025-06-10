@@ -59,9 +59,9 @@ export async function enrichWordsWithLLM(
       "gpt-4", "gpt-3.5", // OpenAI
       "claude-3-opus", "claude-3-sonnet", "claude-3-haiku", // Anthropic
       "gemini", // Google
-      "llama-4-maverick", "llama-4-scout", // Meta LLaMA 4 specific models
-      "llama-4", // Meta LLaMA 4 series (general pattern)
-      "llama-3.3", // Meta LLaMA 3.3 series
+      // "llama-4-maverick", "llama-4-scout", // Meta LLaMA 4 specific models
+      // "llama-4", // Meta LLaMA 4 series (general pattern)
+      // "llama-3.3", // Meta LLaMA 3.3 series
       "devstral", // Mistral Devstral series
     ];
     effectiveModelSupportsTools = knownToolSupportingModelPatterns.some(name => modelIdentifier.toLowerCase().includes(name));

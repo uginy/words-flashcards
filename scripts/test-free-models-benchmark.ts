@@ -2,12 +2,13 @@
 
 import { readFile } from 'fs/promises';
 import { enrichWordsWithLLM } from '../src/services/openrouter/index.ts';
-import { DEFAULT_OPENROUTER_API_KEY } from '../src/config/openrouter.ts';
+import { DEFAULT_OPENROUTER_API_KEY, DEFAULT_BATCH_SIZE, DEFAULT_BATCH_DELAY } from '../src/config/openrouter.ts';
 import type { Word } from '../src/types/index.ts';
 
-// Test configuration
-const DELAY_BETWEEN_MODELS = 10000; // 10 seconds between model tests
+// Test configuration - use values from config as defaults
+const DELAY_BETWEEN_MODELS = DEFAULT_BATCH_DELAY; // Use default batch delay between model tests
 const REQUEST_TIMEOUT = 120000; // 120 seconds per request (all words at once)
+const CHUNK_SIZE = DEFAULT_BATCH_SIZE; // Use default batch size for testing
 
 // Test Hebrew verbs (פועל) for consistency
 const TEST_HEBREW_VERBS = [

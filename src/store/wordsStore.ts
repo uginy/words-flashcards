@@ -330,8 +330,8 @@ async function processHebrewWords(
     return;
   }
 
-  // Process in chunks
-  const chunkSize = 5;
+  // Process in chunks using settings from config
+  const chunkSize = llmSettings.batching.batchSize;
   const chunks = chunkArray(uniqueWords, chunkSize);
   let allValidWords: Word[] = [];
   let allFailedWords: string[] = [];
@@ -385,12 +385,12 @@ async function processHebrewWords(
     try {
       // console.log(`⚡ DEBUG: Calling enrichWordsWithLLM for chunk ${i + 1}`);
       
-      // Enhanced LLM enrichment options for better reliability
+      // Enhanced LLM enrichment options using batching settings
       const llmOptions = {
         retryConfig: {
           maxRetries: 3,
-          baseDelay: 1500, // Start with 1.5s delay
-          maxDelay: 15000, // Max 15s delay
+          baseDelay: Math.max(llmSettings.batching.batchDelay, 1000), // Use batch delay as base, minimum 1s
+          maxDelay: llmSettings.batching.maxDelaySeconds * 1000, // Convert seconds to milliseconds
           backoffMultiplier: 2.5
         },
         enableDetailedLogging: true,
@@ -415,8 +415,8 @@ async function processHebrewWords(
             model: llmSettings.ollama.selectedModel,
             retryConfig: {
               maxRetries: 3,
-              baseDelay: 1500,
-              maxDelay: 15000,
+              baseDelay: Math.max(llmSettings.batching.batchDelay, 1000), // Use batch delay as base, minimum 1s
+              maxDelay: llmSettings.batching.maxDelaySeconds * 1000, // Convert seconds to milliseconds
               backoffMultiplier: 2.5
             },
             enableDetailedLogging: true,
@@ -550,6 +550,32 @@ async function processHebrewWords(
           } : task
         )
       }));
+    }
+
+    // Add delay between chunks if configured and not the last chunk
+    if (i < chunks.length - 1 && llmSettings.batching.batchDelay > 0) {
+      const baseDelay = llmSettings.batching.batchDelay;
+      let actualDelay = baseDelay;
+      
+      // Apply progressive delay if enabled
+      if (llmSettings.batching.progressiveDelay) {
+        const progressMultiplier = 1 + (i * 0.1); // Increase delay by 10% for each subsequent chunk
+        actualDelay = Math.min(
+          baseDelay * progressMultiplier,
+          llmSettings.batching.maxDelaySeconds * 1000
+        );
+      }
+      
+      // console.log(`⏸️ DEBUG: Waiting ${actualDelay}ms before processing chunk ${i + 2}...`);
+      await new Promise(resolve => setTimeout(resolve, actualDelay));
+      
+      // Check if task was cancelled during the delay
+      const taskState = get();
+      const currentTask = taskState.backgroundTasks.find((t: BackgroundTask) => t.id === taskId);
+      if (currentTask?.cancelled) {
+        // console.log(`🚫 DEBUG: Task ${taskId} was cancelled during delay, stopping`);
+        return;
+      }
     }
   }
 
