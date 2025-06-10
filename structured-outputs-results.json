@@ -1,0 +1,64 @@
+[
+  {
+    "modelName": "google/gemma-3-27b-it:free",
+    "success": false,
+    "responseTime": 1593,
+    "error": "400 Provider returned error",
+    "wordsProcessed": 0,
+    "schemaCompliant": false,
+    "validationIssues": [
+      "400 Provider returned error"
+    ]
+  },
+  {
+    "modelName": "google/gemma-3-12b-it:free",
+    "success": false,
+    "responseTime": 1258,
+    "error": "400 Provider returned error",
+    "wordsProcessed": 0,
+    "schemaCompliant": false,
+    "validationIssues": [
+      "400 Provider returned error"
+    ]
+  },
+  {
+    "modelName": "google/gemma-3-4b-it:free",
+    "success": false,
+    "responseTime": 1458,
+    "error": "400 Provider returned error",
+    "wordsProcessed": 0,
+    "schemaCompliant": false,
+    "validationIssues": [
+      "400 Provider returned error"
+    ]
+  },
+  {
+    "modelName": "meta-llama/llama-4-scout:free",
+    "success": true,
+    "responseTime": 8206,
+    "wordsProcessed": 3,
+    "schemaCompliant": true
+  },
+  {
+    "modelName": "meta-llama/llama-4-maverick:free",
+    "success": false,
+    "responseTime": 1735,
+    "error": "Empty response content",
+    "wordsProcessed": 0,
+    "schemaCompliant": false,
+    "validationIssues": [
+      "Empty response content"
+    ]
+  },
+  {
+    "modelName": "meta-llama/llama-3.3-8b-instruct:free",
+    "success": false,
+    "responseTime": 1109,
+    "error": "Empty response content",
+    "wordsProcessed": 0,
+    "schemaCompliant": false,
+    "validationIssues": [
+      "Empty response content"
+    ]
+  }
+]
