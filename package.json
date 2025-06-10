@@ -16,7 +16,9 @@
     "test:api-chunks": "npx tsx scripts/test-api-chunks.ts",
     "test:model-championship": "npx tsx scripts/test-api-chunks-best-model.ts",
     "test:tools-support": "npx tsx scripts/test-tools-support.ts",
-    "test:ollama-chunks": "npx tsx scripts/test-ollama-chunks.ts"
+    "test:ollama-chunks": "npx tsx scripts/test-ollama-chunks.ts",
+    "fetch-free-models": "npx tsx scripts/fetch-free-models.ts",
+    "test:free-models-benchmark": "npx tsx scripts/test-free-models-benchmark.ts"
   },
   "dependencies": {
     "@radix-ui/react-alert-dialog": "^1.1.13",
