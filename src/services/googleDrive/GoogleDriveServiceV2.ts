@@ -203,6 +203,7 @@ export class GoogleDriveServiceV2 {
     words?: unknown[];
     dialogs?: unknown[];
     ttsConfig?: Record<string, unknown>;
+    llmConfig?: Record<string, unknown>;
   }): Promise<void> {
     if (!this.isAuthorized) {
       throw new Error('Не авторизован в Google Drive');
@@ -220,18 +221,11 @@ export class GoogleDriveServiceV2 {
 
     // Upload each file type
     if (data.words) {
-      console.log('Uploading words to cloud:', {
-        count: Array.isArray(data.words) ? data.words.length : 'not array',
-        firstWord: Array.isArray(data.words) ? data.words[0] : 'no words',
-        type: typeof data.words
-      });
       await this.uploadFile(
         GOOGLE_DRIVE_CONFIG.FILES.WORDS,
         JSON.stringify(data.words, null, 2),
         appFolderId
       );
-    } else {
-      console.log('No words to upload');
     }
 
     if (data.dialogs) {
@@ -250,6 +244,14 @@ export class GoogleDriveServiceV2 {
       );
     }
 
+    if (data.llmConfig) {
+      await this.uploadFile(
+        GOOGLE_DRIVE_CONFIG.FILES.LLM_CONFIG,
+        JSON.stringify(data.llmConfig, null, 2),
+        appFolderId
+      );
+    }
+
     // Update metadata
     await this.updateSyncMetadata(metadata);
   }
@@ -258,6 +260,7 @@ export class GoogleDriveServiceV2 {
     words?: unknown[];
     dialogs?: unknown[];
     ttsConfig?: Record<string, unknown>;
+    llmConfig?: Record<string, unknown>;
     metadata?: SyncMetadata;
   }> {
     if (!this.isAuthorized) {
@@ -274,17 +277,10 @@ export class GoogleDriveServiceV2 {
         const wordsContent = await this.downloadFile(GOOGLE_DRIVE_CONFIG.FILES.WORDS, appFolderId);
         if (wordsContent) {
           const parsedWords = JSON.parse(wordsContent);
-        //   console.log('Words downloaded from cloud:', {
-        //     content: `${wordsContent.slice(0, 200)}...`,
-        //     parsedCount: Array.isArray(parsedWords) ? parsedWords.length : 'not array',
-        //     parsedWords: parsedWords
-        //   });
           result.words = parsedWords;
-        } else {
-          console.log('Words file is empty or null');
         }
       } catch (error) {
-        console.log('No words file found or error parsing:', error);
+        // Words file not found
       }
 
       // Download dialogs
@@ -294,7 +290,7 @@ export class GoogleDriveServiceV2 {
           result.dialogs = JSON.parse(dialogsContent);
         }
       } catch (error) {
-        console.log('No dialogs file found');
+        // Dialogs file not found
       }
 
       // Download TTS config
@@ -304,7 +300,17 @@ export class GoogleDriveServiceV2 {
           result.ttsConfig = JSON.parse(ttsContent);
         }
       } catch (error) {
-        console.log('No TTS config file found');
+        // TTS config file not found
+      }
+
+      // Download LLM config
+      try {
+        const llmContent = await this.downloadFile(GOOGLE_DRIVE_CONFIG.FILES.LLM_CONFIG, appFolderId);
+        if (llmContent) {
+          result.llmConfig = JSON.parse(llmContent);
+        }
+      } catch (error) {
+        // LLM config file not found
       }
 
       // Download metadata
@@ -314,7 +320,7 @@ export class GoogleDriveServiceV2 {
           result.metadata = JSON.parse(metadataContent);
         }
       } catch (error) {
-        console.log('No metadata file found');
+        // Metadata file not found
       }
 
       return result;
@@ -340,6 +346,7 @@ export class GoogleDriveServiceV2 {
       const localDialogs = localDialogsStore ? JSON.parse(localDialogsStore) : [];
       
       const localTTSConfig = localStorage.getItem('tts_config');
+      const localLLMConfig = localStorage.getItem('llm_config');
       
       // Check actual data presence
       const hasCloudWords = cloudData.words && Array.isArray(cloudData.words) && cloudData.words.length > 0;
@@ -350,6 +357,9 @@ export class GoogleDriveServiceV2 {
       
       const hasCloudTTS = cloudData.ttsConfig && Object.keys(cloudData.ttsConfig).length > 0;
       const hasLocalTTS = localTTSConfig !== null && localTTSConfig !== undefined;
+
+      const hasCloudLLM = cloudData.llmConfig && Object.keys(cloudData.llmConfig).length > 0;
+      const hasLocalLLM = localLLMConfig !== null && localLLMConfig !== undefined;
       
       // Conflict exists only if BOTH cloud and local have data AND they differ
       const wordConflict = hasCloudWords && hasLocalWords && 
@@ -358,16 +368,11 @@ export class GoogleDriveServiceV2 {
         cloudData.dialogs && Array.isArray(cloudData.dialogs) && cloudData.dialogs.length !== localDialogs.length;
       const ttsConflict = hasCloudTTS && hasLocalTTS && 
         cloudData.ttsConfig && JSON.stringify(cloudData.ttsConfig) !== localTTSConfig;
+      const llmConflict = hasCloudLLM && hasLocalLLM && 
+        cloudData.llmConfig && JSON.stringify(cloudData.llmConfig) !== localLLMConfig;
       
-    //   console.log('Conflict check:', {
-    //     words: { cloud: hasCloudWords, local: hasLocalWords, conflict: wordConflict },
-    //     dialogs: { cloud: hasCloudDialogs, local: hasLocalDialogs, conflict: dialogConflict },
-    //     tts: { cloud: hasCloudTTS, local: hasLocalTTS, conflict: ttsConflict }
-    //   });
-      
-      return Boolean(wordConflict || dialogConflict || ttsConflict);
+      return Boolean(wordConflict || dialogConflict || ttsConflict || llmConflict);
     } catch (error) {
-      console.log('Error checking conflicts:', error);
       return false;
     }
   }

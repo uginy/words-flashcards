@@ -9,6 +9,7 @@ export const GOOGLE_DRIVE_CONFIG = {
     WORDS: 'hebrew-flashcards-data.json',
     DIALOGS: 'flashcards-dialogs.json',
     TTS_CONFIG: 'tts-config.json',
+    LLM_CONFIG: 'llm-config.json',
     METADATA: 'sync-metadata.json'
   }
 };
@@ -37,10 +38,12 @@ export interface AppData {
   words?: unknown[];
   dialogs?: unknown[];
   ttsConfig?: Record<string, unknown>;
+  llmConfig?: Record<string, unknown>;
 }
 
 export interface ConflictData {
   words?: unknown[];
   dialogs?: unknown[];
   ttsConfig?: Record<string, unknown>;
+  llmConfig?: Record<string, unknown>;
 }

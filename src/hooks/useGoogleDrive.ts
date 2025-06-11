@@ -16,7 +16,7 @@ export interface UseGoogleDriveReturn {
   authorize: () => Promise<void>;
   signOut: () => Promise<void>;
   syncToCloud: () => Promise<void>;
-  syncFromCloud: (options?: { words?: boolean; dialogs?: boolean; ttsConfig?: boolean }) => Promise<void>;
+  syncFromCloud: (options?: { words?: boolean; dialogs?: boolean; ttsConfig?: boolean; llmConfig?: boolean }) => Promise<void>;
   refreshStatus: () => Promise<void>;
   
   // Status
@@ -176,23 +176,13 @@ export function useGoogleDrive(): UseGoogleDriveReturn {
       // Prepare data for sync
       const wordsData = localStorage.getItem('hebrew-flashcards-data');
       const ttsConfig = localStorage.getItem('tts_config');
-      
-      console.log('Preparing sync data:', {
-        wordsData: wordsData ? `${wordsData.slice(0, 100)}...` : 'null',
-        dialogsCount: dialogs.length,
-        hasTtsConfig: !!ttsConfig
-      });
+      const llmConfig = localStorage.getItem('llm_config');
       
       const syncData: Record<string, unknown> = {};
       const uploadDetails: string[] = [];
       
       if (wordsData) {
         const words = JSON.parse(wordsData);
-        console.log('Words from localStorage:', {
-          isArray: Array.isArray(words),
-          count: Array.isArray(words) ? words.length : 'not array',
-          firstWord: Array.isArray(words) ? words[0] : 'no words'
-        });
         syncData.words = words;
         uploadDetails.push(`${Array.isArray(words) ? words.length : 0} слов`);
       }
@@ -205,6 +195,11 @@ export function useGoogleDrive(): UseGoogleDriveReturn {
       if (ttsConfig) {
         syncData.ttsConfig = JSON.parse(ttsConfig);
         uploadDetails.push('настройки TTS');
+      }
+
+      if (llmConfig) {
+        syncData.llmConfig = JSON.parse(llmConfig);
+        uploadDetails.push('настройки ИИ');
       }
 
       await driveService.syncToCloud(syncData);
@@ -242,7 +237,7 @@ export function useGoogleDrive(): UseGoogleDriveReturn {
     }
   }, [isAuthorized, dialogs, driveService, toast]);
 
-  const syncFromCloud = useCallback(async (options?: { words?: boolean; dialogs?: boolean; ttsConfig?: boolean }) => {
+  const syncFromCloud = useCallback(async (options?: { words?: boolean; dialogs?: boolean; ttsConfig?: boolean; llmConfig?: boolean }) => {
     if (!isAuthorized) {
       await authorize();
       return;
@@ -256,6 +251,7 @@ export function useGoogleDrive(): UseGoogleDriveReturn {
       words: true,
       dialogs: true,
       ttsConfig: true,
+      llmConfig: true,
       ...options
     };
     
@@ -278,29 +274,18 @@ export function useGoogleDrive(): UseGoogleDriveReturn {
           wordsToImport = Array.isArray(wrappedData.words) ? wrappedData.words : [];
         }
         
-        console.log('Processing words from cloud:', {
-          hasWords: !!cloudData.words,
-          isArray: Array.isArray(cloudData.words),
-          isWrapped: !!(cloudData.words && typeof cloudData.words === 'object' && 'words' in cloudData.words),
-          wordsCount: wordsToImport.length,
-          firstWord: wordsToImport[0]
-        });
-        
         if (Array.isArray(wordsToImport) && wordsToImport.length > 0) {
           replaceAllWords(wordsToImport as Word[]);
           importedCount++;
           importDetails.push(`${wordsToImport.length} слов`);
-        }        } else {
-          console.log('Words sync disabled or no words in cloud data');
         }
+      }
       
       // Import dialogs (only if enabled)
       if (syncOptions.dialogs && cloudData.dialogs && Array.isArray(cloudData.dialogs)) {
         replaceAllDialogs(cloudData.dialogs as Dialog[], toast);
         importedCount++;
         importDetails.push(`${cloudData.dialogs.length} диалогов`);
-      } else if (syncOptions.dialogs) {
-        console.log('Dialogs sync enabled but no dialogs in cloud data');
       }
       
       // Import TTS config (only if enabled)
@@ -308,8 +293,13 @@ export function useGoogleDrive(): UseGoogleDriveReturn {
         localStorage.setItem('tts_config', JSON.stringify(cloudData.ttsConfig));
         importedCount++;
         importDetails.push('настройки TTS');
-      } else if (syncOptions.ttsConfig) {
-        console.log('TTS config sync enabled but no config in cloud data');
+      }
+
+      // Import LLM config (only if enabled)
+      if (syncOptions.llmConfig && cloudData.llmConfig) {
+        localStorage.setItem('llm_config', JSON.stringify(cloudData.llmConfig));
+        importedCount++;
+        importDetails.push('настройки ИИ');
       }
       
       // Update sync metadata

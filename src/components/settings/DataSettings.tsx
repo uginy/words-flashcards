@@ -27,6 +27,7 @@ interface DataSettings {
   hebrewFlashcardsData: boolean;
   flashcardsDialogs: boolean;
   ttsConfig: boolean;
+  llmConfig: boolean;
 }
 
 interface ExportData {
@@ -36,12 +37,13 @@ interface ExportData {
   } | unknown[];
   flashcardsDialogs?: unknown[];
   ttsConfig?: Record<string, unknown>;
+  llmConfig?: Record<string, unknown>;
   timestamp: number;
   version: string;
 }
 
 interface ImportConflictItem {
-  type: 'hebrewFlashcardsData' | 'flashcardsDialogs' | 'ttsConfig';
+  type: 'hebrewFlashcardsData' | 'flashcardsDialogs' | 'ttsConfig' | 'llmConfig';
   label: string;
   hasChanges: boolean;
   currentCount?: number;
@@ -75,12 +77,14 @@ export const DataSettings: React.FC<{ isActive?: boolean }> = ({ isActive = true
     hebrewFlashcardsData: true,
     flashcardsDialogs: true,
     ttsConfig: true,
+    llmConfig: true,
   });
   
   const [importSettings, setImportSettings] = useState<DataSettings>({
     hebrewFlashcardsData: true,
     flashcardsDialogs: true,
     ttsConfig: true,
+    llmConfig: true,
   });
 
   // Google Drive settings
@@ -91,6 +95,7 @@ export const DataSettings: React.FC<{ isActive?: boolean }> = ({ isActive = true
     hebrewFlashcardsData: true,
     flashcardsDialogs: true,
     ttsConfig: true,
+    llmConfig: true,
   });
   
   // Import conflicts handling
@@ -101,10 +106,12 @@ export const DataSettings: React.FC<{ isActive?: boolean }> = ({ isActive = true
   // Get current data counts
   const getCurrentCounts = () => {
     const ttsConfig = localStorage.getItem('tts_config');
+    const llmConfig = localStorage.getItem('llm_config');
     return {
       words: allWords.length,
       dialogs: dialogs.length,
       ttsConfig: ttsConfig ? 1 : 0,
+      llmConfig: llmConfig ? 1 : 0,
     };
   };
 
@@ -160,6 +167,17 @@ export const DataSettings: React.FC<{ isActive?: boolean }> = ({ isActive = true
       });
     }
 
+    if (importSettings.llmConfig && data.llmConfig) {
+      conflicts.push({
+        type: 'llmConfig',
+        label: 'Настройки ИИ',
+        hasChanges: currentCounts.llmConfig > 0,
+        currentCount: currentCounts.llmConfig,
+        importCount: 1,
+        icon: <RefreshCw className="h-4 w-4" />
+      });
+    }
+
     return conflicts;
   };
 
@@ -197,6 +215,18 @@ export const DataSettings: React.FC<{ isActive?: boolean }> = ({ isActive = true
           exportData.ttsConfig = JSON.parse(ttsConfig);
         } catch {
           // Skip invalid TTS config
+        }
+      }
+    }
+
+    // Export LLM config if selected
+    if (exportSettings.llmConfig) {
+      const llmConfig = localStorage.getItem('llm_config');
+      if (llmConfig) {
+        try {
+          exportData.llmConfig = JSON.parse(llmConfig);
+        } catch {
+          // Skip invalid LLM config
         }
       }
     }
@@ -251,6 +281,12 @@ export const DataSettings: React.FC<{ isActive?: boolean }> = ({ isActive = true
       // Import TTS config
       if (importSettings.ttsConfig && data.ttsConfig) {
         localStorage.setItem('tts_config', JSON.stringify(data.ttsConfig));
+        importedCount++;
+      }
+
+      // Import LLM config
+      if (importSettings.llmConfig && data.llmConfig) {
+        localStorage.setItem('llm_config', JSON.stringify(data.llmConfig));
         importedCount++;
       }
 
@@ -341,7 +377,8 @@ export const DataSettings: React.FC<{ isActive?: boolean }> = ({ isActive = true
     await syncFromCloud({
       words: cloudSyncSettings.hebrewFlashcardsData,
       dialogs: cloudSyncSettings.flashcardsDialogs,
-      ttsConfig: cloudSyncSettings.ttsConfig
+      ttsConfig: cloudSyncSettings.ttsConfig,
+      llmConfig: cloudSyncSettings.llmConfig
     });
   }, [syncFromCloud, cloudSyncSettings]);
 
@@ -361,7 +398,7 @@ export const DataSettings: React.FC<{ isActive?: boolean }> = ({ isActive = true
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-3">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div className="flex items-center gap-3 p-3 bg-blue-50 rounded-lg">
               <FileText className="h-8 w-8 text-blue-600" />
               <div>
@@ -383,6 +420,14 @@ export const DataSettings: React.FC<{ isActive?: boolean }> = ({ isActive = true
               <div>
                 <div className="text-2xl font-bold text-purple-900">{currentCounts.ttsConfig ? 'Да' : 'Нет'}</div>
                 <div className="text-sm text-purple-700">Настройки TTS</div>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3 p-3 bg-orange-50 rounded-lg">
+              <RefreshCw className="h-8 w-8 text-orange-600" />
+              <div>
+                <div className="text-2xl font-bold text-orange-900">{currentCounts.llmConfig ? 'Да' : 'Нет'}</div>
+                <div className="text-sm text-orange-700">Настройки ИИ</div>
               </div>
             </div>
           </div>
@@ -446,6 +491,21 @@ export const DataSettings: React.FC<{ isActive?: boolean }> = ({ isActive = true
                 <Volume2 className="h-4 w-4" />
                 Настройки TTS
                 <Badge variant="secondary">{currentCounts.ttsConfig > 0 ? '✓' : '✗'}</Badge>
+              </Label>
+            </div>
+
+            <div className="flex items-center space-x-3">
+              <Checkbox
+                id="export-llm"
+                checked={exportSettings.llmConfig}
+                onCheckedChange={(checked: boolean) => 
+                  setExportSettings(prev => ({ ...prev, llmConfig: checked }))
+                }
+              />
+              <Label htmlFor="export-llm" className="flex items-center gap-2">
+                <RefreshCw className="h-4 w-4" />
+                Настройки ИИ
+                <Badge variant="secondary">{currentCounts.llmConfig > 0 ? '✓' : '✗'}</Badge>
               </Label>
             </div>
           </div>
@@ -514,6 +574,20 @@ export const DataSettings: React.FC<{ isActive?: boolean }> = ({ isActive = true
               <Label htmlFor="import-tts" className="flex items-center gap-2">
                 <Volume2 className="h-4 w-4" />
                 Настройки TTS
+              </Label>
+            </div>
+
+            <div className="flex items-center space-x-3">
+              <Checkbox
+                id="import-llm"
+                checked={importSettings.llmConfig}
+                onCheckedChange={(checked: boolean) => 
+                  setImportSettings(prev => ({ ...prev, llmConfig: checked }))
+                }
+              />
+              <Label htmlFor="import-llm" className="flex items-center gap-2">
+                <RefreshCw className="h-4 w-4" />
+                Настройки ИИ
               </Label>
             </div>
           </div>
@@ -639,6 +713,21 @@ export const DataSettings: React.FC<{ isActive?: boolean }> = ({ isActive = true
                     <Volume2 className="h-4 w-4" />
                     Настройки TTS
                     <Badge variant="secondary">{currentCounts.ttsConfig > 0 ? '✓' : '✗'}</Badge>
+                  </Label>
+                </div>
+
+                <div className="flex items-center space-x-3">
+                  <Checkbox
+                    id="sync-llm"
+                    checked={cloudSyncSettings.llmConfig}
+                    onCheckedChange={(checked: boolean) => 
+                      setCloudSyncSettings(prev => ({ ...prev, llmConfig: checked }))
+                    }
+                  />
+                  <Label htmlFor="sync-llm" className="flex items-center gap-2 text-sm">
+                    <RefreshCw className="h-4 w-4" />
+                    Настройки ИИ
+                    <Badge variant="secondary">{currentCounts.llmConfig > 0 ? '✓' : '✗'}</Badge>
                   </Label>
                 </div>
               </div>
