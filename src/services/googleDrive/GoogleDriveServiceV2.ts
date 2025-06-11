@@ -3,6 +3,23 @@
 import { GOOGLE_DRIVE_CONFIG, type SyncMetadata, type GoogleDriveFile } from './types';
 import './gapi.d.ts';
 
+interface ConflictItem {
+  type: 'words' | 'dialogs' | 'tts' | 'llm';
+  label: string;
+  cloudCount?: number;
+  localCount?: number;
+  cloudTimestamp?: number;
+  hasNewerInCloud: boolean;
+}
+
+interface ConflictDetails {
+  conflicts: ConflictItem[];
+}
+
+// Export types for use in hooks
+// Export types for use in hooks
+export type { ConflictItem, ConflictDetails };
+
 interface GoogleOAuthResponse {
   access_token?: string;
   error?: string;
@@ -80,7 +97,6 @@ export class GoogleDriveServiceV2 {
           this.accessToken = savedToken;
           this.isAuthorized = true;
         } catch (error) {
-          console.log('Saved token invalid, requiring reauth');
           localStorage.removeItem('google_access_token');
         }
       }
@@ -223,9 +239,7 @@ export class GoogleDriveServiceV2 {
 
   async signOut(): Promise<void> {
     if (this.accessToken) {
-      window.google.accounts.oauth2.revoke(this.accessToken, () => {
-        console.log('Access token revoked');
-      });
+      window.google.accounts.oauth2.revoke(this.accessToken);
     }
     
     this.isAuthorized = false;
@@ -372,7 +386,8 @@ export class GoogleDriveServiceV2 {
       try {
         const dialogsContent = await this.downloadFile(GOOGLE_DRIVE_CONFIG.FILES.DIALOGS, appFolderId);
         if (dialogsContent) {
-          result.dialogs = JSON.parse(dialogsContent);
+          const parsedDialogs = JSON.parse(dialogsContent);
+          result.dialogs = parsedDialogs;
         }
       } catch (error) {
         // Dialogs file not found
@@ -428,10 +443,38 @@ export class GoogleDriveServiceV2 {
       
       // Get current local data
       const localWordsStore = localStorage.getItem('hebrew-flashcards-data');
-      const localWords = localWordsStore ? JSON.parse(localWordsStore) : [];
+      const localWordsData = localWordsStore ? JSON.parse(localWordsStore) : null;
+      // Extract words array from the data structure
+      const localWords = localWordsData?.words || [];
       
       const localDialogsStore = localStorage.getItem('dialogs');
       const localDialogs = localDialogsStore ? JSON.parse(localDialogsStore) : [];
+      
+      // Extract words array from cloud data structure  
+      const cloudWordsData = cloudData.words as any;
+      let cloudWords: any[] = [];
+      
+      if (cloudWordsData) {
+        if (Array.isArray(cloudWordsData)) {
+          // Cloud data is already an array
+          cloudWords = cloudWordsData;
+        } else if (cloudWordsData.words && Array.isArray(cloudWordsData.words)) {
+          // Cloud data has structure {words: [...], ...}
+          cloudWords = cloudWordsData.words;
+        }
+      }
+      
+      // Extract dialogs array from cloud data
+      const cloudDialogsData = cloudData.dialogs as any;
+      let cloudDialogs: any[] = [];
+      
+      if (cloudDialogsData) {
+        if (Array.isArray(cloudDialogsData)) {
+          cloudDialogs = cloudDialogsData;
+        } else if (cloudDialogsData.dialogs && Array.isArray(cloudDialogsData.dialogs)) {
+          cloudDialogs = cloudDialogsData.dialogs;
+        }
+      }
       
       const localTTSConfig = localStorage.getItem('tts_config');
       
@@ -455,10 +498,10 @@ export class GoogleDriveServiceV2 {
       );
       
       // Check actual data presence
-      const hasCloudWords = cloudData.words && Array.isArray(cloudData.words) && cloudData.words.length > 0;
+      const hasCloudWords = Array.isArray(cloudWords) && cloudWords.length > 0;
       const hasLocalWords = Array.isArray(localWords) && localWords.length > 0;
       
-      const hasCloudDialogs = cloudData.dialogs && Array.isArray(cloudData.dialogs) && cloudData.dialogs.length > 0;
+      const hasCloudDialogs = Array.isArray(cloudDialogs) && cloudDialogs.length > 0;
       const hasLocalDialogs = Array.isArray(localDialogs) && localDialogs.length > 0;
       
       const hasCloudTTS = cloudData.ttsConfig && Object.keys(cloudData.ttsConfig).length > 0;
@@ -468,18 +511,153 @@ export class GoogleDriveServiceV2 {
       const hasLocalLLM = Object.keys(cleanLocalLLMConfig).length > 0;
       
       // Conflict exists only if BOTH cloud and local have data AND they differ
-      const wordConflict = hasCloudWords && hasLocalWords && 
-        cloudData.words && Array.isArray(cloudData.words) && cloudData.words.length !== localWords.length;
-      const dialogConflict = hasCloudDialogs && hasLocalDialogs && 
-        cloudData.dialogs && Array.isArray(cloudData.dialogs) && cloudData.dialogs.length !== localDialogs.length;
+      const wordConflict = hasCloudWords && hasLocalWords && cloudWords.length !== localWords.length;
+        
+      const dialogConflict = hasCloudDialogs && hasLocalDialogs && cloudDialogs.length !== localDialogs.length;
       const ttsConflict = hasCloudTTS && hasLocalTTS && 
         cloudData.ttsConfig && JSON.stringify(cloudData.ttsConfig) !== localTTSConfig;
       const llmConflict = hasCloudLLM && hasLocalLLM && 
         cloudData.llmConfig && JSON.stringify(cloudData.llmConfig) !== JSON.stringify(cleanLocalLLMConfig);
       
-      return Boolean(wordConflict || dialogConflict || ttsConflict || llmConflict);
+      const result = Boolean(wordConflict || dialogConflict || ttsConflict || llmConflict);
+      
+      return result;
     } catch (error) {
       return false;
+    }
+  }
+
+  async getConflictDetails(): Promise<ConflictDetails | null> {
+    if (!this.isAuthorized) {
+      return null;
+    }
+    
+    try {
+      await this.ensureValidToken();
+      const cloudData = await this.syncFromCloud();
+      
+      // Get current local data
+      const localWordsStore = localStorage.getItem('hebrew-flashcards-data');
+      const localWordsData = localWordsStore ? JSON.parse(localWordsStore) : null;
+      const localWords = localWordsData?.words || [];
+      
+      const localDialogsStore = localStorage.getItem('dialogs');
+      const localDialogs = localDialogsStore ? JSON.parse(localDialogsStore) : [];
+      
+      // Extract words array from cloud data
+      const cloudWordsData = cloudData.words as any;
+      let cloudWords: any[] = [];
+      
+      if (cloudWordsData) {
+        if (Array.isArray(cloudWordsData)) {
+          // Cloud data is already an array
+          cloudWords = cloudWordsData;
+        } else if (cloudWordsData.words && Array.isArray(cloudWordsData.words)) {
+          // Cloud data has structure {words: [...], ...}
+          cloudWords = cloudWordsData.words;
+        }
+      }
+      
+      // Extract dialogs array from cloud data
+      const cloudDialogsData = cloudData.dialogs as any;
+      let cloudDialogs: any[] = [];
+      
+      if (cloudDialogsData) {
+        if (Array.isArray(cloudDialogsData)) {
+          cloudDialogs = cloudDialogsData;
+        } else if (cloudDialogsData.dialogs && Array.isArray(cloudDialogsData.dialogs)) {
+          cloudDialogs = cloudDialogsData.dialogs;
+        }
+      }
+      
+      const localTTSConfig = localStorage.getItem('tts_config');
+      
+      // Collect local LLM config
+      const localLLMConfig = {
+        llmProvider: localStorage.getItem('llmProvider'),
+        batchDelay: localStorage.getItem('batchDelay'),
+        batchSize: localStorage.getItem('batchSize'),
+        maxDelaySeconds: localStorage.getItem('maxDelaySeconds'),
+        ollamaApiUrl: localStorage.getItem('ollamaApiUrl'),
+        ollamaModel: localStorage.getItem('ollamaModel'),
+        openRouterApiKey: localStorage.getItem('openRouterApiKey'),
+        openRouterModel: localStorage.getItem('openRouterModel'),
+        progressiveDelay: localStorage.getItem('progressiveDelay'),
+        'preferred-language': localStorage.getItem('preferred-language')
+      };
+      
+      const cleanLocalLLMConfig = Object.fromEntries(
+        Object.entries(localLLMConfig).filter(([_, value]) => value !== null && value !== undefined)
+      );
+      
+      // Get cloud timestamp from metadata
+      const cloudTimestamp = cloudData.metadata?.lastSync || 0;
+      const localSyncData = localStorage.getItem('syncMetadata');
+      const localTimestamp = localSyncData ? JSON.parse(localSyncData).lastSync || 0 : 0;
+      
+      // Check data presence and conflicts
+      const conflicts: ConflictItem[] = [];
+      
+      // Words conflict
+      const hasCloudWords = Array.isArray(cloudWords) && cloudWords.length > 0;
+      const hasLocalWords = Array.isArray(localWords) && localWords.length > 0;
+      
+      if (hasCloudWords && hasLocalWords && cloudWords.length !== localWords.length) {
+
+        conflicts.push({
+          type: 'words',
+          label: 'Слова',
+          cloudCount: cloudWords.length,
+          localCount: localWords.length,
+          cloudTimestamp,
+          hasNewerInCloud: cloudTimestamp > localTimestamp
+        });
+      }
+      
+      // Dialogs conflict  
+      const hasCloudDialogs = Array.isArray(cloudDialogs) && cloudDialogs.length > 0;
+      const hasLocalDialogs = Array.isArray(localDialogs) && localDialogs.length > 0;
+      
+      if (hasCloudDialogs && hasLocalDialogs && cloudDialogs.length !== localDialogs.length) {
+        conflicts.push({
+          type: 'dialogs',
+          label: 'Диалоги',
+          cloudCount: cloudDialogs.length,
+          localCount: localDialogs.length,
+          cloudTimestamp,
+          hasNewerInCloud: cloudTimestamp > localTimestamp
+        });
+      }
+      
+      // TTS conflict
+      const hasCloudTTS = cloudData.ttsConfig && Object.keys(cloudData.ttsConfig).length > 0;
+      const hasLocalTTS = localTTSConfig !== null && localTTSConfig !== undefined;
+      
+      if (hasCloudTTS && hasLocalTTS && JSON.stringify(cloudData.ttsConfig) !== localTTSConfig) {
+        conflicts.push({
+          type: 'tts',
+          label: 'Настройки TTS',
+          cloudTimestamp,
+          hasNewerInCloud: cloudTimestamp > localTimestamp
+        });
+      }
+      
+      // LLM conflict
+      const hasCloudLLM = cloudData.llmConfig && Object.keys(cloudData.llmConfig).length > 0;
+      const hasLocalLLM = Object.keys(cleanLocalLLMConfig).length > 0;
+      
+      if (hasCloudLLM && hasLocalLLM && JSON.stringify(cloudData.llmConfig) !== JSON.stringify(cleanLocalLLMConfig)) {
+        conflicts.push({
+          type: 'llm',
+          label: 'Настройки LLM',
+          cloudTimestamp,
+          hasNewerInCloud: cloudTimestamp > localTimestamp
+        });
+      }
+      
+      return conflicts.length > 0 ? { conflicts } : null;
+    } catch (error) {
+      return null;
     }
   }
 

@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { getGoogleDriveServiceV2 } from '../services/googleDrive/GoogleDriveServiceV2';
+import { getGoogleDriveServiceV2, type ConflictDetails } from '../services/googleDrive/GoogleDriveServiceV2';
 import { useToast } from './use-toast';
 import { useWordsStore } from '@/store/wordsStore';
 import { useDialogsStore } from '@/store/dialogsStore';
@@ -23,6 +23,7 @@ export interface UseGoogleDriveReturn {
   // Status
   lastSync: Date | null;
   hasConflicts: boolean;
+  conflictDetails: ConflictDetails | null;
 }
 
 export function useGoogleDrive(): UseGoogleDriveReturn {
@@ -37,6 +38,7 @@ export function useGoogleDrive(): UseGoogleDriveReturn {
   const [error, setError] = useState<string | null>(null);
   const [lastSync, setLastSync] = useState<Date | null>(null);
   const [hasConflicts, setHasConflicts] = useState(false);
+  const [conflictDetails, setConflictDetails] = useState<ConflictDetails | null>(null);
   const refreshInProgress = useRef(false);
 
   const driveService = getGoogleDriveServiceV2();
@@ -80,6 +82,12 @@ export function useGoogleDrive(): UseGoogleDriveReturn {
         try {
           const conflicts = await driveService.hasConflicts();
           setHasConflicts(conflicts);
+          if (conflicts) {
+            const details = await driveService.getConflictDetails();
+            setConflictDetails(details);
+          } else {
+            setConflictDetails(null);
+          }
         } catch (error) {
           console.log('Error checking conflicts during init:', error);
         }
@@ -420,11 +428,18 @@ export function useGoogleDrive(): UseGoogleDriveReturn {
         try {
           const conflicts = await driveService.hasConflicts();
           setHasConflicts(conflicts);
+          if (conflicts) {
+            const details = await driveService.getConflictDetails();
+            setConflictDetails(details);
+          } else {
+            setConflictDetails(null);
+          }
         } catch (error) {
           console.log('Error checking conflicts during refresh:', error);
         }
       } else {
         setHasConflicts(false);
+        setConflictDetails(null);
       }
     } catch (error) {
       console.log('Error refreshing status:', error);
@@ -433,6 +448,18 @@ export function useGoogleDrive(): UseGoogleDriveReturn {
       setIsCheckingAuth(false);
     }
   }, [isInitialized, initialize, driveService, isAuthorized]);
+
+  // Auto-refresh status if already authorized
+  useEffect(() => {
+    if (isAuthorized && isInitialized) {
+      // Add a small delay to ensure everything is ready
+      const timer = setTimeout(() => {
+        refreshStatus();
+      }, 1000);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [isAuthorized, isInitialized, refreshStatus]);
 
   return {
     isInitialized,
@@ -449,6 +476,7 @@ export function useGoogleDrive(): UseGoogleDriveReturn {
     refreshStatus,
     
     lastSync,
-    hasConflicts
+    hasConflicts,
+    conflictDetails
   };
 }

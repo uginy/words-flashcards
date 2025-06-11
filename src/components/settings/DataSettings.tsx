@@ -70,7 +70,7 @@ export const DataSettings: React.FC<{ isActive?: boolean }> = ({ isActive = true
     syncFromCloud,
     refreshStatus,
     lastSync,
-    hasConflicts
+    conflictDetails
   } = useGoogleDrive();
   
   // Export/Import settings
@@ -651,13 +651,26 @@ export const DataSettings: React.FC<{ isActive?: boolean }> = ({ isActive = true
       {/* Google Drive Section */}
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <CloudIcon className="h-5 w-5" />
-            Синхронизация с Google Drive
-          </CardTitle>
-          <CardDescription>
-            Автоматическая синхронизация данных через облачное хранилище
-          </CardDescription>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="flex items-center gap-2">
+                <CloudIcon className="h-5 w-5" />
+                Синхронизация с Google Drive
+              </CardTitle>
+              <CardDescription>
+                Автоматическая синхронизация данных через облачное хранилище
+              </CardDescription>
+            </div>
+            <Button 
+              onClick={refreshStatus}
+              disabled={isGDriveLoading || isCheckingAuth}
+              variant="outline" 
+              size="icon"
+              title="Обновить статус"
+            >
+              <RefreshCw className={`h-4 w-4 ${(isGDriveLoading || isCheckingAuth) ? 'animate-spin' : ''}`} />
+            </Button>
+          </div>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex items-center justify-between">
@@ -665,10 +678,17 @@ export const DataSettings: React.FC<{ isActive?: boolean }> = ({ isActive = true
               <Badge variant={isCheckingAuth ? "outline" : (isAuthorized ? "default" : "secondary")}>
                 {isCheckingAuth ? "Проверка авторизации" : (isAuthorized ? "Авторизован" : "Не авторизован")}
               </Badge>
-              {hasConflicts && (
-                <Badge variant="destructive">
-                  Есть конфликты
-                </Badge>
+              {conflictDetails && conflictDetails.conflicts.length > 0 && (
+                <div className="flex flex-wrap gap-1">
+                  {conflictDetails.conflicts.map((conflict, index) => (
+                    <Badge key={index} variant="destructive" className="text-xs">
+                      {conflict.label}: {conflict.hasNewerInCloud ? "облако новее" : "локально новее"}
+                      {conflict.cloudCount !== undefined && conflict.localCount !== undefined && (
+                        <span className="ml-1">({conflict.cloudCount} vs {conflict.localCount})</span>
+                      )}
+                    </Badge>
+                  ))}
+                </div>
               )}
               {(isGDriveLoading || isCheckingAuth) && (
                 <RefreshCw className="h-4 w-4 animate-spin" />
@@ -791,9 +811,9 @@ export const DataSettings: React.FC<{ isActive?: boolean }> = ({ isActive = true
                   onClick={handleSyncToCloud}
                   disabled={isGDriveLoading}
                   variant="outline" 
-                  className="flex-1 border-blue-600 text-blue-600 hover:bg-blue-50"
+                  className="flex-1 border-green-600 text-green-600 hover:bg-green-50"
                 >
-                  {isGDriveLoading ? "Сохранение..." : "Сохранить в Drive"}
+                  {isGDriveLoading ? "Загрузка..." : "Загрузить в Drive"}
                 </Button>
               </div>
               
