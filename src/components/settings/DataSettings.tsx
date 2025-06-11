@@ -19,9 +19,9 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { useWordsStore } from '@/store/wordsStore';
 import { useDialogsStore } from '@/store/dialogsStore';
-import { Download, Upload, CloudIcon, FileText, MessageSquare, Volume2 } from 'lucide-react';
+import { useGoogleDrive } from '@/hooks/useGoogleDrive';
+import { Download, Upload, CloudIcon, FileText, MessageSquare, Volume2, RefreshCw } from 'lucide-react';
 import type { Word, Dialog } from '@/types';
-import { cn } from '@/lib/utils';
 
 interface DataSettings {
   hebrewFlashcardsData: boolean;
@@ -54,6 +54,21 @@ export const DataSettings: React.FC = () => {
   const { words: allWords, replaceAllWords } = useWordsStore();
   const { dialogs, replaceAllDialogs } = useDialogsStore();
   
+  // Google Drive integration
+  const {
+    isInitialized,
+    isAuthorized,
+    isLoading: isGDriveLoading,
+    error: gdriveError,
+    initialize: initializeGDrive,
+    authorize: authorizeGDrive,
+    signOut: signOutGDrive,
+    syncToCloud,
+    syncFromCloud,
+    lastSync,
+    hasConflicts
+  } = useGoogleDrive();
+  
   // Export/Import settings
   const [exportSettings, setExportSettings] = useState<DataSettings>({
     hebrewFlashcardsData: true,
@@ -68,8 +83,7 @@ export const DataSettings: React.FC = () => {
   });
 
   // Google Drive settings
-  const [googleDriveFolder, setGoogleDriveFolder] = useState('MyApp');
-  const [isAuthorized] = useState(false);
+  const [googleDriveFolder, setGoogleDriveFolder] = useState('FlashcardsApp');
   
   // Import conflicts handling
   const [importData, setImportData] = useState<ExportData | null>(null);
@@ -287,14 +301,25 @@ export const DataSettings: React.FC = () => {
     reader.readAsText(file);
   }, [checkDataConflicts, performImport, toast]);
 
-  // Google Drive authorization (placeholder)
-  const handleGoogleDriveAuth = useCallback(() => {
-    // TODO: Implement Google Drive authorization
-    toast({
-      title: "В разработке",
-      description: "Авторизация Google Drive будет добавлена в следующем обновлении"
-    });
-  }, [toast]);
+  // Google Drive handlers
+  const handleGoogleDriveAuth = useCallback(async () => {
+    if (!isInitialized) {
+      await initializeGDrive();
+    }
+    await authorizeGDrive();
+  }, [isInitialized, initializeGDrive, authorizeGDrive]);
+
+  const handleGoogleDriveSignOut = useCallback(async () => {
+    await signOutGDrive();
+  }, [signOutGDrive]);
+
+  const handleSyncToCloud = useCallback(async () => {
+    await syncToCloud();
+  }, [syncToCloud]);
+
+  const handleSyncFromCloud = useCallback(async () => {
+    await syncFromCloud();
+  }, [syncFromCloud]);
 
   const currentCounts = getCurrentCounts();
 
@@ -461,11 +486,32 @@ export const DataSettings: React.FC = () => {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="flex items-center gap-2">
-            <Badge variant={isAuthorized ? "default" : "secondary"}>
-              {isAuthorized ? "Авторизован" : "Не авторизован"}
-            </Badge>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Badge variant={isAuthorized ? "default" : "secondary"}>
+                {isAuthorized ? "Авторизован" : "Не авторизован"}
+              </Badge>
+              {hasConflicts && (
+                <Badge variant="destructive">
+                  Есть конфликты
+                </Badge>
+              )}
+              {isGDriveLoading && (
+                <RefreshCw className="h-4 w-4 animate-spin" />
+              )}
+            </div>
+            {lastSync && (
+              <div className="text-sm text-gray-500">
+                Последняя синхронизация: {lastSync.toLocaleString()}
+              </div>
+            )}
           </div>
+          
+          {gdriveError && (
+            <div className="text-sm text-red-600 bg-red-50 p-2 rounded">
+              {gdriveError}
+            </div>
+          )}
           
           <div className="space-y-2">
             <Label htmlFor="drive-folder">Папка в Google Drive</Label>
@@ -474,30 +520,60 @@ export const DataSettings: React.FC = () => {
               value={googleDriveFolder}
               onChange={(e) => setGoogleDriveFolder(e.target.value)}
               placeholder="Название папки"
+              disabled={isGDriveLoading}
             />
+            <div className="text-sm text-gray-500">
+              Папка будет создана автоматически при первой синхронизации
+            </div>
           </div>
           
-          <Button 
-            onClick={handleGoogleDriveAuth}
-            className={cn(
-              "w-full",
-              isAuthorized 
-                ? "border-blue-600 text-blue-600 hover:bg-blue-50" 
-                : "bg-blue-600 hover:bg-blue-700 text-white"
-            )}
-            variant={isAuthorized ? "outline" : "default"}
-          >
-            {isAuthorized ? "Переавторизация" : "Авторизоваться в Google Drive"}
-          </Button>
-          
-          {isAuthorized && (
-            <div className="flex gap-2">
-              <Button variant="outline" className="flex-1 border-blue-600 text-blue-600 hover:bg-blue-50">
-                Загрузить из Drive
-              </Button>
-              <Button variant="outline" className="flex-1 border-blue-600 text-blue-600 hover:bg-blue-50">
-                Сохранить в Drive
-              </Button>
+          {!isAuthorized ? (
+            <Button 
+              onClick={handleGoogleDriveAuth}
+              disabled={isGDriveLoading}
+              className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+            >
+              {isGDriveLoading ? "Авторизация..." : "Авторизоваться в Google Drive"}
+            </Button>
+          ) : (
+            <div className="space-y-2">
+              <div className="flex gap-2">
+                <Button 
+                  onClick={handleSyncFromCloud}
+                  disabled={isGDriveLoading}
+                  variant="outline" 
+                  className="flex-1 border-blue-600 text-blue-600 hover:bg-blue-50"
+                >
+                  {isGDriveLoading ? "Загрузка..." : "Загрузить из Drive"}
+                </Button>
+                <Button 
+                  onClick={handleSyncToCloud}
+                  disabled={isGDriveLoading}
+                  variant="outline" 
+                  className="flex-1 border-blue-600 text-blue-600 hover:bg-blue-50"
+                >
+                  {isGDriveLoading ? "Сохранение..." : "Сохранить в Drive"}
+                </Button>
+              </div>
+              
+              <div className="flex gap-2">
+                <Button 
+                  onClick={handleGoogleDriveAuth}
+                  disabled={isGDriveLoading}
+                  variant="outline"
+                  className="flex-1 text-sm"
+                >
+                  Переавторизация
+                </Button>
+                <Button 
+                  onClick={handleGoogleDriveSignOut}
+                  disabled={isGDriveLoading}
+                  variant="outline"
+                  className="flex-1 text-sm text-red-600 border-red-300 hover:bg-red-50"
+                >
+                  Выйти
+                </Button>
+              </div>
             </div>
           )}
         </CardContent>
