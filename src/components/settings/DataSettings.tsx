@@ -61,6 +61,7 @@ export const DataSettings: React.FC<{ isActive?: boolean }> = ({ isActive = true
     isInitialized,
     isAuthorized,
     isLoading: isGDriveLoading,
+    isCheckingAuth,
     error: gdriveError,
     initialize: initializeGDrive,
     authorize: authorizeGDrive,
@@ -661,15 +662,15 @@ export const DataSettings: React.FC<{ isActive?: boolean }> = ({ isActive = true
         <CardContent className="space-y-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <Badge variant={isAuthorized ? "default" : "secondary"}>
-                {isAuthorized ? "Авторизован" : "Не авторизован"}
+              <Badge variant={isCheckingAuth ? "outline" : (isAuthorized ? "default" : "secondary")}>
+                {isCheckingAuth ? "Проверка авторизации" : (isAuthorized ? "Авторизован" : "Не авторизован")}
               </Badge>
               {hasConflicts && (
                 <Badge variant="destructive">
                   Есть конфликты
                 </Badge>
               )}
-              {isGDriveLoading && (
+              {(isGDriveLoading || isCheckingAuth) && (
                 <RefreshCw className="h-4 w-4 animate-spin" />
               )}
             </div>

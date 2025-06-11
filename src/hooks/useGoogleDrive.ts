@@ -9,6 +9,7 @@ export interface UseGoogleDriveReturn {
   isInitialized: boolean;
   isAuthorized: boolean;
   isLoading: boolean;
+  isCheckingAuth: boolean;
   error: string | null;
   
   // Actions
@@ -32,6 +33,7 @@ export function useGoogleDrive(): UseGoogleDriveReturn {
   const [isInitialized, setIsInitialized] = useState(false);
   const [isAuthorized, setIsAuthorized] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [isCheckingAuth, setIsCheckingAuth] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [lastSync, setLastSync] = useState<Date | null>(null);
   const [hasConflicts, setHasConflicts] = useState(false);
@@ -64,6 +66,7 @@ export function useGoogleDrive(): UseGoogleDriveReturn {
     if (isInitialized) return;
     
     setIsLoading(true);
+    setIsCheckingAuth(true);
     setError(null);
     
     try {
@@ -91,11 +94,13 @@ export function useGoogleDrive(): UseGoogleDriveReturn {
       });
     } finally {
       setIsLoading(false);
+      setIsCheckingAuth(false);
     }
   }, [isInitialized, driveService, toast]);
 
   const authorize = useCallback(async () => {
     setIsLoading(true);
+    setIsCheckingAuth(true);
     setError(null);
     
     try {
@@ -130,6 +135,7 @@ export function useGoogleDrive(): UseGoogleDriveReturn {
       });
     } finally {
       setIsLoading(false);
+      setIsCheckingAuth(false);
     }
   }, [isInitialized, initialize, driveService, toast]);
 
@@ -394,6 +400,7 @@ export function useGoogleDrive(): UseGoogleDriveReturn {
     }
     
     refreshInProgress.current = true;
+    setIsCheckingAuth(true);
     
     try {
       if (!isInitialized) {
@@ -423,6 +430,7 @@ export function useGoogleDrive(): UseGoogleDriveReturn {
       console.log('Error refreshing status:', error);
     } finally {
       refreshInProgress.current = false;
+      setIsCheckingAuth(false);
     }
   }, [isInitialized, initialize, driveService, isAuthorized]);
 
@@ -430,6 +438,7 @@ export function useGoogleDrive(): UseGoogleDriveReturn {
     isInitialized,
     isAuthorized,
     isLoading,
+    isCheckingAuth,
     error,
     
     initialize,
