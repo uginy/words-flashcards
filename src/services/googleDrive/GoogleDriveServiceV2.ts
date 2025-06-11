@@ -287,10 +287,6 @@ export class GoogleDriveServiceV2 {
       throw new Error('Не авторизован в Google Drive');
     }
 
-    // Отладочная информация
-    const debugInfo = this.getDebugInfo();
-    console.log('syncToCloud started with token info:', debugInfo);
-
     // Проверяем и обновляем токен если необходимо
     await this.ensureValidToken();
 
@@ -438,7 +434,25 @@ export class GoogleDriveServiceV2 {
       const localDialogs = localDialogsStore ? JSON.parse(localDialogsStore) : [];
       
       const localTTSConfig = localStorage.getItem('tts_config');
-      const localLLMConfig = localStorage.getItem('llm_config');
+      
+      // Collect local LLM config from various keys
+      const localLLMConfig = {
+        llmProvider: localStorage.getItem('llmProvider'),
+        batchDelay: localStorage.getItem('batchDelay'),
+        batchSize: localStorage.getItem('batchSize'),
+        maxDelaySeconds: localStorage.getItem('maxDelaySeconds'),
+        ollamaApiUrl: localStorage.getItem('ollamaApiUrl'),
+        ollamaModel: localStorage.getItem('ollamaModel'),
+        openRouterApiKey: localStorage.getItem('openRouterApiKey'),
+        openRouterModel: localStorage.getItem('openRouterModel'),
+        progressiveDelay: localStorage.getItem('progressiveDelay'),
+        'preferred-language': localStorage.getItem('preferred-language')
+      };
+      
+      // Remove null/undefined values from local LLM config
+      const cleanLocalLLMConfig = Object.fromEntries(
+        Object.entries(localLLMConfig).filter(([_, value]) => value !== null && value !== undefined)
+      );
       
       // Check actual data presence
       const hasCloudWords = cloudData.words && Array.isArray(cloudData.words) && cloudData.words.length > 0;
@@ -451,7 +465,7 @@ export class GoogleDriveServiceV2 {
       const hasLocalTTS = localTTSConfig !== null && localTTSConfig !== undefined;
 
       const hasCloudLLM = cloudData.llmConfig && Object.keys(cloudData.llmConfig).length > 0;
-      const hasLocalLLM = localLLMConfig !== null && localLLMConfig !== undefined;
+      const hasLocalLLM = Object.keys(cleanLocalLLMConfig).length > 0;
       
       // Conflict exists only if BOTH cloud and local have data AND they differ
       const wordConflict = hasCloudWords && hasLocalWords && 
@@ -461,7 +475,7 @@ export class GoogleDriveServiceV2 {
       const ttsConflict = hasCloudTTS && hasLocalTTS && 
         cloudData.ttsConfig && JSON.stringify(cloudData.ttsConfig) !== localTTSConfig;
       const llmConflict = hasCloudLLM && hasLocalLLM && 
-        cloudData.llmConfig && JSON.stringify(cloudData.llmConfig) !== localLLMConfig;
+        cloudData.llmConfig && JSON.stringify(cloudData.llmConfig) !== JSON.stringify(cleanLocalLLMConfig);
       
       return Boolean(wordConflict || dialogConflict || ttsConflict || llmConflict);
     } catch (error) {

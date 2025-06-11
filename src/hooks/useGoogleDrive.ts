@@ -176,7 +176,25 @@ export function useGoogleDrive(): UseGoogleDriveReturn {
       // Prepare data for sync
       const wordsData = localStorage.getItem('hebrew-flashcards-data');
       const ttsConfig = localStorage.getItem('tts_config');
-      const llmConfig = localStorage.getItem('llm_config');
+      
+      // Collect LLM settings from various localStorage keys
+      const llmConfig = {
+        llmProvider: localStorage.getItem('llmProvider'),
+        batchDelay: localStorage.getItem('batchDelay'),
+        batchSize: localStorage.getItem('batchSize'),
+        maxDelaySeconds: localStorage.getItem('maxDelaySeconds'),
+        ollamaApiUrl: localStorage.getItem('ollamaApiUrl'),
+        ollamaModel: localStorage.getItem('ollamaModel'),
+        openRouterApiKey: localStorage.getItem('openRouterApiKey'),
+        openRouterModel: localStorage.getItem('openRouterModel'),
+        progressiveDelay: localStorage.getItem('progressiveDelay'),
+        'preferred-language': localStorage.getItem('preferred-language')
+      };
+      
+      // Remove null/undefined values
+      const cleanLlmConfig = Object.fromEntries(
+        Object.entries(llmConfig).filter(([_, value]) => value !== null && value !== undefined)
+      );
       
       const syncData: Record<string, unknown> = {};
       const uploadDetails: string[] = [];
@@ -197,8 +215,8 @@ export function useGoogleDrive(): UseGoogleDriveReturn {
         uploadDetails.push('настройки TTS');
       }
 
-      if (llmConfig) {
-        syncData.llmConfig = JSON.parse(llmConfig);
+      if (Object.keys(cleanLlmConfig).length > 0) {
+        syncData.llmConfig = cleanLlmConfig;
         uploadDetails.push('настройки ИИ');
       }
 
@@ -312,7 +330,15 @@ export function useGoogleDrive(): UseGoogleDriveReturn {
 
       // Import LLM config (only if enabled)
       if (syncOptions.llmConfig && cloudData.llmConfig) {
-        localStorage.setItem('llm_config', JSON.stringify(cloudData.llmConfig));
+        const llmSettings = cloudData.llmConfig as Record<string, string>;
+        
+        // Restore LLM settings to individual localStorage keys
+        for (const [key, value] of Object.entries(llmSettings)) {
+          if (value !== null && value !== undefined) {
+            localStorage.setItem(key, value);
+          }
+        }
+        
         importedCount++;
         importDetails.push('настройки ИИ');
       }
