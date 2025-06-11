@@ -102,18 +102,33 @@ export const DataSettings: React.FC<{ isActive?: boolean }> = ({ isActive = true
   const [importData, setImportData] = useState<ExportData | null>(null);
   const [conflicts, setConflicts] = useState<ImportConflictItem[]>([]);
   const [showConflictDialog, setShowConflictDialog] = useState(false);
+  
+  // Current data counts (reactive state)
+  const [currentCounts, setCurrentCounts] = useState({ words: 0, dialogs: 0, ttsConfig: 0, llmConfig: 0 });
 
-  // Get current data counts
-  const getCurrentCounts = () => {
-    const ttsConfig = localStorage.getItem('tts_config');
-    const llmConfig = localStorage.getItem('llm_config');
-    return {
-      words: allWords.length,
-      dialogs: dialogs.length,
-      ttsConfig: ttsConfig ? 1 : 0,
-      llmConfig: llmConfig ? 1 : 0,
+  // Update counts when dependencies change
+  useEffect(() => {
+    const updateCounts = () => {
+      const ttsConfig = localStorage.getItem('tts_config');
+      
+      // Check for LLM config in various keys
+      const llmKeys = [
+        'llmProvider', 'batchDelay', 'batchSize', 'maxDelaySeconds',
+        'ollamaApiUrl', 'ollamaModel', 'openRouterApiKey', 'openRouterModel',
+        'progressiveDelay', 'preferred-language'
+      ];
+      const hasLlmConfig = llmKeys.some(key => localStorage.getItem(key) !== null);
+      
+      setCurrentCounts({
+        words: allWords.length,
+        dialogs: dialogs.length,
+        ttsConfig: ttsConfig ? 1 : 0,
+        llmConfig: hasLlmConfig ? 1 : 0,
+      });
     };
-  };
+    
+    updateCounts();
+  }, [allWords.length, dialogs.length]);
 
   // Refresh Google Drive status when component mounts or becomes active
   useEffect(() => {
@@ -130,7 +145,6 @@ export const DataSettings: React.FC<{ isActive?: boolean }> = ({ isActive = true
   // Check for data conflicts
   const checkDataConflicts = (data: ExportData): ImportConflictItem[] => {
     const conflicts: ImportConflictItem[] = [];
-    const currentCounts = getCurrentCounts();
 
     if (importSettings.hebrewFlashcardsData && data.hebrewFlashcardsData) {
       const importWords = Array.isArray(data.hebrewFlashcardsData) ? data.hebrewFlashcardsData : data.hebrewFlashcardsData.words || [];
@@ -221,13 +235,27 @@ export const DataSettings: React.FC<{ isActive?: boolean }> = ({ isActive = true
 
     // Export LLM config if selected
     if (exportSettings.llmConfig) {
-      const llmConfig = localStorage.getItem('llm_config');
-      if (llmConfig) {
-        try {
-          exportData.llmConfig = JSON.parse(llmConfig);
-        } catch {
-          // Skip invalid LLM config
-        }
+      // Collect LLM settings from various localStorage keys
+      const llmConfig = {
+        llmProvider: localStorage.getItem('llmProvider'),
+        batchDelay: localStorage.getItem('batchDelay'),
+        batchSize: localStorage.getItem('batchSize'),
+        maxDelaySeconds: localStorage.getItem('maxDelaySeconds'),
+        ollamaApiUrl: localStorage.getItem('ollamaApiUrl'),
+        ollamaModel: localStorage.getItem('ollamaModel'),
+        openRouterApiKey: localStorage.getItem('openRouterApiKey'),
+        openRouterModel: localStorage.getItem('openRouterModel'),
+        progressiveDelay: localStorage.getItem('progressiveDelay'),
+        'preferred-language': localStorage.getItem('preferred-language')
+      };
+      
+      // Remove null/undefined values
+      const cleanLlmConfig = Object.fromEntries(
+        Object.entries(llmConfig).filter(([_, value]) => value !== null && value !== undefined)
+      );
+      
+      if (Object.keys(cleanLlmConfig).length > 0) {
+        exportData.llmConfig = cleanLlmConfig;
       }
     }
 
@@ -286,7 +314,14 @@ export const DataSettings: React.FC<{ isActive?: boolean }> = ({ isActive = true
 
       // Import LLM config
       if (importSettings.llmConfig && data.llmConfig) {
-        localStorage.setItem('llm_config', JSON.stringify(data.llmConfig));
+        const llmSettings = data.llmConfig as Record<string, string>;
+        
+        // Write each setting to its respective localStorage key
+        for (const [key, value] of Object.entries(llmSettings)) {
+          if (value !== null && value !== undefined) {
+            localStorage.setItem(key, String(value));
+          }
+        }
         importedCount++;
       }
 
@@ -381,8 +416,6 @@ export const DataSettings: React.FC<{ isActive?: boolean }> = ({ isActive = true
       llmConfig: cloudSyncSettings.llmConfig
     });
   }, [syncFromCloud, cloudSyncSettings]);
-
-  const currentCounts = getCurrentCounts();
 
   return (
     <div className="space-y-6">
