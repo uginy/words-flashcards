@@ -3,11 +3,21 @@
 import { GOOGLE_DRIVE_CONFIG, type SyncMetadata, type GoogleDriveFile } from './types';
 import './gapi.d.ts';
 
+interface GoogleOAuthResponse {
+  access_token?: string;
+  error?: string;
+  error_description?: string;
+}
+
+interface GoogleTokenClient {
+  requestAccessToken: () => void;
+}
+
 export class GoogleDriveServiceV2 {
   private isInitialized = false;
   private isAuthorized = false;
   private appFolderId: string | null = null;
-  private tokenClient: any = null;
+  private tokenClient: GoogleTokenClient | null = null;
   private accessToken: string | null = null;
 
   async initialize(): Promise<void> {
@@ -38,15 +48,22 @@ export class GoogleDriveServiceV2 {
       this.tokenClient = window.google.accounts.oauth2.initTokenClient({
         client_id: GOOGLE_DRIVE_CONFIG.CLIENT_ID,
         scope: GOOGLE_DRIVE_CONFIG.SCOPES,
-        callback: (response: any) => {
+        callback: (response: GoogleOAuthResponse) => {
           if (response.access_token) {
             this.accessToken = response.access_token;
             this.isAuthorized = true;
             // Устанавливаем токен для GAPI
             window.gapi.client.setToken({ access_token: response.access_token });
+            // Сохраняем время получения токена
+            localStorage.setItem('google_access_token', response.access_token);
+            localStorage.setItem('google_token_timestamp', Date.now().toString());
+          } else if (response.error) {
+            console.error('Google OAuth callback error:', response.error);
+            this.isAuthorized = false;
+            this.accessToken = null;
           }
         },
-        error_callback: (error: any) => {
+        error_callback: (error: unknown) => {
           console.error('Google OAuth error:', error);
           this.isAuthorized = false;
           this.accessToken = null;
@@ -124,6 +141,8 @@ export class GoogleDriveServiceV2 {
           const checkAuth = () => {
             if (this.isAuthorized && this.accessToken) {
               localStorage.setItem('google_access_token', this.accessToken);
+              // Сохраняем время получения токена для проверки истечения
+              localStorage.setItem('google_token_timestamp', Date.now().toString());
               resolve(true);
             } else {
               setTimeout(checkAuth, 100);
@@ -137,6 +156,31 @@ export class GoogleDriveServiceV2 {
       console.error('Authorization failed:', error);
       return false;
     }
+  }
+
+  // Проверяем, не истёк ли токен (Google токены живут около 1 часа)
+  private isTokenExpired(): boolean {
+    const timestamp = localStorage.getItem('google_token_timestamp');
+    if (!timestamp) return true;
+    
+    const tokenAge = Date.now() - Number.parseInt(timestamp, 10);
+    const oneHour = 60 * 60 * 1000;
+    return tokenAge > oneHour;
+  }
+
+  // Обновляем токен если необходимо
+  private async ensureValidToken(): Promise<void> {
+    if (!this.isAuthorized || this.isTokenExpired()) {
+      const success = await this.authorize();
+      if (!success) {
+        throw new Error('Не удалось обновить токен доступа');
+      }
+    }
+  }
+
+  // Проверка статуса авторизации
+  isSignedIn(): boolean {
+    return this.isAuthorized && !!this.accessToken;
   }
 
   async signOut(): Promise<void> {
@@ -153,10 +197,6 @@ export class GoogleDriveServiceV2 {
     
     // Очищаем токен в GAPI
     window.gapi.client.setToken(null);
-  }
-
-  isSignedIn(): boolean {
-    return this.isAuthorized && !!this.accessToken;
   }
 
   // Остальные методы остаются такими же...
@@ -209,6 +249,9 @@ export class GoogleDriveServiceV2 {
       throw new Error('Не авторизован в Google Drive');
     }
 
+    // Проверяем и обновляем токен если необходимо
+    await this.ensureValidToken();
+
     const now = Date.now();
     const metadata: SyncMetadata = {
       lastSync: now,
@@ -254,6 +297,7 @@ export class GoogleDriveServiceV2 {
 
     // Update metadata
     await this.updateSyncMetadata(metadata);
+    localStorage.setItem('syncMetadata', JSON.stringify(metadata));
   }
 
   async syncFromCloud(): Promise<{
@@ -266,6 +310,9 @@ export class GoogleDriveServiceV2 {
     if (!this.isAuthorized) {
       throw new Error('Не авторизован в Google Drive');
     }
+
+    // Проверяем и обновляем токен если необходимо
+    await this.ensureValidToken();
 
     const result: Record<string, unknown> = {};
 
@@ -336,6 +383,9 @@ export class GoogleDriveServiceV2 {
     }
     
     try {
+      // Проверяем и обновляем токен если необходимо
+      await this.ensureValidToken();
+      
       const cloudData = await this.syncFromCloud();
       
       // Get current local data
@@ -392,19 +442,44 @@ export class GoogleDriveServiceV2 {
 
     const multipartRequestBody = `${delimiter}Content-Type: application/json\r\n\r\n${JSON.stringify(metadata)}${delimiter}Content-Type: application/json\r\n\r\n${content}${close_delim}`;
 
-    const request = window.gapi.client.request({
-      path: existingFile 
-        ? `https://www.googleapis.com/upload/drive/v3/files/${existingFile.id}`
-        : 'https://www.googleapis.com/upload/drive/v3/files',
-      method: existingFile ? 'PATCH' : 'POST',
-      params: { uploadType: 'multipart' },
-      headers: {
-        'Content-Type': `multipart/related; boundary="${boundary}"`
-      },
-      body: multipartRequestBody
-    });
+    // Retry logic for handling token expiration
+    const maxRetries = 2;
+    let retryCount = 0;
 
-    await request;
+    while (retryCount <= maxRetries) {
+      try {
+        const request = window.gapi.client.request({
+          path: existingFile 
+            ? `https://www.googleapis.com/upload/drive/v3/files/${existingFile.id}`
+            : 'https://www.googleapis.com/upload/drive/v3/files',
+          method: existingFile ? 'PATCH' : 'POST',
+          params: { uploadType: 'multipart' },
+          headers: {
+            'Content-Type': `multipart/related; boundary="${boundary}"`,
+            Authorization: `Bearer ${this.accessToken}`
+          },
+          body: multipartRequestBody
+        });
+
+        await request;
+        return; // Success
+      } catch (error: unknown) {
+        const errorObj = error as { status?: number; message?: string };
+        // If 401 or 403, try to refresh token and retry
+        if ((errorObj.status === 401 || errorObj.status === 403) && retryCount < maxRetries) {
+          try {
+            await this.ensureValidToken();
+            retryCount++;
+            continue;
+          } catch (refreshError) {
+            throw new Error(`Ошибка обновления токена: ${refreshError}`);
+          }
+        }
+        
+        // For other errors or if retries exhausted
+        throw new Error(`Ошибка загрузки файла ${fileName}: ${errorObj.message || 'Неизвестная ошибка'}`);
+      }
+    }
   }
 
   private async downloadFile(fileName: string, parentId: string): Promise<string | null> {

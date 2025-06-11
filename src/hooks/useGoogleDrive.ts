@@ -225,11 +225,26 @@ export function useGoogleDrive(): UseGoogleDriveReturn {
         description: detailsText
       });
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Ошибка синхронизации';
+      let message = 'Ошибка синхронизации';
+      let description = '';
+      
+      if (err instanceof Error) {
+        message = err.message;
+        
+        // Специальные сообщения для разных типов ошибок
+        if (message.includes('токен') || message.includes('token') || message.includes('401') || message.includes('403')) {
+          description = 'Попробуйте выйти и заново авторизоваться в Google Drive';
+        } else if (message.includes('quota') || message.includes('rate limit')) {
+          description = 'Превышен лимит запросов. Попробуйте позже';
+        } else if (message.includes('network') || message.includes('Network')) {
+          description = 'Проверьте подключение к интернету';
+        }
+      }
+      
       setError(message);
       toast({
-        title: "Ошибка",
-        description: message,
+        title: "Ошибка загрузки в облако",
+        description: description || message,
         variant: "destructive"
       });
     } finally {
@@ -319,11 +334,26 @@ export function useGoogleDrive(): UseGoogleDriveReturn {
         description: detailsText
       });
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Ошибка синхронизации';
+      let message = 'Ошибка синхронизации';
+      let description = '';
+      
+      if (err instanceof Error) {
+        message = err.message;
+        
+        // Специальные сообщения для разных типов ошибок
+        if (message.includes('токен') || message.includes('token') || message.includes('401') || message.includes('403')) {
+          description = 'Попробуйте выйти и заново авторизоваться в Google Drive';
+        } else if (message.includes('quota') || message.includes('rate limit')) {
+          description = 'Превышен лимит запросов. Попробуйте позже';
+        } else if (message.includes('network') || message.includes('Network')) {
+          description = 'Проверьте подключение к интернету';
+        }
+      }
+      
       setError(message);
       toast({
-        title: "Ошибка",
-        description: message,
+        title: "Ошибка загрузки из облака",
+        description: description || message,
         variant: "destructive"
       });
     } finally {
