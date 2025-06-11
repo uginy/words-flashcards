@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { getGoogleDriveServiceV2 } from '../services/googleDrive/GoogleDriveServiceV2';
 import { useToast } from './use-toast';
 import { useWordsStore } from '@/store/wordsStore';
@@ -16,7 +16,8 @@ export interface UseGoogleDriveReturn {
   authorize: () => Promise<void>;
   signOut: () => Promise<void>;
   syncToCloud: () => Promise<void>;
-  syncFromCloud: () => Promise<void>;
+  syncFromCloud: (options?: { words?: boolean; dialogs?: boolean; ttsConfig?: boolean }) => Promise<void>;
+  refreshStatus: () => Promise<void>;
   
   // Status
   lastSync: Date | null;
@@ -34,6 +35,7 @@ export function useGoogleDrive(): UseGoogleDriveReturn {
   const [error, setError] = useState<string | null>(null);
   const [lastSync, setLastSync] = useState<Date | null>(null);
   const [hasConflicts, setHasConflicts] = useState(false);
+  const refreshInProgress = useRef(false);
 
   const driveService = getGoogleDriveServiceV2();
 
@@ -50,6 +52,12 @@ export function useGoogleDrive(): UseGoogleDriveReturn {
         // Ignore parsing errors
       }
     }
+    
+    // Check if already authorized
+    const savedToken = localStorage.getItem('google_access_token');
+    if (savedToken) {
+      setIsAuthorized(true);
+    }
   }, []);
 
   const initialize = useCallback(async () => {
@@ -61,7 +69,18 @@ export function useGoogleDrive(): UseGoogleDriveReturn {
     try {
       await driveService.initialize();
       setIsInitialized(true);
-      setIsAuthorized(driveService.isSignedIn());
+      const authorized = driveService.isSignedIn();
+      setIsAuthorized(authorized);
+      
+      if (authorized) {
+        // Check for conflicts if already authorized
+        try {
+          const conflicts = await driveService.hasConflicts();
+          setHasConflicts(conflicts);
+        } catch (error) {
+          console.log('Error checking conflicts during init:', error);
+        }
+      }
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Ошибка инициализации';
       setError(message);
@@ -94,8 +113,12 @@ export function useGoogleDrive(): UseGoogleDriveReturn {
         });
         
         // Check for conflicts after authorization
-        const conflicts = await driveService.hasConflicts();
-        setHasConflicts(conflicts);
+        try {
+          const conflicts = await driveService.hasConflicts();
+          setHasConflicts(conflicts);
+        } catch (error) {
+          console.log('Error checking conflicts:', error);
+        }
       }
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Ошибка авторизации';
@@ -117,6 +140,7 @@ export function useGoogleDrive(): UseGoogleDriveReturn {
       await driveService.signOut();
       setIsAuthorized(false);
       setHasConflicts(false);
+      setLastSync(null);
       
       toast({
         title: "Выход выполнен",
@@ -153,18 +177,34 @@ export function useGoogleDrive(): UseGoogleDriveReturn {
       const wordsData = localStorage.getItem('hebrew-flashcards-data');
       const ttsConfig = localStorage.getItem('tts_config');
       
+      console.log('Preparing sync data:', {
+        wordsData: wordsData ? `${wordsData.slice(0, 100)}...` : 'null',
+        dialogsCount: dialogs.length,
+        hasTtsConfig: !!ttsConfig
+      });
+      
       const syncData: Record<string, unknown> = {};
+      const uploadDetails: string[] = [];
       
       if (wordsData) {
-        syncData.words = JSON.parse(wordsData);
+        const words = JSON.parse(wordsData);
+        console.log('Words from localStorage:', {
+          isArray: Array.isArray(words),
+          count: Array.isArray(words) ? words.length : 'not array',
+          firstWord: Array.isArray(words) ? words[0] : 'no words'
+        });
+        syncData.words = words;
+        uploadDetails.push(`${Array.isArray(words) ? words.length : 0} слов`);
       }
       
       if (dialogs.length > 0) {
         syncData.dialogs = dialogs;
+        uploadDetails.push(`${dialogs.length} диалогов`);
       }
       
       if (ttsConfig) {
         syncData.ttsConfig = JSON.parse(ttsConfig);
+        uploadDetails.push('настройки TTS');
       }
 
       await driveService.syncToCloud(syncData);
@@ -181,9 +221,13 @@ export function useGoogleDrive(): UseGoogleDriveReturn {
       };
       localStorage.setItem('syncMetadata', JSON.stringify(metadata));
       
+      const detailsText = uploadDetails.length > 0 
+        ? `Загружено: ${uploadDetails.join(', ')}`
+        : 'Нет данных для загрузки';
+      
       toast({
         title: "Синхронизация завершена",
-        description: "Данные успешно загружены в Google Drive"
+        description: detailsText
       });
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Ошибка синхронизации';
@@ -198,46 +242,74 @@ export function useGoogleDrive(): UseGoogleDriveReturn {
     }
   }, [isAuthorized, dialogs, driveService, toast]);
 
-  const syncFromCloud = useCallback(async () => {
+  const syncFromCloud = useCallback(async (options?: { words?: boolean; dialogs?: boolean; ttsConfig?: boolean }) => {
     if (!isAuthorized) {
-      toast({
-        title: "Ошибка",
-        description: "Необходима авторизация в Google Drive",
-        variant: "destructive"
-      });
+      await authorize();
       return;
     }
 
     setIsLoading(true);
     setError(null);
     
+    // Default to sync everything if no options provided
+    const syncOptions = {
+      words: true,
+      dialogs: true,
+      ttsConfig: true,
+      ...options
+    };
+    
     try {
       const cloudData = await driveService.syncFromCloud();
       
       let importedCount = 0;
+      const importDetails: string[] = [];
       
-      // Import words
-      if (cloudData.words) {
-        const wordsToImport = Array.isArray(cloudData.words) 
-          ? cloudData.words 
-          : [];
+      // Import words (only if enabled)
+      if (syncOptions.words && cloudData.words) {
+        let wordsToImport: unknown[] = [];
+        
+        // Handle different data formats
+        if (Array.isArray(cloudData.words)) {
+          wordsToImport = cloudData.words;
+        } else if (cloudData.words && typeof cloudData.words === 'object' && 'words' in cloudData.words) {
+          // Handle wrapped format { words: [...] }
+          const wrappedData = cloudData.words as { words?: unknown[] };
+          wordsToImport = Array.isArray(wrappedData.words) ? wrappedData.words : [];
+        }
+        
+        console.log('Processing words from cloud:', {
+          hasWords: !!cloudData.words,
+          isArray: Array.isArray(cloudData.words),
+          isWrapped: !!(cloudData.words && typeof cloudData.words === 'object' && 'words' in cloudData.words),
+          wordsCount: wordsToImport.length,
+          firstWord: wordsToImport[0]
+        });
         
         if (Array.isArray(wordsToImport) && wordsToImport.length > 0) {
           replaceAllWords(wordsToImport as Word[]);
           importedCount++;
+          importDetails.push(`${wordsToImport.length} слов`);
+        }        } else {
+          console.log('Words sync disabled or no words in cloud data');
         }
-      }
       
-      // Import dialogs
-      if (cloudData.dialogs && Array.isArray(cloudData.dialogs)) {
+      // Import dialogs (only if enabled)
+      if (syncOptions.dialogs && cloudData.dialogs && Array.isArray(cloudData.dialogs)) {
         replaceAllDialogs(cloudData.dialogs as Dialog[], toast);
         importedCount++;
+        importDetails.push(`${cloudData.dialogs.length} диалогов`);
+      } else if (syncOptions.dialogs) {
+        console.log('Dialogs sync enabled but no dialogs in cloud data');
       }
       
-      // Import TTS config
-      if (cloudData.ttsConfig) {
+      // Import TTS config (only if enabled)
+      if (syncOptions.ttsConfig && cloudData.ttsConfig) {
         localStorage.setItem('tts_config', JSON.stringify(cloudData.ttsConfig));
         importedCount++;
+        importDetails.push('настройки TTS');
+      } else if (syncOptions.ttsConfig) {
+        console.log('TTS config sync enabled but no config in cloud data');
       }
       
       // Update sync metadata
@@ -248,9 +320,13 @@ export function useGoogleDrive(): UseGoogleDriveReturn {
       
       setHasConflicts(false);
       
+      const detailsText = importDetails.length > 0 
+        ? `Загружено: ${importDetails.join(', ')}`
+        : 'Данные уже актуальны';
+      
       toast({
         title: "Синхронизация завершена",
-        description: `Загружено ${importedCount} набора(ов) данных из Google Drive`
+        description: detailsText
       });
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Ошибка синхронизации';
@@ -263,7 +339,46 @@ export function useGoogleDrive(): UseGoogleDriveReturn {
     } finally {
       setIsLoading(false);
     }
-  }, [isAuthorized, driveService, replaceAllWords, replaceAllDialogs, toast]);
+  }, [isAuthorized, authorize, driveService, replaceAllWords, replaceAllDialogs, toast]);
+
+  const refreshStatus = useCallback(async () => {
+    // Prevent concurrent refreshes
+    if (refreshInProgress.current) {
+      return;
+    }
+    
+    refreshInProgress.current = true;
+    
+    try {
+      if (!isInitialized) {
+        await initialize();
+        return;
+      }
+      
+      // Check current authorization status
+      const currentlyAuthorized = driveService.isSignedIn();
+      
+      if (currentlyAuthorized !== isAuthorized) {
+        setIsAuthorized(currentlyAuthorized);
+      }
+      
+      if (currentlyAuthorized) {
+        // Check for conflicts
+        try {
+          const conflicts = await driveService.hasConflicts();
+          setHasConflicts(conflicts);
+        } catch (error) {
+          console.log('Error checking conflicts during refresh:', error);
+        }
+      } else {
+        setHasConflicts(false);
+      }
+    } catch (error) {
+      console.log('Error refreshing status:', error);
+    } finally {
+      refreshInProgress.current = false;
+    }
+  }, [isInitialized, initialize, driveService, isAuthorized]);
 
   return {
     isInitialized,
@@ -276,6 +391,7 @@ export function useGoogleDrive(): UseGoogleDriveReturn {
     signOut,
     syncToCloud,
     syncFromCloud,
+    refreshStatus,
     
     lastSync,
     hasConflicts

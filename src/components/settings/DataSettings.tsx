@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -49,7 +49,7 @@ interface ImportConflictItem {
   icon: React.ReactNode;
 }
 
-export const DataSettings: React.FC = () => {
+export const DataSettings: React.FC<{ isActive?: boolean }> = ({ isActive = true }) => {
   const { toast } = useToast();
   const { words: allWords, replaceAllWords } = useWordsStore();
   const { dialogs, replaceAllDialogs } = useDialogsStore();
@@ -65,6 +65,7 @@ export const DataSettings: React.FC = () => {
     signOut: signOutGDrive,
     syncToCloud,
     syncFromCloud,
+    refreshStatus,
     lastSync,
     hasConflicts
   } = useGoogleDrive();
@@ -85,6 +86,13 @@ export const DataSettings: React.FC = () => {
   // Google Drive settings
   const [googleDriveFolder, setGoogleDriveFolder] = useState('FlashcardsApp');
   
+  // Google Drive sync settings
+  const [cloudSyncSettings, setCloudSyncSettings] = useState<DataSettings>({
+    hebrewFlashcardsData: true,
+    flashcardsDialogs: true,
+    ttsConfig: true,
+  });
+  
   // Import conflicts handling
   const [importData, setImportData] = useState<ExportData | null>(null);
   const [conflicts, setConflicts] = useState<ImportConflictItem[]>([]);
@@ -99,6 +107,18 @@ export const DataSettings: React.FC = () => {
       ttsConfig: ttsConfig ? 1 : 0,
     };
   };
+
+  // Refresh Google Drive status when component mounts or becomes active
+  useEffect(() => {
+    if (isActive) {
+      // Debounce the refresh to prevent rapid-fire calls
+      const timer = setTimeout(() => {
+        refreshStatus();
+      }, 500);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [refreshStatus, isActive]);
 
   // Check for data conflicts
   const checkDataConflicts = (data: ExportData): ImportConflictItem[] => {
@@ -318,13 +338,59 @@ export const DataSettings: React.FC = () => {
   }, [syncToCloud]);
 
   const handleSyncFromCloud = useCallback(async () => {
-    await syncFromCloud();
-  }, [syncFromCloud]);
+    await syncFromCloud({
+      words: cloudSyncSettings.hebrewFlashcardsData,
+      dialogs: cloudSyncSettings.flashcardsDialogs,
+      ttsConfig: cloudSyncSettings.ttsConfig
+    });
+  }, [syncFromCloud, cloudSyncSettings]);
 
   const currentCounts = getCurrentCounts();
 
   return (
     <div className="space-y-6">
+      {/* Data Statistics Section */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <FileText className="h-5 w-5" />
+            Статистика данных
+          </CardTitle>
+          <CardDescription>
+            Текущее состояние данных в приложении
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="flex items-center gap-3 p-3 bg-blue-50 rounded-lg">
+              <FileText className="h-8 w-8 text-blue-600" />
+              <div>
+                <div className="text-2xl font-bold text-blue-900">{currentCounts.words}</div>
+                <div className="text-sm text-blue-700">Слов-карточек</div>
+              </div>
+            </div>
+            
+            <div className="flex items-center gap-3 p-3 bg-green-50 rounded-lg">
+              <MessageSquare className="h-8 w-8 text-green-600" />
+              <div>
+                <div className="text-2xl font-bold text-green-900">{currentCounts.dialogs}</div>
+                <div className="text-sm text-green-700">Диалогов</div>
+              </div>
+            </div>
+            
+            <div className="flex items-center gap-3 p-3 bg-purple-50 rounded-lg">
+              <Volume2 className="h-8 w-8 text-purple-600" />
+              <div>
+                <div className="text-2xl font-bold text-purple-900">{currentCounts.ttsConfig ? 'Да' : 'Нет'}</div>
+                <div className="text-sm text-purple-700">Настройки TTS</div>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Separator />
+
       {/* Export Section */}
       <Card>
         <CardHeader>
@@ -526,6 +592,58 @@ export const DataSettings: React.FC = () => {
               Папка будет создана автоматически при первой синхронизации
             </div>
           </div>
+          
+          {isAuthorized && (
+            <div className="space-y-3">
+              <Label className="text-sm font-medium">Выберите данные для синхронизации из облака:</Label>
+              <div className="space-y-2">
+                <div className="flex items-center space-x-3">
+                  <Checkbox
+                    id="sync-words"
+                    checked={cloudSyncSettings.hebrewFlashcardsData}
+                    onCheckedChange={(checked: boolean) => 
+                      setCloudSyncSettings(prev => ({ ...prev, hebrewFlashcardsData: checked }))
+                    }
+                  />
+                  <Label htmlFor="sync-words" className="flex items-center gap-2 text-sm">
+                    <FileText className="h-4 w-4" />
+                    Слова-карточки
+                    <Badge variant="secondary">{currentCounts.words}</Badge>
+                  </Label>
+                </div>
+                
+                <div className="flex items-center space-x-3">
+                  <Checkbox
+                    id="sync-dialogs"
+                    checked={cloudSyncSettings.flashcardsDialogs}
+                    onCheckedChange={(checked: boolean) => 
+                      setCloudSyncSettings(prev => ({ ...prev, flashcardsDialogs: checked }))
+                    }
+                  />
+                  <Label htmlFor="sync-dialogs" className="flex items-center gap-2 text-sm">
+                    <MessageSquare className="h-4 w-4" />
+                    Диалоги
+                    <Badge variant="secondary">{currentCounts.dialogs}</Badge>
+                  </Label>
+                </div>
+                
+                <div className="flex items-center space-x-3">
+                  <Checkbox
+                    id="sync-tts"
+                    checked={cloudSyncSettings.ttsConfig}
+                    onCheckedChange={(checked: boolean) => 
+                      setCloudSyncSettings(prev => ({ ...prev, ttsConfig: checked }))
+                    }
+                  />
+                  <Label htmlFor="sync-tts" className="flex items-center gap-2 text-sm">
+                    <Volume2 className="h-4 w-4" />
+                    Настройки TTS
+                    <Badge variant="secondary">{currentCounts.ttsConfig > 0 ? '✓' : '✗'}</Badge>
+                  </Label>
+                </div>
+              </div>
+            </div>
+          )}
           
           {!isAuthorized ? (
             <Button 

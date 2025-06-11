@@ -442,7 +442,7 @@ const Settings: React.FC = () => {
         return <TTSSettings />;
 
       case 'data':
-        return <DataSettings />;
+        return <DataSettings isActive={activeTab === 'data'} />;
 
       case 'llm':
         return (

@@ -908,8 +908,9 @@ export const useWordsStore = create<WordsStore>((set, get) => {
     },
 
     replaceAllWords: (newWords, toast) => {
-      // console.log('🔍 DEBUG wordsStore replaceAllWords - newWords:', newWords);
-      // console.log('🔍 DEBUG wordsStore replaceAllWords - word with conjugations:', newWords.find(w => w.conjugations));
+      console.log('🔍 DEBUG wordsStore replaceAllWords - newWords:', newWords);
+      console.log('🔍 DEBUG wordsStore replaceAllWords - newWords count:', newWords.length);
+      console.log('🔍 DEBUG wordsStore replaceAllWords - first word:', newWords[0]);
       set(() => {
         const newCurrentIndex = newWords.length > 0 ? 0 : 0;
         if (newWords.length === 0) {

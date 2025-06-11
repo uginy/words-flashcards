@@ -220,11 +220,18 @@ export class GoogleDriveServiceV2 {
 
     // Upload each file type
     if (data.words) {
+      console.log('Uploading words to cloud:', {
+        count: Array.isArray(data.words) ? data.words.length : 'not array',
+        firstWord: Array.isArray(data.words) ? data.words[0] : 'no words',
+        type: typeof data.words
+      });
       await this.uploadFile(
         GOOGLE_DRIVE_CONFIG.FILES.WORDS,
         JSON.stringify(data.words, null, 2),
         appFolderId
       );
+    } else {
+      console.log('No words to upload');
     }
 
     if (data.dialogs) {
@@ -266,10 +273,18 @@ export class GoogleDriveServiceV2 {
       try {
         const wordsContent = await this.downloadFile(GOOGLE_DRIVE_CONFIG.FILES.WORDS, appFolderId);
         if (wordsContent) {
-          result.words = JSON.parse(wordsContent);
+          const parsedWords = JSON.parse(wordsContent);
+        //   console.log('Words downloaded from cloud:', {
+        //     content: `${wordsContent.slice(0, 200)}...`,
+        //     parsedCount: Array.isArray(parsedWords) ? parsedWords.length : 'not array',
+        //     parsedWords: parsedWords
+        //   });
+          result.words = parsedWords;
+        } else {
+          console.log('Words file is empty or null');
         }
       } catch (error) {
-        console.log('No words file found');
+        console.log('No words file found or error parsing:', error);
       }
 
       // Download dialogs
@@ -310,11 +325,49 @@ export class GoogleDriveServiceV2 {
   }
 
   async hasConflicts(): Promise<boolean> {
-    // Упрощенная проверка конфликтов
+    if (!this.isAuthorized) {
+      return false;
+    }
+    
     try {
       const cloudData = await this.syncFromCloud();
-      return !!(cloudData.words || cloudData.dialogs || cloudData.ttsConfig);
-    } catch {
+      
+      // Get current local data
+      const localWordsStore = localStorage.getItem('hebrew-flashcards-data');
+      const localWords = localWordsStore ? JSON.parse(localWordsStore) : [];
+      
+      const localDialogsStore = localStorage.getItem('dialogs');
+      const localDialogs = localDialogsStore ? JSON.parse(localDialogsStore) : [];
+      
+      const localTTSConfig = localStorage.getItem('tts_config');
+      
+      // Check actual data presence
+      const hasCloudWords = cloudData.words && Array.isArray(cloudData.words) && cloudData.words.length > 0;
+      const hasLocalWords = Array.isArray(localWords) && localWords.length > 0;
+      
+      const hasCloudDialogs = cloudData.dialogs && Array.isArray(cloudData.dialogs) && cloudData.dialogs.length > 0;
+      const hasLocalDialogs = Array.isArray(localDialogs) && localDialogs.length > 0;
+      
+      const hasCloudTTS = cloudData.ttsConfig && Object.keys(cloudData.ttsConfig).length > 0;
+      const hasLocalTTS = localTTSConfig !== null && localTTSConfig !== undefined;
+      
+      // Conflict exists only if BOTH cloud and local have data AND they differ
+      const wordConflict = hasCloudWords && hasLocalWords && 
+        cloudData.words && Array.isArray(cloudData.words) && cloudData.words.length !== localWords.length;
+      const dialogConflict = hasCloudDialogs && hasLocalDialogs && 
+        cloudData.dialogs && Array.isArray(cloudData.dialogs) && cloudData.dialogs.length !== localDialogs.length;
+      const ttsConflict = hasCloudTTS && hasLocalTTS && 
+        cloudData.ttsConfig && JSON.stringify(cloudData.ttsConfig) !== localTTSConfig;
+      
+    //   console.log('Conflict check:', {
+    //     words: { cloud: hasCloudWords, local: hasLocalWords, conflict: wordConflict },
+    //     dialogs: { cloud: hasCloudDialogs, local: hasLocalDialogs, conflict: dialogConflict },
+    //     tts: { cloud: hasCloudTTS, local: hasLocalTTS, conflict: ttsConflict }
+    //   });
+      
+      return Boolean(wordConflict || dialogConflict || ttsConflict);
+    } catch (error) {
+      console.log('Error checking conflicts:', error);
       return false;
     }
   }
