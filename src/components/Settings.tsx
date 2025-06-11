@@ -10,6 +10,7 @@ import {
 } from "./ui/select"
 import { loadTableSettings, saveTableSettings } from '@/utils/tableSettings';
 import { TTSSettings } from './settings/TTSSettings';
+import { DataSettings } from './settings/DataSettings';
 import { useToast } from '../hooks/use-toast';
 import { useOllamaModels } from '../hooks/useOllamaModels';
 import {
@@ -30,7 +31,7 @@ interface OpenRouterModel {
   context_length: number;
 }
 
-type TabType = 'table' | 'tts' | 'llm';
+type TabType = 'table' | 'tts' | 'llm' | 'data';
 type LLMProviderTab = 'openrouter' | 'ollama';
 
 const Settings: React.FC = () => {
@@ -228,6 +229,7 @@ const Settings: React.FC = () => {
     { id: 'llm' as TabType, label: 'ИИ Модель', icon: '🤖' },
     { id: 'tts' as TabType, label: 'Озвучка', icon: '🔊' },
     { id: 'table' as TabType, label: 'Таблица', icon: '📊' },
+    { id: 'data' as TabType, label: 'Данные', icon: '💾' },
   ];
 
   const llmProviderTabs = [
@@ -438,6 +440,9 @@ const Settings: React.FC = () => {
 
       case 'tts':
         return <TTSSettings />;
+
+      case 'data':
+        return <DataSettings />;
 
       case 'llm':
         return (
