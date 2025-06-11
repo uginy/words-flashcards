@@ -171,16 +171,54 @@ export class GoogleDriveServiceV2 {
   // Обновляем токен если необходимо
   private async ensureValidToken(): Promise<void> {
     if (!this.isAuthorized || this.isTokenExpired()) {
-      const success = await this.authorize();
-      if (!success) {
-        throw new Error('Не удалось обновить токен доступа');
+      if (this.tokenClient) {
+        // Просто запрашиваем новый токен через существующий client
+        this.tokenClient.requestAccessToken();
+        
+        // Ждем пока токен обновится
+        return new Promise((resolve, reject) => {
+          const timeout = setTimeout(() => {
+            reject(new Error('Timeout при обновлении токена'));
+          }, 5000);
+          
+          const checkToken = () => {
+            if (this.isAuthorized && this.accessToken) {
+              clearTimeout(timeout);
+              resolve();
+            } else {
+              setTimeout(checkToken, 100);
+            }
+          };
+          
+          setTimeout(checkToken, 100);
+        });
       }
+      
+      throw new Error('Не удалось обновить токен доступа - требуется повторная авторизация');
     }
   }
 
   // Проверка статуса авторизации
   isSignedIn(): boolean {
     return this.isAuthorized && !!this.accessToken;
+  }
+
+  // Отладочный метод для проверки состояния токена
+  getDebugInfo(): { 
+    isAuthorized: boolean; 
+    hasToken: boolean; 
+    tokenAge?: number; 
+    isTokenExpired: boolean;
+  } {
+    const timestamp = localStorage.getItem('google_token_timestamp');
+    const tokenAge = timestamp ? Date.now() - Number.parseInt(timestamp, 10) : undefined;
+    
+    return {
+      isAuthorized: this.isAuthorized,
+      hasToken: !!this.accessToken,
+      tokenAge,
+      isTokenExpired: this.isTokenExpired()
+    };
   }
 
   async signOut(): Promise<void> {
@@ -248,6 +286,10 @@ export class GoogleDriveServiceV2 {
     if (!this.isAuthorized) {
       throw new Error('Не авторизован в Google Drive');
     }
+
+    // Отладочная информация
+    const debugInfo = this.getDebugInfo();
+    console.log('syncToCloud started with token info:', debugInfo);
 
     // Проверяем и обновляем токен если необходимо
     await this.ensureValidToken();
@@ -435,10 +477,19 @@ export class GoogleDriveServiceV2 {
     // Check if file exists
     const existingFile = await this.findFile(fileName, parentId);
 
-    const metadata = {
-      name: fileName,
-      parents: [parentId]
-    };
+    let metadata: Record<string, unknown>;
+    if (existingFile) {
+      // For existing files, don't include parents
+      metadata = {
+        name: fileName
+      };
+    } else {
+      // For new files, include parents
+      metadata = {
+        name: fileName,
+        parents: [parentId]
+      };
+    }
 
     const multipartRequestBody = `${delimiter}Content-Type: application/json\r\n\r\n${JSON.stringify(metadata)}${delimiter}Content-Type: application/json\r\n\r\n${content}${close_delim}`;
 
@@ -464,20 +515,35 @@ export class GoogleDriveServiceV2 {
         await request;
         return; // Success
       } catch (error: unknown) {
-        const errorObj = error as { status?: number; message?: string };
+        // GAPI errors have different structure: error.result.error or error.status
+        const gapiError = error as { 
+          status?: number; 
+          result?: { error?: { code?: number; message?: string } };
+          message?: string;
+        };
+        
+        const statusCode = gapiError.status || gapiError.result?.error?.code;
+        const errorMessage = gapiError.result?.error?.message || gapiError.message || 'Неизвестная ошибка';
+        
+        console.log(`Upload attempt ${retryCount + 1} failed:`, { statusCode, errorMessage, error });
+        
         // If 401 or 403, try to refresh token and retry
-        if ((errorObj.status === 401 || errorObj.status === 403) && retryCount < maxRetries) {
+        if ((statusCode === 401 || statusCode === 403) && retryCount < maxRetries) {
+          console.log('Attempting to refresh token and retry...');
           try {
             await this.ensureValidToken();
             retryCount++;
+            console.log(`Retrying upload (attempt ${retryCount + 1}/${maxRetries + 1})...`);
             continue;
           } catch (refreshError) {
+            console.error('Token refresh failed:', refreshError);
             throw new Error(`Ошибка обновления токена: ${refreshError}`);
           }
         }
         
         // For other errors or if retries exhausted
-        throw new Error(`Ошибка загрузки файла ${fileName}: ${errorObj.message || 'Неизвестная ошибка'}`);
+        console.error('Upload failed after all retries:', { statusCode, errorMessage });
+        throw new Error(`Ошибка загрузки файла ${fileName}: ${errorMessage}`);
       }
     }
   }
