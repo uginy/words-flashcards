@@ -76,13 +76,6 @@ const WordInput: React.FC = () => {
     }
   };
 
-
-  const handlePaste = (e: React.ClipboardEvent) => {
-    e.preventDefault(); // Prevent default paste behavior
-    const paste = e.clipboardData.getData('text');
-    setDraftInputText(paste);
-  };
-
   const sampleText = `שלום
 תודה רבה
 ספר טוב
@@ -152,7 +145,6 @@ const WordInput: React.FC = () => {
               className="w-full px-3 py-2 text-gray-700 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               value={draftInputText}
               onChange={(e) => setDraftInputText(e.target.value)}
-              onPaste={handlePaste}
               dir="auto" // Changed to auto to better support mixed LTR/RTL for instructions and RTL for Hebrew
               placeholder="Введите слова на русском или иврите, каждое слово на новой строке..."
             />
