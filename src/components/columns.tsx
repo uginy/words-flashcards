@@ -1,5 +1,6 @@
 import { ColumnDef } from "@tanstack/react-table";
 import { Word } from "@/types";
+import type { ImageGenerationStatus } from '@/types/imageGeneration';
 import { Button } from "@/components/ui/button";
 import {
   Tooltip,
@@ -7,7 +8,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { Pen, RotateCcw, Check, ArrowUpDown, BookOpen, Languages, RefreshCw, Edit3, FileText } from "lucide-react";
+import { Pen, RotateCcw, Check, ArrowUpDown, BookOpen, Languages, RefreshCw, Edit3, FileText, Image as ImageIcon, Trash2, Loader2 } from "lucide-react";
 import { DeleteButton } from './DeleteButton';
 import {
   Popover,
@@ -26,6 +27,9 @@ export const getColumns = (
   isWordRefining: (id: string) => boolean,
   setEditingConjugations?: (word: Word) => void,
   setEditingExamples?: (word: Word) => void,
+  generateImage?: (word: Word) => void,
+  clearImage?: (word: Word) => void,
+  getImageStatus?: (id: string) => ImageGenerationStatus | undefined,
 ): ColumnDef<Word>[] => [
     {
       accessorKey: "hebrew",
@@ -81,6 +85,49 @@ export const getColumns = (
           <ArrowUpDown className="ml-2 h-4 w-4" />
         </Button>
       ),
+    },
+    {
+      id: "image",
+      size: 110,
+      header: "Иконка",
+      cell: ({ row }) => {
+        const word = row.original;
+        if (word.image?.dataUrl) {
+          return (
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <img
+                    src={word.image.dataUrl}
+                    alt={`Иконка для ${word.hebrew}`}
+                    className="w-12 h-12 rounded-md border border-gray-200 object-cover shadow-sm cursor-pointer"
+                    loading="lazy"
+                  />
+                </TooltipTrigger>
+                <TooltipContent className="p-3 bg-white border shadow-lg text-center space-y-2">
+                  <img
+                    src={word.image.dataUrl}
+                    alt={`Иконка для ${word.hebrew}`}
+                    className="w-48 h-48 rounded-md object-cover mx-auto"
+                    loading="lazy"
+                  />
+                  <div className="text-base font-semibold text-gray-900" dir="rtl">
+                    {word.hebrew}
+                  </div>
+                  <div className="text-sm text-gray-600">
+                    {word.russian}
+                  </div>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          );
+        }
+        return (
+          <div className="w-12 h-12 rounded-md border border-dashed border-gray-300 text-[10px] text-gray-400 flex items-center justify-center uppercase">
+            Нет
+          </div>
+        );
+      },
     },
     {
       accessorKey: "examples",
@@ -314,6 +361,11 @@ export const getColumns = (
         const handleRefineWord = () => refineWord(word.id);
         const handleToggleLearned = () => word.isLearned ? markAsNotLearned(word.id) : markAsLearned(word.id);
         const handleDeleteWord = () => deleteWord(word.id);
+        const handleGenerateImage = generateImage ? () => generateImage(word) : undefined;
+        const handleClearImage = clearImage ? () => clearImage(word) : undefined;
+        const imageStatus = getImageStatus ? getImageStatus(word.id) : undefined;
+        const isGeneratingImage = imageStatus?.status === 'generating';
+        const imageGenerationError = imageStatus?.status === 'error' ? imageStatus.error : undefined;
         
         return (
           <div className="flex justify-end gap-2">
@@ -366,6 +418,53 @@ export const getColumns = (
                   </TooltipTrigger>
                   <TooltipContent>
                     <p>Редактировать примеры</p>
+                  </TooltipContent>
+                </Tooltip>
+              )}
+
+              {handleGenerateImage && (
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className={`h-8 w-8 ${word.image ? 'text-indigo-600 hover:text-indigo-700' : 'text-gray-500 hover:text-indigo-600'}`}
+                      onClick={handleGenerateImage}
+                      disabled={isGeneratingImage}
+                    >
+                      {isGeneratingImage ? <Loader2 className="h-4 w-4 animate-spin" /> : <ImageIcon className="h-4 w-4" />}
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent className="max-w-[220px]">
+                    <p>
+                      {isGeneratingImage
+                        ? 'Создаем иконку...'
+                        : word.image
+                          ? 'Перегенерировать иконку'
+                          : 'Сгенерировать иконку'}
+                    </p>
+                    {imageGenerationError && (
+                      <p className="text-red-500 text-xs mt-1">{imageGenerationError}</p>
+                    )}
+                  </TooltipContent>
+                </Tooltip>
+              )}
+
+              {word.image && handleClearImage && (
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 text-red-500 hover:text-red-600"
+                      onClick={handleClearImage}
+                      disabled={isGeneratingImage}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Удалить иконку</p>
                   </TooltipContent>
                 </Tooltip>
               )}

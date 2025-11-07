@@ -1,6 +1,17 @@
-import { WordsState } from '../types';
+import { WordsState, Word } from '../types';
 
 const STORAGE_KEY = 'hebrew-flashcards-data';
+
+const stripImageDataUrl = (word: Word): Word => {
+  if (word.image?.dataUrl) {
+    const { dataUrl, ...restImage } = word.image;
+    return {
+      ...word,
+      image: restImage,
+    };
+  }
+  return word;
+};
 
 export const saveToLocalStorage = (state: WordsState): void => {
   try {
@@ -8,7 +19,12 @@ export const saveToLocalStorage = (state: WordsState): void => {
       // If clearing the words list, remove the entire storage
       localStorage.removeItem(STORAGE_KEY);
     } else {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      const sanitizedWords = state.words.map(stripImageDataUrl);
+      const sanitizedState: WordsState = {
+        ...state,
+        words: sanitizedWords,
+      };
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(sanitizedState));
     }
   } catch (error) {
     console.error('Error saving to localStorage:', error);

@@ -1,3 +1,5 @@
+import type { WordImageAsset } from './imageGeneration';
+
 export type WordCategory = 'שם עצם' | 'פועל' | 'שם תואר' | 'פרזות' | 'אחר' | 'דיאלוג';
 
 export interface Word {
@@ -19,6 +21,7 @@ export interface Word {
   learningStage?: number;
   lastReviewed?: number | null;
   nextReview?: number | null;
+  image?: WordImageAsset | null;
 }
 
 export interface BackgroundTask {

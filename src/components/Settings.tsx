@@ -18,6 +18,13 @@ import {
   loadLLMSettings,
   saveLLMSettings,
 } from '../config/llm-settings';
+import {
+  type ImageGenerationSettings,
+  type ImageSizeOption,
+  loadImageSettings,
+  saveImageSettings,
+  DEFAULT_IMAGE_SETTINGS,
+} from '../config/image-generation';
 import { OLLAMA_MODEL_RATINGS } from '../config/ollama';
 
 interface OpenRouterModel {
@@ -31,7 +38,7 @@ interface OpenRouterModel {
   context_length: number;
 }
 
-type TabType = 'table' | 'tts' | 'llm' | 'data';
+type TabType = 'table' | 'tts' | 'llm' | 'data' | 'images';
 type LLMProviderTab = 'openrouter' | 'ollama';
 
 const Settings: React.FC = () => {
@@ -42,6 +49,7 @@ const Settings: React.FC = () => {
   
   // LLM Settings state
   const [llmSettings, setLLMSettings] = useState<LLMSettings>(() => loadLLMSettings());
+  const [imageSettings, setImageSettings] = useState<ImageGenerationSettings>(() => loadImageSettings());
   
   // OpenRouter state
   const [availableModels, setAvailableModels] = useState<OpenRouterModel[]>([]);
@@ -196,6 +204,33 @@ const Settings: React.FC = () => {
     }));
   };
 
+  const handleSaveImageSettings = () => {
+    saveImageSettings(imageSettings);
+    toast({
+      title: "Настройки изображений сохранены",
+      description: "Gemini Banana готов генерировать 256×256 иконки.",
+      variant: "default"
+    });
+  };
+
+  const updateBananaSettings = (partial: Partial<ImageGenerationSettings['banana']>) => {
+    setImageSettings(prev => ({
+      ...prev,
+      banana: { ...prev.banana, ...partial }
+    }));
+  };
+
+  const handleImageApiKeyChange = (apiKey: string) => updateBananaSettings({ apiKey });
+  const handleImageModelChange = (modelId: string) => updateBananaSettings({ modelId });
+  const handleImageBaseUrlChange = (baseUrl: string) => updateBananaSettings({ baseUrl });
+  const handleImageSizeChange = (size: ImageSizeOption) => updateBananaSettings({ size });
+  const handleImagePromptTemplateChange = (promptTemplate: string) => {
+    setImageSettings(prev => ({ ...prev, promptTemplate }));
+  };
+  const handleResetImagePromptTemplate = () => {
+    setImageSettings(prev => ({ ...prev, promptTemplate: DEFAULT_IMAGE_SETTINGS.promptTemplate }));
+  };
+
   // Batch settings handlers
   const handleBatchSizeChange = (batchSize: number) => {
     setLLMSettings(prev => ({
@@ -228,6 +263,7 @@ const Settings: React.FC = () => {
   const tabs = [
     { id: 'llm' as TabType, label: 'ИИ Модель', icon: '🤖' },
     { id: 'tts' as TabType, label: 'Озвучка', icon: '🔊' },
+     { id: 'images' as TabType, label: 'Иконки', icon: '🖼️' },
     { id: 'table' as TabType, label: 'Таблица', icon: '📊' },
     { id: 'data' as TabType, label: 'Данные', icon: '💾' },
   ];
@@ -443,6 +479,131 @@ const Settings: React.FC = () => {
 
       case 'data':
         return <DataSettings isActive={activeTab === 'data'} />;
+
+      case 'images':
+        return (
+          <div className="space-y-6">
+            <div>
+              <h3 className="text-lg font-medium text-gray-800 mb-2">Image Generation API</h3>
+              <p className="text-sm text-gray-600">
+                Генерируйте ассоциативные иконки 256×256 для слов на иврите через бесплатный тариф Gemini Nano (Banana Models).
+              </p>
+              <div className="mt-3 bg-indigo-50 border border-indigo-100 rounded-md p-3 text-sm text-indigo-800">
+                <p className="font-medium mb-1">Gemini 2.5 Flash Image · Banana Models</p>
+                <p>Модель: <code className="text-indigo-900">{imageSettings.banana.modelId}</code></p>
+                <p className="mt-1">Тариф Free Tier даёт хороший лимит запросов, поэтому иконки генерируются по требованию из списка слов.</p>
+              </div>
+            </div>
+
+            <div className="grid gap-4">
+              <div>
+                <label htmlFor="imageApiKey" className="block text-sm font-medium text-gray-700 mb-1">
+                  Banana API Key
+                </label>
+                <input
+                  type="password"
+                  id="imageApiKey"
+                  className="w-full px-3 py-2 text-gray-700 border rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  value={imageSettings.banana.apiKey}
+                  onChange={(e) => handleImageApiKeyChange(e.target.value)}
+                  placeholder="Введите API ключ Banana"
+                />
+                <p className="text-xs text-gray-500 mt-1">Хранится локально в браузере, не отправляется на сервер.</p>
+              </div>
+
+              <div className="grid gap-4 md:grid-cols-2">
+                <div>
+                  <label htmlFor="imageModelId" className="block text-sm font-medium text-gray-700 mb-1">
+                    Модель
+                  </label>
+                  <input
+                    type="text"
+                    id="imageModelId"
+                    className="w-full px-3 py-2 text-gray-700 border rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    value={imageSettings.banana.modelId}
+                    onChange={(e) => handleImageModelChange(e.target.value)}
+                    placeholder="models/gemini-2.5-flash-image"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">Рекомендуемая бесплатная модель Banana.</p>
+                </div>
+                <div>
+                  <label htmlFor="imageBaseUrl" className="block text-sm font-medium text-gray-700 mb-1">
+                    Base URL
+                  </label>
+                  <input
+                    type="url"
+                    id="imageBaseUrl"
+                    className="w-full px-3 py-2 text-gray-700 border rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    value={imageSettings.banana.baseUrl}
+                    onChange={(e) => handleImageBaseUrlChange(e.target.value)}
+                    placeholder="https://models.banana.dev"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">
+                    Введите корень (например, https://models.banana.dev) — приложение само добавит /ai/&lt;model&gt;.
+                  </p>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Размер изображения
+                </label>
+                <Select
+                  value={imageSettings.banana.size}
+                  onValueChange={(value) => handleImageSizeChange(value as ImageSizeOption)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Выберите размер" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {['256x256', '512x512', '768x768'].map((size) => (
+                      <SelectItem key={size} value={size}>
+                        {size}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-gray-500 mt-1">256×256 — оптимально для карточек, другие опции пригодятся позже.</p>
+              </div>
+
+              <div>
+                <label htmlFor="imagePromptTemplate" className="block text-sm font-medium text-gray-700 mb-1">
+                  Prompt template
+                </label>
+                <textarea
+                  id="imagePromptTemplate"
+                  className="w-full min-h-[120px] px-3 py-2 text-gray-700 border rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  value={imageSettings.promptTemplate}
+                  onChange={(e) => handleImagePromptTemplateChange(e.target.value)}
+                  placeholder={DEFAULT_IMAGE_SETTINGS.promptTemplate}
+                />
+                <div className="flex flex-wrap items-center gap-2 text-xs text-gray-500 mt-2">
+                  <span>Поддерживаются плейсхолдеры:</span>
+                  <code className="px-2 py-0.5 bg-gray-100 rounded">{'{{hebrew}}'}</code>
+                  <code className="px-2 py-0.5 bg-gray-100 rounded">{'{{translation}}'}</code>
+                  <code className="px-2 py-0.5 bg-gray-100 rounded">{'{{category}}'}</code>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleResetImagePromptTemplate}
+                  className="mt-2 text-xs text-indigo-600 hover:text-indigo-800 underline"
+                >
+                  Сбросить шаблон по умолчанию
+                </button>
+              </div>
+            </div>
+
+            <div className="flex justify-end mt-4">
+              <button
+                type="button"
+                onClick={handleSaveImageSettings}
+                className="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 w-full sm:w-auto"
+              >
+                Сохранить настройки генерации
+              </button>
+            </div>
+          </div>
+        );
 
       case 'llm':
         return (

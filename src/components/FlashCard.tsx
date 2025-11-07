@@ -172,6 +172,20 @@ const FlashCard: React.FC<FlashCardProps> = ({ word: propWord, reverse, onMarkAs
 
   const categoryColors = getCategoryColor(word.category);
 
+  const renderWordImage = () => {
+    if (!word?.image?.dataUrl) return null;
+    return (
+      <div className="flex justify-center mb-4">
+        <img
+          src={word.image.dataUrl}
+          alt={`Ассоциативная иконка для ${word.hebrew}`}
+          className="w-44 h-44 rounded-2xl border border-white/60 shadow-xl object-cover"
+          loading="lazy"
+        />
+      </div>
+    );
+  };
+
   return (
     <div>
       <div className="w-full max-w-7xl mx-auto px-2 sm:px-0">
@@ -268,6 +282,7 @@ const FlashCard: React.FC<FlashCardProps> = ({ word: propWord, reverse, onMarkAs
                 <div className={`inline-block px-2 py-1 rounded-full text-sm ${categoryColors.bg} ${categoryColors.text} ${categoryColors.category} mb-2`}>
                   {word.category}
                 </div>
+                {renderWordImage()}
                 {reverse ? (
                   <>
                     <h2 className={`text-4xl font-bold mb-2 ${categoryColors.text}`}>{word.russian}</h2>
@@ -304,6 +319,7 @@ const FlashCard: React.FC<FlashCardProps> = ({ word: propWord, reverse, onMarkAs
               tabIndex={0}
             >
               <div className="text-center w-full">
+                {renderWordImage()}
                 {reverse ? (
                   <>
                     <h2 className={`text-5xl font-bold mb-2 ${categoryColors.text}`}>{word.hebrew}</h2>

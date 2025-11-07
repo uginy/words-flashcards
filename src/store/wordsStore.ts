@@ -2,10 +2,14 @@
 
 import { create } from 'zustand';
 import type { Word, WordsState, BackgroundTask } from '../types';
+import type { ImageGenerationStatus } from '../types/imageGeneration';
 import { saveToLocalStorage, loadFromLocalStorage } from '../utils/storage';
 import { parseAndTranslateWords } from '../utils/translation';
 import { enrichWordsWithLLM, refineWordWithLLM, translateToHebrew } from '../services/openrouter';
 import { loadLLMSettings, type LLMSettings } from '../config/llm-settings';
+import { loadImageSettings } from '../config/image-generation';
+import { generateWordImageAsset } from '../services/imageGeneration';
+import { saveWordImageData, loadWordImageData, deleteWordImageData, clearAllWordImages } from '../utils/imageStorage';
 
 const initialState: WordsState = {
   words: [],
@@ -18,6 +22,7 @@ const initialStoreState = {
   isBackgroundProcessing: false,
   draftInputText: '',
   refiningWords: new Set<string>(),
+  imageGenerationStatus: {} as Record<string, ImageGenerationStatus>,
 };
 
 // Returns statistics for a given array of words
@@ -50,6 +55,38 @@ export function getStats(words: Word[]) {
   };
 }
 type ToastFn = (opts: { title: string; description: string; variant?: string }) => void;
+
+async function hydrateImagesFromStorage(
+  words: Word[],
+  set: (updater: (state: WordsStore) => Partial<WordsStore>) => void
+) {
+  try {
+    const hydratedWords = await Promise.all(
+      words.map(async (word) => {
+        if (word.image?.storageKey && !word.image.dataUrl) {
+          const dataUrl = await loadWordImageData(word.image.storageKey);
+          if (dataUrl) {
+            return {
+              ...word,
+              image: {
+                ...word.image,
+                dataUrl,
+              },
+            };
+          }
+        }
+        return word;
+      })
+    );
+
+    set((state) => ({
+      ...state,
+      words: hydratedWords,
+    }));
+  } catch (error) {
+    console.error('Не удалось загрузить изображения из IndexedDB', error);
+  }
+}
 
 // Helper function to chunk arrays
 function chunkArray<T>(arr: T[], size: number): T[][] {
@@ -628,6 +665,7 @@ interface WordsStore extends WordsState {
   
   // Refinement state
   refiningWords: Set<string>; // Track which words are being refined
+  imageGenerationStatus: Record<string, ImageGenerationStatus>;
   
   // Methods
   addWords: (newWords: Word[], toast: ToastFn) => Promise<void>;
@@ -649,6 +687,8 @@ interface WordsStore extends WordsState {
   setDraftInputText: (text: string) => void;
   clearDraftInputText: () => void;
   refineWord: (wordId: string, toast?: ToastFn) => Promise<void>; // New method for word refinement
+  generateWordImage: (wordId: string, toast?: ToastFn) => Promise<void>;
+  clearWordImage: (wordId: string, toast?: ToastFn) => void;
   // currentWord removed; use getCurrentWord(words, currentIndex) instead
 }
 
@@ -663,8 +703,16 @@ export const useWordsStore = create<WordsStore>((set, get) => {
         isBackgroundProcessing: false,
         draftInputText: '',
         refiningWords: new Set<string>(),
+        imageGenerationStatus: {} as Record<string, ImageGenerationStatus>,
       }
     : initialStoreState;
+
+  if (
+    typeof window !== 'undefined' &&
+    state.words.some(word => word.image?.storageKey && !word.image?.dataUrl)
+  ) {
+    hydrateImagesFromStorage(state.words, set);
+  }
 
   // Sync with localStorage changes from other tabs/windows
   if (typeof window !== 'undefined') {
@@ -873,16 +921,25 @@ export const useWordsStore = create<WordsStore>((set, get) => {
     },
 
     deleteWord: (id) => {
+      const targetWord = get().words.find(word => word.id === id);
+      if (targetWord?.image?.storageKey) {
+        void deleteWordImageData(targetWord.image.storageKey).catch(error =>
+          console.error('Не удалось удалить изображение слова', error)
+        );
+      }
       set(state => {
         const updatedWords = state.words.filter(word => word.id !== id);
         let newCurrentIndex = state.currentIndex;
         if (newCurrentIndex >= updatedWords.length) {
           newCurrentIndex = Math.max(0, updatedWords.length - 1);
         }
+        const restStatuses = { ...state.imageGenerationStatus };
+        delete restStatuses[id];
         return {
           ...state,
           words: updatedWords,
           currentIndex: newCurrentIndex,
+          imageGenerationStatus: restStatuses,
         };
       });
     },
@@ -901,9 +958,17 @@ export const useWordsStore = create<WordsStore>((set, get) => {
         set({
           words,
           currentIndex: 0,
+          imageGenerationStatus: {},
         });
+        if (typeof window !== 'undefined' && words.some(word => word.image?.storageKey && !word.image?.dataUrl)) {
+          hydrateImagesFromStorage(words, set);
+        }
       } else {
-        set(initialState);
+        set(state => ({
+          ...state,
+          ...initialState,
+          imageGenerationStatus: {},
+        }));
       }
     },
 
@@ -919,8 +984,12 @@ export const useWordsStore = create<WordsStore>((set, get) => {
         return {
           words: newWords,
           currentIndex: newCurrentIndex,
+          imageGenerationStatus: {},
         };
       });
+      if (typeof window !== 'undefined' && newWords.some(word => word.image?.storageKey && !word.image?.dataUrl)) {
+        hydrateImagesFromStorage(newWords, set);
+      }
     },
 
     /**
@@ -928,7 +997,18 @@ export const useWordsStore = create<WordsStore>((set, get) => {
      * including currentWord, currentIndex, and progress.
      */
     clearAllWords: toast => {
-      set({ ...initialState });
+      void clearAllWordImages().catch(error => {
+        console.error('Не удалось очистить изображения', error);
+      });
+      set(state => ({
+        ...state,
+        ...initialState,
+        backgroundTasks: [],
+        isBackgroundProcessing: false,
+        draftInputText: '',
+        refiningWords: new Set<string>(),
+        imageGenerationStatus: {},
+      }));
       toast?.({
         title: 'Успех!',
         description: 'Все слова удалены из коллекции',
@@ -1130,6 +1210,124 @@ export const useWordsStore = create<WordsStore>((set, get) => {
           variant: 'destructive',
         });
       }
+    },
+
+    generateWordImage: async (wordId, toast) => {
+      const state = get();
+      const word = state.words.find(w => w.id === wordId);
+
+      if (!word) {
+        toast?.({
+          title: 'Ошибка',
+          description: 'Слово не найдено',
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      if (!word.hebrew) {
+        toast?.({
+          title: 'Ошибка',
+          description: 'Для генерации иконки требуется текст на иврите',
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      const imageSettings = loadImageSettings();
+
+      if (imageSettings.provider === 'banana-gemini' && !imageSettings.banana.apiKey) {
+        toast?.({
+          title: 'Настройте API',
+          description: 'Укажите API ключ Gemini Banana в разделе “Image Generation API”.',
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      set(state => ({
+        ...state,
+        imageGenerationStatus: {
+          ...state.imageGenerationStatus,
+          [wordId]: { status: 'generating' },
+        },
+      }));
+
+      try {
+        const imageAsset = await generateWordImageAsset({
+          word,
+          settings: imageSettings,
+        });
+        if (!imageAsset.dataUrl) {
+          throw new Error('Провайдер не вернул изображение');
+        }
+
+        let storageKey = word.image?.storageKey || `word-image-${word.id}`;
+        try {
+          await saveWordImageData(storageKey, imageAsset.dataUrl);
+        } catch (storageError) {
+          console.error('Не удалось сохранить изображение локально', storageError);
+          storageKey = undefined;
+        }
+
+        const imageWithStorage = {
+          ...imageAsset,
+          storageKey,
+        };
+
+        set(state => ({
+          ...state,
+          words: state.words.map(w => (w.id === wordId ? { ...w, image: imageWithStorage } : w)),
+          imageGenerationStatus: {
+            ...state.imageGenerationStatus,
+            [wordId]: { status: 'idle' },
+          },
+        }));
+
+        toast?.({
+          title: 'Иконка готова',
+          description: `Создано изображение для "${word.hebrew}"`,
+        });
+      } catch (error) {
+        const message = error instanceof Error ? error.message : 'Неизвестная ошибка';
+        set(state => ({
+          ...state,
+          imageGenerationStatus: {
+            ...state.imageGenerationStatus,
+            [wordId]: { status: 'error', error: message },
+          },
+        }));
+
+        toast?.({
+          title: 'Ошибка генерации',
+          description: message,
+          variant: 'destructive',
+        });
+      }
+    },
+
+    clearWordImage: (wordId, toast) => {
+      const targetWord = get().words.find(word => word.id === wordId);
+      if (targetWord?.image?.storageKey) {
+        void deleteWordImageData(targetWord.image.storageKey).catch(error =>
+          console.error('Не удалось удалить изображение', error)
+        );
+      }
+      set(state => ({
+        ...state,
+        words: state.words.map(word =>
+          word.id === wordId ? { ...word, image: null } : word
+        ),
+        imageGenerationStatus: {
+          ...state.imageGenerationStatus,
+          [wordId]: { status: 'idle' },
+        },
+      }));
+
+      toast?.({
+        title: 'Иконка удалена',
+        description: 'Изображение можно сгенерировать повторно в любой момент.',
+      });
     },
 
     // stats getter removed; use getStats(words) instead

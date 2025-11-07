@@ -30,6 +30,9 @@ const WordTable: FC<WordTableProps> = ({ onEditWord }) => {
   const deleteWord = useWordsStore(state => state.deleteWord);
   const refineWord = useWordsStore(state => state.refineWord);
   const refiningWords = useWordsStore(state => state.refiningWords);
+  const generateWordImage = useWordsStore(state => state.generateWordImage);
+  const clearWordImage = useWordsStore(state => state.clearWordImage);
+  const imageGenerationStatus = useWordsStore(state => state.imageGenerationStatus);
   const { toast } = useToast();
   const [editingWord, setEditingWord] = useState<Word | null>(null);
   const [editingConjugations, setEditingConjugations] = useState<Word | null>(null);
@@ -55,6 +58,16 @@ const WordTable: FC<WordTableProps> = ({ onEditWord }) => {
     refineWord(id, toastWrapper);
   }, [refineWord, toastWrapper]);
 
+  const handleGenerateImage = useCallback((word: Word) => {
+    generateWordImage(word.id, toastWrapper);
+  }, [generateWordImage, toastWrapper]);
+
+  const handleClearImage = useCallback((word: Word) => {
+    clearWordImage(word.id, toastWrapper);
+  }, [clearWordImage, toastWrapper]);
+
+  const getImageStatus = useCallback((id: string) => imageGenerationStatus[id], [imageGenerationStatus]);
+
   // Create a stable function to check if word is refining
   const isWordRefining = useCallback((id: string) => refiningWords.has(id), [refiningWords]);
 
@@ -67,8 +80,11 @@ const WordTable: FC<WordTableProps> = ({ onEditWord }) => {
     handleRefineWord,
     isWordRefining,
     setEditingConjugations,
-    setEditingExamples
-  ), [markAsLearned, markAsNotLearned, deleteWord, handleRefineWord, isWordRefining]);
+    setEditingExamples,
+    handleGenerateImage,
+    handleClearImage,
+    getImageStatus
+  ), [markAsLearned, markAsNotLearned, deleteWord, handleRefineWord, isWordRefining, handleGenerateImage, handleClearImage, getImageStatus]);
 
   // Function to handle saving edited word
   const handleSaveEdit = useCallback((editedWord: Word) => {
