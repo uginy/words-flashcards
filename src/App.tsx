@@ -28,13 +28,11 @@ function App() {
   const wordInputRef = useRef<HTMLDivElement>(null);
 
   // Получаем данные и методы из Zustand-стора
-  const {
-    words,
-    markAsLearned,
-    markAsNotLearned,
-    deleteWord,
-    resetProgress,
-  } = useWordsStore();
+  const words = useWordsStore((state) => state.words);
+  const markAsLearned = useWordsStore((state) => state.markAsLearned);
+  const markAsNotLearned = useWordsStore((state) => state.markAsNotLearned);
+  const deleteWord = useWordsStore((state) => state.deleteWord);
+  const resetProgress = useWordsStore((state) => state.resetProgress);
 
   // Получаем список уникальных категорий из слов
   const categories = Array.from(new Set(words.map(w => w.category))).filter(Boolean);
@@ -60,8 +58,14 @@ function App() {
     // Всегда отмечаем слово выученным, даже в режиме уже выученных слов
     markAsLearned(id);
     
+    // Вычисляем статистику с учетом того, что текущее слово будет помечено как изученное
+    const updatedFilteredWords = filteredWords.map(w => 
+      w.id === id ? { ...w, isLearned: true } : w
+    );
+    const updatedStats = getStats(updatedFilteredWords);
+    
     // Если после отметки все слова выучены, сбрасываем filteredIndex
-    if (getStats(filteredWords).remaining <= 1) {
+    if (updatedStats.remaining === 0) {
       setFilteredIndex(0);
     } else {
       handleNextWord();
