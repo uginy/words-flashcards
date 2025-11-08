@@ -27,6 +27,7 @@ interface DeleteButtonProps {
   variant?: "ghost" | "destructive" | "secondary";
   size?: "icon" | "default" | "sm" | "lg";
   className?: string;
+  disabled?: boolean;
 }
 
 export const DeleteButton: React.FC<DeleteButtonProps> = ({
@@ -37,18 +38,20 @@ export const DeleteButton: React.FC<DeleteButtonProps> = ({
   variant = "ghost",
   size = "icon",
   className = "h-8 w-8",
+  disabled = false,
 }) => {
   return (
     <TooltipProvider>
       <AlertDialog>
         <div className="flex items-center">
           <Tooltip>
-            <AlertDialogTrigger asChild>
+            <AlertDialogTrigger asChild disabled={disabled}>
               <TooltipTrigger asChild>
                 <Button
                   variant={variant}
                   size={size}
                   className={`${className} ${variant === "ghost" ? "text-red-600 hover:text-red-900" : ""}`}
+                  disabled={disabled}
                 >
                   <Trash2 className="h-4 w-4" />
                 </Button>
