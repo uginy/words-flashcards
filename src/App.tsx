@@ -47,8 +47,8 @@ function App() {
     return categoryMatch && statusMatch;
   });
 
-  // Статистика только по отфильтрованным словам
-  const stats = getStats(filteredWords);
+  // Статистика по всем словам (независимо от фильтра)
+  const stats = getStats(words);
 
   // Получаем текущее слово для обучения по filteredIndex
   const currentWord = filteredWords[filteredIndex];
