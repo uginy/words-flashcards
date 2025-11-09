@@ -19,13 +19,22 @@ import {
 } from './components/ui/select';
 
 function App() {
-  const [activeTab, setActiveTab] = useState('learn');
+  // Load last active tab from localStorage
+  const [activeTab, setActiveTab] = useState(() => {
+    const saved = localStorage.getItem('activeTab');
+    return saved || 'learn';
+  });
   const [reverseMode, setReverseMode] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   // State for status filter: 'all' | 'learned' | 'not_learned'
   const [selectedStatus, setSelectedStatus] = useState<'all' | 'learned' | 'not_learned'>('all');
   const [filteredIndex, setFilteredIndex] = useState(0);
   const wordInputRef = useRef<HTMLDivElement>(null);
+
+  // Save active tab to localStorage when it changes
+  useEffect(() => {
+    localStorage.setItem('activeTab', activeTab);
+  }, [activeTab]);
 
   // Получаем данные и методы из Zustand-стора
   const words = useWordsStore((state) => state.words);
