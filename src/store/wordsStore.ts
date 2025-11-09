@@ -23,6 +23,8 @@ const initialStoreState = {
   draftInputText: '',
   refiningWords: new Set<string>(),
   imageGenerationStatus: {} as Record<string, ImageGenerationStatus>,
+  isBatchGeneratingImages: false,
+  batchGenerationProgress: null as { current: number; total: number; currentWord: string } | null,
 };
 
 // Returns statistics for a given array of words
@@ -738,6 +740,8 @@ interface WordsStore extends WordsState {
   // Refinement state
   refiningWords: Set<string>; // Track which words are being refined
   imageGenerationStatus: Record<string, ImageGenerationStatus>;
+  isBatchGeneratingImages: boolean;
+  batchGenerationProgress: { current: number; total: number; currentWord: string } | null;
   
   // Methods
   addWords: (newWords: Word[], toast: ToastFn) => Promise<void>;
@@ -761,6 +765,7 @@ interface WordsStore extends WordsState {
   refineWord: (wordId: string, toast?: ToastFn) => Promise<void>; // New method for word refinement
   generateWordImage: (wordId: string, toast?: ToastFn) => Promise<void>;
   generateImagesForMultipleWords: (wordIds: string[], toast?: ToastFn) => Promise<void>;
+  cancelBatchImageGeneration: () => void;
   clearWordImage: (wordId: string, toast?: ToastFn) => void;
   // currentWord removed; use getCurrentWord(words, currentIndex) instead
 }
@@ -777,6 +782,8 @@ export const useWordsStore = create<WordsStore>((set, get) => {
         draftInputText: '',
         refiningWords: new Set<string>(),
         imageGenerationStatus: {} as Record<string, ImageGenerationStatus>,
+        isBatchGeneratingImages: false,
+        batchGenerationProgress: null as { current: number; total: number; currentWord: string } | null,
       }
     : initialStoreState;
 
@@ -1400,28 +1407,69 @@ export const useWordsStore = create<WordsStore>((set, get) => {
         return;
       }
 
+      set({ 
+        isBatchGeneratingImages: true,
+        batchGenerationProgress: { current: 0, total: words.length, currentWord: words[0].hebrew }
+      });
+
       toast?.({
         title: 'Генерация запущена',
-        description: `Генерируем иконки для ${words.length} слов...`,
+        description: `Будет обработано ${words.length} ${words.length === 1 ? 'слово' : words.length < 5 ? 'слова' : 'слов'}`,
       });
 
       let successCount = 0;
       let errorCount = 0;
 
-      for (const word of words) {
+      for (let i = 0; i < words.length; i++) {
+        // Check if cancelled
+        if (!get().isBatchGeneratingImages) {
+          set({ batchGenerationProgress: null });
+          toast?.({
+            title: 'Генерация остановлена',
+            description: `Обработано: ${i}/${words.length}. Успешно: ${successCount}, Ошибок: ${errorCount}`,
+          });
+          return;
+        }
+
+        const word = words[i];
+        
+        // Update progress
+        set(state => ({
+          ...state,
+          batchGenerationProgress: { 
+            current: i + 1, 
+            total: words.length, 
+            currentWord: word.hebrew 
+          },
+          imageGenerationStatus: {
+            ...state.imageGenerationStatus,
+            [word.id]: { status: 'generating' },
+          },
+        }));
+        
         try {
-          set(state => ({
-            ...state,
-            imageGenerationStatus: {
-              ...state.imageGenerationStatus,
-              [word.id]: { status: 'generating' },
-            },
-          }));
 
           const imageAsset = await generateWordImageAsset({
             word,
             settings: imageSettings,
           });
+
+          // Check again after async operation
+          if (!get().isBatchGeneratingImages) {
+            set(state => ({
+              ...state,
+              batchGenerationProgress: null,
+              imageGenerationStatus: {
+                ...state.imageGenerationStatus,
+                [word.id]: { status: 'idle' },
+              },
+            }));
+            toast?.({
+              title: 'Генерация остановлена',
+              description: `Обработано: ${i + 1}/${words.length}. Успешно: ${successCount}, Ошибок: ${errorCount}`,
+            });
+            return;
+          }
 
           if (!imageAsset.dataUrl) {
             throw new Error('Провайдер не вернул изображение');
@@ -1466,10 +1514,22 @@ export const useWordsStore = create<WordsStore>((set, get) => {
         await new Promise(resolve => setTimeout(resolve, 500));
       }
 
+      set({ 
+        isBatchGeneratingImages: false,
+        batchGenerationProgress: null
+      });
+
       toast?.({
         title: 'Генерация завершена',
         description: `Успешно: ${successCount}, Ошибок: ${errorCount}`,
         variant: errorCount > 0 ? 'destructive' : 'default',
+      });
+    },
+
+    cancelBatchImageGeneration: () => {
+      set({ 
+        isBatchGeneratingImages: false,
+        batchGenerationProgress: null
       });
     },
 

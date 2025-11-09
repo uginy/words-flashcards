@@ -11,6 +11,7 @@ import { getColumns } from './columns';
 import {
   TooltipProvider,
 } from "@/components/ui/tooltip";
+import { Loader2 } from 'lucide-react';
 import { DeleteButton } from './DeleteButton';
 
 interface WordTableProps {
@@ -32,6 +33,9 @@ const WordTable: FC<WordTableProps> = ({ onEditWord }) => {
   const refiningWords = useWordsStore(state => state.refiningWords);
   const generateWordImage = useWordsStore(state => state.generateWordImage);
   const generateImagesForMultipleWords = useWordsStore(state => state.generateImagesForMultipleWords);
+  const cancelBatchImageGeneration = useWordsStore(state => state.cancelBatchImageGeneration);
+  const isBatchGeneratingImages = useWordsStore(state => state.isBatchGeneratingImages);
+  const batchGenerationProgress = useWordsStore(state => state.batchGenerationProgress);
   const clearWordImage = useWordsStore(state => state.clearWordImage);
   const imageGenerationStatus = useWordsStore(state => state.imageGenerationStatus);
   const { toast } = useToast();
@@ -106,6 +110,11 @@ const WordTable: FC<WordTableProps> = ({ onEditWord }) => {
   }, [clearAllWords, toast]);
 
   const handleBatchGenerateImages = useCallback(() => {
+    if (isBatchGeneratingImages) {
+      cancelBatchImageGeneration();
+      return;
+    }
+    
     const wordsWithoutImages = allWords.filter(w => !w.image && w.hebrew);
     if (wordsWithoutImages.length === 0) {
       toast({ 
@@ -116,7 +125,7 @@ const WordTable: FC<WordTableProps> = ({ onEditWord }) => {
     }
     const wordIds = wordsWithoutImages.map(w => w.id);
     generateImagesForMultipleWords(wordIds, toastWrapper);
-  }, [allWords, generateImagesForMultipleWords, toastWrapper, toast]);
+  }, [allWords, isBatchGeneratingImages, generateImagesForMultipleWords, cancelBatchImageGeneration, toastWrapper, toast]);
 
   return (
     <div className="w-full min-w-0">
@@ -153,14 +162,43 @@ const WordTable: FC<WordTableProps> = ({ onEditWord }) => {
             <h3 className="text-base sm:text-lg font-medium text-gray-800 truncate max-w-full">
               Список слов ({filteredWordCount})
             </h3>
-            <div className="flex flex-wrap gap-2 w-full sm:w-auto justify-start sm:justify-end">
+            <div className="flex flex-wrap gap-2 w-full sm:w-auto justify-start sm:justify-end items-center">
               <TooltipProvider>
+                {batchGenerationProgress && (
+                  <div className="flex flex-col gap-1 px-3 py-1 bg-indigo-50 border border-indigo-200 rounded text-xs">
+                    <div className="flex items-center gap-2">
+                      <span className="font-semibold text-indigo-700">
+                        {batchGenerationProgress.current}/{batchGenerationProgress.total}
+                      </span>
+                      <span className="text-gray-600">•</span>
+                      <span className="text-gray-700" dir="rtl">{batchGenerationProgress.currentWord}</span>
+                    </div>
+                    <div className="w-full bg-indigo-200 rounded-full h-1.5">
+                      <div 
+                        className="bg-indigo-600 h-1.5 rounded-full transition-all duration-300"
+                        style={{ width: `${(batchGenerationProgress.current / batchGenerationProgress.total) * 100}%` }}
+                      />
+                    </div>
+                  </div>
+                )}
                 <button
                   onClick={handleBatchGenerateImages}
-                  className="px-3 py-1.5 text-sm bg-indigo-500 text-white rounded hover:bg-indigo-600 transition-colors"
-                  disabled={Object.values(imageGenerationStatus).some(s => s.status === 'generating')}
+                  className={`px-3 py-1.5 text-sm rounded transition-colors flex items-center gap-2 ${
+                    isBatchGeneratingImages 
+                      ? 'bg-red-500 hover:bg-red-600 text-white' 
+                      : 'bg-indigo-500 hover:bg-indigo-600 text-white'
+                  }`}
                 >
-                  🎨 Сгенерировать иконки
+                  {isBatchGeneratingImages ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      Остановить генерацию
+                    </>
+                  ) : (
+                    <>
+                      🎨 Сгенерировать иконки
+                    </>
+                  )}
                 </button>
                 <DeleteButton
                   onDelete={performClearAllWords}

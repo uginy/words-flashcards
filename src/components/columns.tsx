@@ -110,7 +110,9 @@ export const getColumns = (
         const imageGenerationError = imageStatus?.status === 'error' ? imageStatus.error : undefined;
         
         return (
-          <div className="flex items-center gap-2">
+          <div className={`flex items-center gap-2 p-2 rounded-md transition-colors ${
+            isGeneratingImage ? 'bg-indigo-50 border border-indigo-200' : ''
+          }`}>
             {word.image?.dataUrl ? (
               <TooltipProvider>
                 <Tooltip>
@@ -138,6 +140,10 @@ export const getColumns = (
                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>
+            ) : isGeneratingImage ? (
+              <div className="w-12 h-12 rounded-md border border-indigo-300 bg-indigo-100 text-[10px] text-indigo-600 flex items-center justify-center uppercase font-semibold">
+                <Loader2 className="h-5 w-5 animate-spin" />
+              </div>
             ) : (
               <div className="w-12 h-12 rounded-md border border-dashed border-gray-300 text-[10px] text-gray-400 flex items-center justify-center uppercase">
                 Нет
