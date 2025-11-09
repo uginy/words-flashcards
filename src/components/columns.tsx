@@ -18,6 +18,19 @@ import {
 import ConjugationDisplay from './ConjugationDisplay';
 import { SpeakerIcon } from "./SpeakerIcon";
 
+// Mapping of binyan keys to Hebrew names
+const BINYAN_HEBREW: Record<string, string> = {
+  'PAAL': 'פעל',
+  'PIEL': 'פיעל',
+  'HITPAEL': 'התפעל',
+  'PUAL': 'פועל',
+  'NIFAL': 'נפעל',
+  'HIFIL': 'הפעיל',
+  'HUFAL': 'הופעל',
+  'HITCIL': 'התציע',
+  'OTHER': 'אחר',
+};
+
 export const getColumns = (
   setEditingWord: (word: Word) => void,
   markAsLearned: (id: string) => void,
@@ -280,7 +293,7 @@ export const getColumns = (
     },
     {
       accessorKey: "category",
-      size: 130,
+      size: 110,
       header: ({ column }) => (
         <Button
           variant="ghost"
@@ -292,16 +305,28 @@ export const getColumns = (
         </Button>
       ),
       cell: ({ row }) => {
-        const category = row.getValue("category") as string;
+        const word = row.original;
+        const category = word.category;
+        const isVerb = category === 'פועל';
+        const binyan = word.binyan;
+        const binyanHebrew = binyan ? BINYAN_HEBREW[binyan] || binyan : null;
+        
         return (
-          <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
-          ${category === 'פועל' ? 'bg-blue-100 text-blue-800' :
-              category === 'שם עצם' ? 'bg-green-100 text-green-800' :
-                category === 'שם תואר' ? 'bg-purple-100 text-purple-800' :
-                  'bg-gray-100 text-gray-800'}`}
-          >
-            {category}
-          </span>
+          <div className="flex flex-col gap-0.5">
+            <span className={`px-2 py-0.5 inline-flex text-xs leading-tight font-semibold rounded-full w-fit
+            ${category === 'פועל' ? 'bg-blue-100 text-blue-800' :
+                category === 'שם עצם' ? 'bg-green-100 text-green-800' :
+                  category === 'שם תואר' ? 'bg-purple-100 text-purple-800' :
+                    'bg-gray-100 text-gray-800'}`}
+            >
+              {category}
+            </span>
+            {isVerb && binyanHebrew && (
+              <span className="text-[10px] text-gray-500 px-1" dir="rtl">
+                {binyanHebrew}
+              </span>
+            )}
+          </div>
         );
       },
     },
