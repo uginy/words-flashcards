@@ -30,13 +30,29 @@ const EditWordDialog: React.FC<EditWordDialogProps> = ({
   onSave,
 }) => {
   const [editedWord, setEditedWord] = useState<Word>(word);
+  const [examplesText, setExamplesText] = useState<string>('');
 
+  // Only reset when dialog opens, not on every word change
   useEffect(() => {
-    setEditedWord(word);
-  }, [word]);
+    if (isOpen) {
+      setEditedWord(word);
+      setExamplesText(word.examples ? JSON.stringify(word.examples, null, 2) : '');
+    }
+  }, [isOpen, word.id]); // Only trigger when dialog opens or word ID changes
 
   const handleSave = () => {
-    onSave(editedWord);
+    // Try to parse examples only on save
+    if (examplesText.trim()) {
+      try {
+        const examples = JSON.parse(examplesText);
+        onSave({ ...editedWord, examples });
+      } catch {
+        // If invalid JSON, save without examples update
+        onSave(editedWord);
+      }
+    } else {
+      onSave(editedWord);
+    }
     onClose();
   };
 
@@ -149,7 +165,7 @@ const EditWordDialog: React.FC<EditWordDialogProps> = ({
                     <SelectItem value="HIFIL">HIFIL (הפע"יל)</SelectItem>
                     <SelectItem value="HUFAL">HUFAL (הופע"ל)</SelectItem>
                     <SelectItem value="HITCIL">HITCIL (התצע"י)</SelectItem>
-                    <SelectItem value="">Другое</SelectItem>
+                    <SelectItem value="OTHER">Другое</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -162,17 +178,10 @@ const EditWordDialog: React.FC<EditWordDialogProps> = ({
               </label>
               <div className="col-span-3">
                 <textarea
-                  className="w-full px-3 py-2 border rounded-md min-h-[100px]"
-                  value={JSON.stringify(editedWord.examples, null, 2)}
-                  onChange={(e) => {
-                    try {
-                      const examples = JSON.parse(e.target.value);
-                      setEditedWord({ ...editedWord, examples });
-                    } catch (error) {
-                      console.error(error)
-                      // Ignore invalid JSON while typing
-                    }
-                  }}
+                  className="w-full px-3 py-2 border rounded-md min-h-[100px] font-mono text-sm"
+                  value={examplesText}
+                  onChange={(e) => setExamplesText(e.target.value)}
+                  placeholder="JSON формат примеров"
                 />
               </div>
             </div>

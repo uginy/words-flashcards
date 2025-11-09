@@ -144,6 +144,23 @@ export const fetchSuggestedWordsUniversal = async ({
     });
   }
   
+  if (llmSettings.provider === 'lmstudio') {
+    // Use LM Studio
+    if (!llmSettings.lmstudio.apiUrl || !llmSettings.lmstudio.selectedModel) {
+      throw new Error('LM Studio не настроен. Укажите URL и модель в настройках.');
+    }
+    
+    const { fetchSuggestedWordsWithLMStudio } = await import('./lmstudio/word-suggestions');
+    
+    return await fetchSuggestedWordsWithLMStudio({
+      category,
+      level,
+      count,
+      baseUrl: llmSettings.lmstudio.apiUrl,
+      model: llmSettings.lmstudio.selectedModel
+    });
+  }
+  
   // Use OpenRouter
   if (!llmSettings.openrouter.apiKey || !llmSettings.openrouter.selectedModel) {
     throw new Error('OpenRouter не настроен. Укажите API ключ и модель в настройках.');

@@ -1,5 +1,6 @@
 import { DEFAULT_OPENROUTER_API_KEY, DEFAULT_OPENROUTER_MODEL, DEFAULT_BATCH_SIZE, DEFAULT_BATCH_DELAY, DEFAULT_PROGRESSIVE_DELAY, DEFAULT_MAX_DELAY_SECONDS } from './openrouter';
 import { DEFAULT_OLLAMA_API_URL, DEFAULT_OLLAMA_MODEL } from './ollama';
+import { DEFAULT_LMSTUDIO_API_URL, DEFAULT_LMSTUDIO_MODEL } from './lmstudio';
 
 // Storage keys for LLM settings
 export const LLM_PROVIDER_STORAGE_KEY = 'llmProvider';
@@ -7,13 +8,15 @@ export const OPENROUTER_API_KEY_STORAGE_KEY = 'openRouterApiKey';
 export const OPENROUTER_SELECTED_MODEL_STORAGE_KEY = 'openRouterModel';
 export const OLLAMA_API_URL_STORAGE_KEY = 'ollamaApiUrl';
 export const OLLAMA_SELECTED_MODEL_STORAGE_KEY = 'ollamaModel';
+export const LMSTUDIO_API_URL_STORAGE_KEY = 'lmstudioApiUrl';
+export const LMSTUDIO_SELECTED_MODEL_STORAGE_KEY = 'lmstudioModel';
 export const BATCH_SIZE_STORAGE_KEY = 'batchSize';
 export const BATCH_DELAY_STORAGE_KEY = 'batchDelay';
 export const PROGRESSIVE_DELAY_STORAGE_KEY = 'progressiveDelay';
 export const MAX_DELAY_SECONDS_STORAGE_KEY = 'maxDelaySeconds';
 
 // LLM Provider types
-export type LLMProvider = 'openrouter' | 'ollama';
+export type LLMProvider = 'openrouter' | 'ollama' | 'lmstudio';
 
 // Default settings
 export const DEFAULT_LLM_PROVIDER: LLMProvider = 'openrouter';
@@ -25,6 +28,10 @@ export interface LLMSettings {
     selectedModel: string;
   };
   ollama: {
+    apiUrl: string;
+    selectedModel: string;
+  };
+  lmstudio: {
     apiUrl: string;
     selectedModel: string;
   };
@@ -45,6 +52,10 @@ export const getDefaultLLMSettings = (): LLMSettings => ({
   ollama: {
     apiUrl: DEFAULT_OLLAMA_API_URL,
     selectedModel: DEFAULT_OLLAMA_MODEL,
+  },
+  lmstudio: {
+    apiUrl: DEFAULT_LMSTUDIO_API_URL,
+    selectedModel: DEFAULT_LMSTUDIO_MODEL,
   },
   batching: {
     batchSize: DEFAULT_BATCH_SIZE,
@@ -68,6 +79,10 @@ export const loadLLMSettings = (): LLMSettings => {
         apiUrl: localStorage.getItem(OLLAMA_API_URL_STORAGE_KEY) || defaults.ollama.apiUrl,
         selectedModel: localStorage.getItem(OLLAMA_SELECTED_MODEL_STORAGE_KEY) || defaults.ollama.selectedModel,
       },
+      lmstudio: {
+        apiUrl: localStorage.getItem(LMSTUDIO_API_URL_STORAGE_KEY) || defaults.lmstudio.apiUrl,
+        selectedModel: localStorage.getItem(LMSTUDIO_SELECTED_MODEL_STORAGE_KEY) || defaults.lmstudio.selectedModel,
+      },
       batching: {
         batchSize: parseInt(localStorage.getItem(BATCH_SIZE_STORAGE_KEY) || String(defaults.batching.batchSize)),
         batchDelay: parseInt(localStorage.getItem(BATCH_DELAY_STORAGE_KEY) || String(defaults.batching.batchDelay)),
@@ -88,6 +103,8 @@ export const saveLLMSettings = (settings: LLMSettings): void => {
     localStorage.setItem(OPENROUTER_SELECTED_MODEL_STORAGE_KEY, settings.openrouter.selectedModel);
     localStorage.setItem(OLLAMA_API_URL_STORAGE_KEY, settings.ollama.apiUrl);
     localStorage.setItem(OLLAMA_SELECTED_MODEL_STORAGE_KEY, settings.ollama.selectedModel);
+    localStorage.setItem(LMSTUDIO_API_URL_STORAGE_KEY, settings.lmstudio.apiUrl);
+    localStorage.setItem(LMSTUDIO_SELECTED_MODEL_STORAGE_KEY, settings.lmstudio.selectedModel);
     localStorage.setItem(BATCH_SIZE_STORAGE_KEY, String(settings.batching.batchSize));
     localStorage.setItem(BATCH_DELAY_STORAGE_KEY, String(settings.batching.batchDelay));
     localStorage.setItem(PROGRESSIVE_DELAY_STORAGE_KEY, String(settings.batching.progressiveDelay));

@@ -39,7 +39,7 @@ interface OpenRouterModel {
 }
 
 type TabType = 'table' | 'tts' | 'llm' | 'data' | 'images';
-type LLMProviderTab = 'openrouter' | 'ollama';
+type LLMProviderTab = 'openrouter' | 'ollama' | 'lmstudio';
 
 const Settings: React.FC = () => {
   const { toast } = useToast();
@@ -59,13 +59,18 @@ const Settings: React.FC = () => {
   const [showFreeOnly, setShowFreeOnly] = useState<boolean>(true);
 
   // Ollama state
-  const { 
-    models: ollamaModels, 
-    isLoading: isLoadingOllamaModels, 
+  const {
+    models: ollamaModels,
+    isLoading: isLoadingOllamaModels,
     fetchModels: fetchOllamaModels,
     clearError: clearOllamaError,
-    isServerUnavailable: isOllamaServerUnavailable 
+    isServerUnavailable: isOllamaServerUnavailable
   } = useOllamaModels();
+
+  // LM Studio state
+  const [lmStudioModels, setLmStudioModels] = useState<string[]>([]);
+  const [isLoadingLmStudioModels, setIsLoadingLmStudioModels] = useState<boolean>(false);
+  const [isLmStudioServerUnavailable, setIsLmStudioServerUnavailable] = useState<boolean>(false);
 
   useEffect(() => {
     const tableSettings = loadTableSettings();
@@ -94,15 +99,23 @@ const Settings: React.FC = () => {
 
   // Auto-fetch Ollama models when user opens LLM settings tab and Ollama is the default provider
   useEffect(() => {
-    if (activeTab === 'llm' && 
-        llmSettings.provider === 'ollama' && 
-        llmSettings.ollama.apiUrl && 
-        ollamaModels.length === 0 && 
+    if (activeTab === 'llm' &&
+        llmSettings.provider === 'ollama' &&
+        llmSettings.ollama.apiUrl &&
+        ollamaModels.length === 0 &&
         !isLoadingOllamaModels &&
         !isOllamaServerUnavailable) {
       fetchOllamaModels(llmSettings.ollama.apiUrl);
     }
-  }, [activeTab, llmSettings.provider, llmSettings.ollama.apiUrl, ollamaModels.length, isLoadingOllamaModels, isOllamaServerUnavailable, fetchOllamaModels]);
+    if (activeTab === 'llm' &&
+        llmSettings.provider === 'lmstudio' &&
+        llmSettings.lmstudio.apiUrl &&
+        lmStudioModels.length === 0 &&
+        !isLoadingLmStudioModels &&
+        !isLmStudioServerUnavailable) {
+      fetchLmStudioModels(llmSettings.lmstudio.apiUrl);
+    }
+  }, [activeTab, llmSettings.provider, llmSettings.ollama.apiUrl, ollamaModels.length, isLoadingOllamaModels, isOllamaServerUnavailable, fetchOllamaModels, llmSettings.lmstudio.apiUrl, lmStudioModels.length, isLoadingLmStudioModels, isLmStudioServerUnavailable]);
 
   useEffect(() => {
     let models = availableModels;
@@ -153,7 +166,7 @@ const Settings: React.FC = () => {
     
     toast({
       title: "Настройки ИИ сохранены",
-      description: `Провайдер: ${llmSettings.provider === 'openrouter' ? 'OpenRouter' : 'Ollama'}`,
+      description: `Провайдер: ${llmSettings.provider === 'openrouter' ? 'OpenRouter' : llmSettings.provider === 'ollama' ? 'Ollama' : 'LM Studio'}`,
       variant: "default"
     });
   };
@@ -163,12 +176,18 @@ const Settings: React.FC = () => {
     // Update provider in settings when tab changes
     setLLMSettings(prev => ({ ...prev, provider: tab }));
     
-    // Auto-fetch models when switching to Ollama tab only if server is available
-    if (tab === 'ollama' && 
-        llmSettings.ollama.apiUrl && 
+    // Auto-fetch models when switching to provider tab
+    if (tab === 'ollama' &&
+        llmSettings.ollama.apiUrl &&
         ollamaModels.length === 0 &&
         !isOllamaServerUnavailable) {
       fetchOllamaModels(llmSettings.ollama.apiUrl);
+    }
+    if (tab === 'lmstudio' &&
+        llmSettings.lmstudio.apiUrl &&
+        lmStudioModels.length === 0 &&
+        !isLmStudioServerUnavailable) {
+      fetchLmStudioModels(llmSettings.lmstudio.apiUrl);
     }
   };
 
@@ -188,6 +207,42 @@ const Settings: React.FC = () => {
     setLLMSettings(prev => ({
       ...prev,
       ollama: { ...prev.ollama, selectedModel }
+    }));
+  };
+
+  const fetchLmStudioModels = async (apiUrl: string, force = false) => {
+    setIsLoadingLmStudioModels(true);
+    setIsLmStudioServerUnavailable(false);
+    try {
+      const response = await fetch(`${apiUrl}/models`);
+      if (!response.ok) {
+        throw new Error(`Failed to fetch models: ${response.statusText}`);
+      }
+      const data = await response.json();
+      const models = data.data || [];
+      setLmStudioModels(models.map((model: any) => model.id));
+    } catch (error) {
+      console.error('Error fetching LM Studio models:', error);
+      setIsLmStudioServerUnavailable(true);
+      setLmStudioModels([]);
+    } finally {
+      setIsLoadingLmStudioModels(false);
+    }
+  };
+
+  const handleLmStudioApiUrlChange = (apiUrl: string) => {
+    setLLMSettings(prev => ({
+      ...prev,
+      lmstudio: { ...prev.lmstudio, apiUrl }
+    }));
+    setIsLmStudioServerUnavailable(false);
+    setLmStudioModels([]);
+  };
+
+  const handleLmStudioModelChange = (selectedModel: string) => {
+    setLLMSettings(prev => ({
+      ...prev,
+      lmstudio: { ...prev.lmstudio, selectedModel }
     }));
   };
 
@@ -271,7 +326,8 @@ const Settings: React.FC = () => {
 
   const llmProviderTabs = [
     { id: 'openrouter' as LLMProviderTab, label: 'OpenRouter', icon: '🌐' },
-    { id: 'ollama' as LLMProviderTab, label: 'Ollama', icon: '🏠' }
+    { id: 'ollama' as LLMProviderTab, label: 'Ollama', icon: '🏠' },
+    { id: 'lmstudio' as LLMProviderTab, label: 'LM Studio', icon: '🖥️' }
   ];
 
   const renderLLMProviderContent = () => {
@@ -374,7 +430,7 @@ const Settings: React.FC = () => {
                   <Combobox
                     options={ollamaModels.map((model) => {
                       const rating = OLLAMA_MODEL_RATINGS[model.name as keyof typeof OLLAMA_MODEL_RATINGS];
-                      const label = rating 
+                      const label = rating
                         ? `${model.name} - ${rating.description} (Качество: ${rating.quality}/5)`
                         : model.name;
                       
@@ -424,6 +480,84 @@ const Settings: React.FC = () => {
                 <li><strong>gemma3:4b</strong> - Лучший баланс качества и скорости</li>
                 <li><strong>llama3.2:latest</strong> - Быстрый, но базовые категории</li>
                 <li><strong>llama3.1:latest</strong> - Высокое качество, медленный</li>
+              </ul>
+            </div>
+          </div>
+        );
+
+      case 'lmstudio':
+        return (
+          <div className="space-y-4">
+            <div>
+              <label htmlFor="lmstudioApiUrl" className="block text-sm font-medium text-gray-700 mb-1">
+                LM Studio API URL
+              </label>
+              <input
+                type="url"
+                id="lmstudioApiUrl"
+                className="w-full px-3 py-2 text-gray-700 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                value={llmSettings.lmstudio.apiUrl}
+                onChange={(e) => handleLmStudioApiUrlChange(e.target.value)}
+                placeholder="http://localhost:1234/v1"
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                URL LM Studio OpenAI-совместимого API (по умолчанию http://localhost:1234/v1)
+              </p>
+            </div>
+
+            <div>
+              <label htmlFor="lmstudioModelSelect" className="block text-sm font-medium text-gray-700 mb-1">
+                Выберите модель LM Studio
+              </label>
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+                <div className="flex-1">
+                  <Combobox
+                    options={lmStudioModels.map((modelName) => ({
+                      value: modelName,
+                      label: modelName
+                    }))}
+                    value={llmSettings.lmstudio.selectedModel}
+                    onValueChange={handleLmStudioModelChange}
+                    placeholder="Выберите модель LM Studio"
+                    searchPlaceholder="Поиск модели..."
+                    noResultsText="Модели не найдены"
+                    disabled={isLoadingLmStudioModels || lmStudioModels.length === 0}
+                  />
+                </div>
+                <button
+                  type="button"
+                  onClick={() => fetchLmStudioModels(llmSettings.lmstudio.apiUrl, true)}
+                  disabled={!llmSettings.lmstudio.apiUrl || isLoadingLmStudioModels}
+                  className="px-3 py-2 text-sm bg-green-500 text-white rounded-md hover:bg-green-600 disabled:bg-green-300 shrink-0 w-full sm:w-auto"
+                >
+                  {isLoadingLmStudioModels ? 'Загрузка...' : 'Проверить'}
+                </button>
+              </div>
+              {isLmStudioServerUnavailable && (
+                <div className="text-xs text-orange-600 mt-2 p-2 bg-orange-50 rounded border border-orange-200">
+                  <p className="font-medium">⚠️ Сервер LM Studio недоступен</p>
+                  <p className="mt-1">Убедитесь, что LM Studio запущен и включен OpenAI-совместимый API.</p>
+                </div>
+              )}
+              {lmStudioModels.length === 0 && !isLoadingLmStudioModels && llmSettings.lmstudio.apiUrl && !isLmStudioServerUnavailable && (
+                <p className="text-xs text-red-500 mt-1">
+                  Модели не найдены. Убедитесь, что LM Studio запущен и URL правильный.
+                </p>
+              )}
+              {lmStudioModels.length > 0 && (
+                <p className="text-xs text-green-600 mt-1">
+                  ✅ Найдено {lmStudioModels.length} моделей
+                </p>
+              )}
+            </div>
+
+            <div className="bg-blue-50 p-3 rounded-md">
+              <h4 className="text-sm font-medium text-blue-800 mb-2">💡 Настройка LM Studio:</h4>
+              <ul className="text-xs text-blue-700 space-y-1">
+                <li>Запустите LM Studio и загрузите модель</li>
+                <li>Включите "OpenAI-compatible API" в настройках</li>
+                <li>Убедитесь, что API доступен на http://localhost:1234/v1</li>
+                <li>Используйте модели, совместимые с OpenAI API</li>
               </ul>
             </div>
           </div>
@@ -745,7 +879,7 @@ const Settings: React.FC = () => {
 
             <div className="bg-yellow-50 p-3 rounded-md">
               <p className="text-xs text-yellow-800">
-                <strong>Текущий провайдер:</strong> {llmSettings.provider === 'openrouter' ? 'OpenRouter (требует интернет)' : 'Ollama (локальный)'}
+                <strong>Текущий провайдер:</strong> {llmSettings.provider === 'openrouter' ? 'OpenRouter (требует интернет)' : llmSettings.provider === 'ollama' ? 'Ollama (локальный)' : 'LM Studio (локальный)'}
               </p>
             </div>
           </div>

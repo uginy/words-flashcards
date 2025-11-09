@@ -27,6 +27,8 @@ export const useLLMSettings = () => {
     openRouterModel: settings.openrouter.selectedModel,
     ollamaApiUrl: settings.ollama.apiUrl,
     ollamaModel: settings.ollama.selectedModel,
+    lmStudioApiUrl: settings.lmstudio.apiUrl,
+    lmStudioModel: settings.lmstudio.selectedModel,
     // Batching settings
     batchSize: settings.batching.batchSize,
     batchDelay: settings.batching.batchDelay,
@@ -35,8 +37,11 @@ export const useLLMSettings = () => {
     // Check if provider is properly configured
     isOpenRouterConfigured: settings.openrouter.apiKey.trim() !== '',
     isOllamaConfigured: settings.ollama.apiUrl.trim() !== '' && settings.ollama.selectedModel.trim() !== '',
-    isCurrentProviderConfigured: settings.provider === 'openrouter' 
+    isLmStudioConfigured: settings.lmstudio.apiUrl.trim() !== '' && settings.lmstudio.selectedModel.trim() !== '',
+    isCurrentProviderConfigured: settings.provider === 'openrouter'
       ? settings.openrouter.apiKey.trim() !== ''
-      : settings.ollama.apiUrl.trim() !== '' && settings.ollama.selectedModel.trim() !== ''
+      : settings.provider === 'ollama'
+        ? settings.ollama.apiUrl.trim() !== '' && settings.ollama.selectedModel.trim() !== ''
+        : settings.lmstudio.apiUrl.trim() !== '' && settings.lmstudio.selectedModel.trim() !== ''
   };
 };

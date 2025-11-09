@@ -63,7 +63,21 @@ const WordInput: React.FC = () => {
     if (!draftInputText.trim()) return;
 
     if (!isCurrentProviderConfigured) {
-      setError(`${currentProvider === 'openrouter' ? 'OpenRouter' : 'Ollama'} не настроен. Укажите настройки в разделе ИИ Модель.`);
+      let providerName = '';
+      switch (currentProvider) {
+        case 'openrouter':
+          providerName = 'OpenRouter';
+          break;
+        case 'ollama':
+          providerName = 'Ollama';
+          break;
+        case 'lmstudio':
+          providerName = 'LM Studio';
+          break;
+        default:
+          providerName = currentProvider;
+      }
+      setError(`${providerName} не настроен. Укажите настройки в разделе ИИ Модель.`);
       return;
     }
 
@@ -105,8 +119,10 @@ const WordInput: React.FC = () => {
         <div className="flex justify-between items-center mb-2">
           <h3 className="text-lg font-medium text-gray-800">Добавить слова</h3>
           <div className="text-xs text-gray-500 flex items-center gap-1">
-            {currentProvider === 'openrouter' ? '🌐' : '🏠'} 
-            {currentProvider === 'openrouter' ? 'OpenRouter' : 'Ollama'}
+            {currentProvider === 'openrouter' ? '🌐' :
+             currentProvider === 'ollama' ? '🏠' : '🖥️'}
+            {currentProvider === 'openrouter' ? 'OpenRouter' :
+             currentProvider === 'ollama' ? 'Ollama' : 'LM Studio'}
             {isCurrentProviderConfigured ? ' ✅' : ' ⚠️'}
           </div>
         </div>

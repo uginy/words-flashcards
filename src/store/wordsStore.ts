@@ -159,6 +159,10 @@ async function processWordsInBackground(
       if (!llmSettings.ollama.apiUrl || !llmSettings.ollama.selectedModel) {
         throw new Error('Ollama не настроен. Укажите URL и модель в настройках.');
       }
+    } else if (llmSettings.provider === 'lmstudio') {
+      if (!llmSettings.lmstudio.apiUrl || !llmSettings.lmstudio.selectedModel) {
+        throw new Error('LM Studio не настроен. Укажите URL и модель в настройках.');
+      }
     } else {
       throw new Error('Не выбран провайдер ИИ в настройках.');
     }
@@ -441,7 +445,7 @@ async function processHebrewWords(
       if (llmSettings.provider === 'openrouter') {
         apiKey = llmSettings.openrouter.apiKey;
         model = llmSettings.openrouter.selectedModel;
-      } else {
+      } else if (llmSettings.provider === 'ollama') {
         // For Ollama, use Ollama enrichment
         const { enrichWordsWithOllama } = await import('../services/ollama');
         
@@ -505,6 +509,74 @@ async function processHebrewWords(
         }));
         
         continue; // Skip the OpenRouter code below
+      } else if (llmSettings.provider === 'lmstudio') {
+        // For LM Studio, use LM Studio enrichment
+        const { enrichWordsWithLMStudio } = await import('../services/lmstudio');
+        
+        const result = await enrichWordsWithLMStudio(
+          chunk,
+          {
+            baseUrl: llmSettings.lmstudio.apiUrl,
+            model: llmSettings.lmstudio.selectedModel,
+            retryConfig: {
+              maxRetries: 3,
+              baseDelay: Math.max(llmSettings.batching.batchDelay, 1000), // Use batch delay as base, minimum 1s
+              maxDelay: llmSettings.batching.maxDelaySeconds * 1000, // Convert seconds to milliseconds
+              backoffMultiplier: 2.5
+            },
+            enableDetailedLogging: true,
+            validateJsonResponse: true,
+            abortController: currentTask?.abortController
+          }
+        );
+        
+        // console.log(`📥 DEBUG: LM Studio result for chunk ${i + 1}:`, result);
+        
+        const valid = result; // LM Studio enrichment already returns Word[] format
+        // console.log(`✅ DEBUG: Valid words from chunk ${i + 1}: ${valid.length}`, valid.map(w => w.hebrew));
+        
+        if (valid.length > 0) {
+          allValidWords = allValidWords.concat(valid);
+          // console.log(`📝 DEBUG: Total valid words so far: ${allValidWords.length}`);
+          
+          // Add words to store immediately
+          set((state: WordsStore) => ({
+            ...state,
+            words: [...state.words, ...valid]
+          }));
+          // console.log(`💾 DEBUG: Added ${valid.length} words to store`);
+        }
+
+        // Track failed words in this chunk
+        const chunkFailed = chunk.filter(w => !valid.some(v => v.hebrew === w));
+        allFailedWords = allFailedWords.concat(chunkFailed);
+        // console.log(`❌ DEBUG: Failed words from chunk ${i + 1}: ${chunkFailed.length}`, chunkFailed);
+
+        processedCount += chunk.length;
+        // console.log(`📊 DEBUG: Progress - processed: ${processedCount}/${uniqueWords.length}`);
+        
+        // Update progress with detailed statistics
+        set((state: WordsStore) => ({
+          ...state,
+          backgroundTasks: state.backgroundTasks.map((task: BackgroundTask) =>
+            task.id === taskId ? {
+              ...task,
+              processedItems: processedCount,
+              progress: Math.round((processedCount / uniqueWords.length) * 75) + 25, // Reserve last 25% for completion
+              added: allValidWords.length,
+              skipped: skippedCount,
+              failed: allFailedWords.length,
+              result: allValidWords,
+              failedWords: allFailedWords
+            } : task
+          )
+        }));
+        
+        continue; // Skip the OpenRouter code below
+      } else {
+        // OpenRouter is the default/fallback
+        apiKey = llmSettings.openrouter.apiKey;
+        model = llmSettings.openrouter.selectedModel;
       }
       
       const result = await enrichWordsWithLLM(
@@ -1262,7 +1334,7 @@ export const useWordsStore = create<WordsStore>((set, get) => {
           throw new Error('Провайдер не вернул изображение');
         }
 
-        let storageKey = word.image?.storageKey || `word-image-${word.id}`;
+        let storageKey: string | undefined = word.image?.storageKey || `word-image-${word.id}`;
         try {
           await saveWordImageData(storageKey, imageAsset.dataUrl);
         } catch (storageError) {

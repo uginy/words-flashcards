@@ -5,6 +5,7 @@ import { SpeakerIcon } from './SpeakerIcon';
 import { useWordsStore } from '../store/wordsStore';
 import { getCurrentWord } from '../store/wordsStore';
 import { hasUserInteracted } from '../utils/userInteraction';
+import { getBinyanHebrewName } from '../utils/binyanMapping';
 
 import type { Word } from '../types';
 
@@ -188,7 +189,7 @@ const FlashCard: React.FC<FlashCardProps> = ({ word: propWord, reverse, onMarkAs
 
   const isVerbCard = word.category === 'פועל';
   const infinitiveLabel = word.infinitive?.trim() || word.hebrew;
-  const binyanLabel = word.binyan?.trim();
+  const binyanLabel = getBinyanHebrewName(word.binyan);
   const renderVerbDetails = () => {
     if (!isVerbCard) return null;
 
@@ -200,7 +201,7 @@ const FlashCard: React.FC<FlashCardProps> = ({ word: propWord, reverse, onMarkAs
           </div>
         )}
         {binyanLabel && (
-          <div className="text-xs uppercase tracking-wider text-gray-500">
+          <div className="text-lg font-medium text-gray-600">
             {binyanLabel}
           </div>
         )}
@@ -327,7 +328,7 @@ const FlashCard: React.FC<FlashCardProps> = ({ word: propWord, reverse, onMarkAs
                     </h2>
                     <p className={`text-xl ${categoryColors.text} mb-3`}>[{word.transcription}]</p>
                     {isVerbCard && binyanLabel && (
-                      <p className="text-xs uppercase tracking-wider text-gray-500 mb-1">
+                      <p className="text-lg font-medium text-gray-600 mb-1">
                         {binyanLabel}
                       </p>
                     )}
