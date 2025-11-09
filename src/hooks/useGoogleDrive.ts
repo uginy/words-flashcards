@@ -199,15 +199,18 @@ export function useGoogleDrive(): UseGoogleDriveReturn {
         maxDelaySeconds: localStorage.getItem('maxDelaySeconds'),
         ollamaApiUrl: localStorage.getItem('ollamaApiUrl'),
         ollamaModel: localStorage.getItem('ollamaModel'),
+        lmstudioApiUrl: localStorage.getItem('lmstudioApiUrl'),
+        lmstudioModel: localStorage.getItem('lmstudioModel'),
         openRouterApiKey: localStorage.getItem('openRouterApiKey'),
         openRouterModel: localStorage.getItem('openRouterModel'),
         progressiveDelay: localStorage.getItem('progressiveDelay'),
-        'preferred-language': localStorage.getItem('preferred-language')
+        'preferred-language': localStorage.getItem('preferred-language'),
+        imageGenerationSettings: localStorage.getItem('imageGenerationSettings'),
       };
       
       // Remove null/undefined values
       const cleanLlmConfig = Object.fromEntries(
-        Object.entries(llmConfig).filter(([_, value]) => value !== null && value !== undefined)
+        Object.entries(llmConfig).filter(([, value]) => value !== null && value !== undefined)
       );
       
       const syncData: Record<string, unknown> = {};
@@ -231,7 +234,7 @@ export function useGoogleDrive(): UseGoogleDriveReturn {
 
       if (Object.keys(cleanLlmConfig).length > 0) {
         syncData.llmConfig = cleanLlmConfig;
-        uploadDetails.push('настройки ИИ');
+        uploadDetails.push('настройки ИИ и изображений');
       }
 
       await driveService.syncToCloud(syncData);
@@ -354,7 +357,7 @@ export function useGoogleDrive(): UseGoogleDriveReturn {
         }
         
         importedCount++;
-        importDetails.push('настройки ИИ');
+        importDetails.push('настройки ИИ и изображений');
       }
       
       // Update sync metadata

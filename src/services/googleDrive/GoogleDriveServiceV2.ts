@@ -572,7 +572,7 @@ export class GoogleDriveServiceV2 {
       
       const localTTSConfig = localStorage.getItem('tts_config');
       
-      // Collect local LLM config
+      // Collect local LLM config (including LM Studio and Image Settings)
       const localLLMConfig = {
         llmProvider: localStorage.getItem('llmProvider'),
         batchDelay: localStorage.getItem('batchDelay'),
@@ -580,14 +580,17 @@ export class GoogleDriveServiceV2 {
         maxDelaySeconds: localStorage.getItem('maxDelaySeconds'),
         ollamaApiUrl: localStorage.getItem('ollamaApiUrl'),
         ollamaModel: localStorage.getItem('ollamaModel'),
+        lmstudioApiUrl: localStorage.getItem('lmstudioApiUrl'),
+        lmstudioModel: localStorage.getItem('lmstudioModel'),
         openRouterApiKey: localStorage.getItem('openRouterApiKey'),
         openRouterModel: localStorage.getItem('openRouterModel'),
         progressiveDelay: localStorage.getItem('progressiveDelay'),
-        'preferred-language': localStorage.getItem('preferred-language')
+        'preferred-language': localStorage.getItem('preferred-language'),
+        imageGenerationSettings: localStorage.getItem('imageGenerationSettings'),
       };
       
       const cleanLocalLLMConfig = Object.fromEntries(
-        Object.entries(localLLMConfig).filter(([_, value]) => value !== null && value !== undefined)
+        Object.entries(localLLMConfig).filter(([, value]) => value !== null && value !== undefined)
       );
       
       // Get cloud timestamp from metadata
@@ -598,19 +601,49 @@ export class GoogleDriveServiceV2 {
       // Check data presence and conflicts
       const conflicts: ConflictItem[] = [];
       
-      // Words conflict
+      // Words conflict - check both count and content (including new fields like binyan, infinitive, images)
       const hasCloudWords = Array.isArray(cloudWords) && cloudWords.length > 0;
       const hasLocalWords = Array.isArray(localWords) && localWords.length > 0;
       
-      if (hasCloudWords && hasLocalWords && cloudWords.length !== localWords.length) {
-
+      let wordsHaveConflict = false;
+      let wordsCloudIsNewer = false;
+      
+      if (hasCloudWords && hasLocalWords) {
+        // Check if counts differ
+        if (cloudWords.length !== localWords.length) {
+          wordsHaveConflict = true;
+          // More words = newer (usually)
+          wordsCloudIsNewer = cloudWords.length > localWords.length;
+        } else {
+          // Same count, but check if content differs (deep comparison)
+          // This catches cases where new fields (binyan, infinitive, images) were added
+          const cloudWordsStr = JSON.stringify(cloudWords.sort((a, b) => (a.id || '').localeCompare(b.id || '')));
+          const localWordsStr = JSON.stringify(localWords.sort((a, b) => (a.id || '').localeCompare(b.id || '')));
+          wordsHaveConflict = cloudWordsStr !== localWordsStr;
+          
+          if (wordsHaveConflict) {
+            // Check which has more complete data (more fields filled)
+            const cloudFieldCount = cloudWords.reduce((sum, w: any) => {
+              return sum + Object.keys(w).filter(k => w[k] !== null && w[k] !== undefined && w[k] !== '').length;
+            }, 0);
+            const localFieldCount = localWords.reduce((sum, w: any) => {
+              return sum + Object.keys(w).filter(k => w[k] !== null && w[k] !== undefined && w[k] !== '').length;
+            }, 0);
+            
+            // More filled fields = newer/more complete data
+            wordsCloudIsNewer = cloudFieldCount > localFieldCount;
+          }
+        }
+      }
+      
+      if (wordsHaveConflict) {
         conflicts.push({
           type: 'words',
           label: 'Слова',
           cloudCount: cloudWords.length,
           localCount: localWords.length,
           cloudTimestamp,
-          hasNewerInCloud: cloudTimestamp > localTimestamp
+          hasNewerInCloud: wordsCloudIsNewer
         });
       }
       
@@ -625,7 +658,8 @@ export class GoogleDriveServiceV2 {
           cloudCount: cloudDialogs.length,
           localCount: localDialogs.length,
           cloudTimestamp,
-          hasNewerInCloud: cloudTimestamp > localTimestamp
+          // More dialogs = newer
+          hasNewerInCloud: cloudDialogs.length > localDialogs.length
         });
       }
       
@@ -634,24 +668,32 @@ export class GoogleDriveServiceV2 {
       const hasLocalTTS = localTTSConfig !== null && localTTSConfig !== undefined;
       
       if (hasCloudTTS && hasLocalTTS && JSON.stringify(cloudData.ttsConfig) !== localTTSConfig) {
+        const cloudTTSKeys = Object.keys(cloudData.ttsConfig as object).length;
+        const localTTSKeys = Object.keys(JSON.parse(localTTSConfig)).length;
+        
         conflicts.push({
           type: 'tts',
           label: 'Настройки TTS',
           cloudTimestamp,
-          hasNewerInCloud: cloudTimestamp > localTimestamp
+          // More settings = newer/more complete
+          hasNewerInCloud: cloudTTSKeys > localTTSKeys
         });
       }
       
-      // LLM conflict
+      // LLM conflict (includes LM Studio and Image Generation settings)
       const hasCloudLLM = cloudData.llmConfig && Object.keys(cloudData.llmConfig).length > 0;
       const hasLocalLLM = Object.keys(cleanLocalLLMConfig).length > 0;
       
       if (hasCloudLLM && hasLocalLLM && JSON.stringify(cloudData.llmConfig) !== JSON.stringify(cleanLocalLLMConfig)) {
+        const cloudLLMKeys = Object.keys(cloudData.llmConfig as object).length;
+        const localLLMKeys = Object.keys(cleanLocalLLMConfig).length;
+        
         conflicts.push({
           type: 'llm',
-          label: 'Настройки LLM',
+          label: 'Настройки ИИ и Изображений',
           cloudTimestamp,
-          hasNewerInCloud: cloudTimestamp > localTimestamp
+          // More settings = newer/more complete (includes LM Studio, Image Settings)
+          hasNewerInCloud: cloudLLMKeys > localLLMKeys
         });
       }
       

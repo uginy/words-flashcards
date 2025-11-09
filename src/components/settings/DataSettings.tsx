@@ -115,8 +115,9 @@ export const DataSettings: React.FC<{ isActive?: boolean }> = ({ isActive = true
       // Check for LLM config in various keys
       const llmKeys = [
         'llmProvider', 'batchDelay', 'batchSize', 'maxDelaySeconds',
-        'ollamaApiUrl', 'ollamaModel', 'openRouterApiKey', 'openRouterModel',
-        'progressiveDelay', 'preferred-language'
+        'ollamaApiUrl', 'ollamaModel', 'lmstudioApiUrl', 'lmstudioModel',
+        'openRouterApiKey', 'openRouterModel', 'progressiveDelay', 
+        'preferred-language', 'imageGenerationSettings'
       ];
       const hasLlmConfig = llmKeys.some(key => localStorage.getItem(key) !== null);
       
@@ -144,7 +145,7 @@ export const DataSettings: React.FC<{ isActive?: boolean }> = ({ isActive = true
   }, [refreshStatus, isActive]);
 
   // Check for data conflicts
-  const checkDataConflicts = (data: ExportData): ImportConflictItem[] => {
+  const checkDataConflicts = useCallback((data: ExportData): ImportConflictItem[] => {
     const conflicts: ImportConflictItem[] = [];
 
     if (importSettings.hebrewFlashcardsData && data.hebrewFlashcardsData) {
@@ -185,7 +186,7 @@ export const DataSettings: React.FC<{ isActive?: boolean }> = ({ isActive = true
     if (importSettings.llmConfig && data.llmConfig) {
       conflicts.push({
         type: 'llmConfig',
-        label: 'Настройки ИИ',
+        label: 'Настройки ИИ и Изображений',
         hasChanges: currentCounts.llmConfig > 0,
         currentCount: currentCounts.llmConfig,
         importCount: 1,
@@ -194,7 +195,7 @@ export const DataSettings: React.FC<{ isActive?: boolean }> = ({ isActive = true
     }
 
     return conflicts;
-  };
+  }, [importSettings, currentCounts]);
 
   // Export data
   const handleExport = useCallback(() => {
@@ -209,7 +210,8 @@ export const DataSettings: React.FC<{ isActive?: boolean }> = ({ isActive = true
       if (storedWords) {
         try {
           exportData.hebrewFlashcardsData = JSON.parse(storedWords);
-        } catch {
+        } catch (e) {
+          console.error('Error parsing stored words:', e);
           exportData.hebrewFlashcardsData = { words: allWords };
         }
       } else {
@@ -228,7 +230,8 @@ export const DataSettings: React.FC<{ isActive?: boolean }> = ({ isActive = true
       if (ttsConfig) {
         try {
           exportData.ttsConfig = JSON.parse(ttsConfig);
-        } catch {
+        } catch (e) {
+          console.error('Error parsing TTS config:', e);
           // Skip invalid TTS config
         }
       }
@@ -244,15 +247,18 @@ export const DataSettings: React.FC<{ isActive?: boolean }> = ({ isActive = true
         maxDelaySeconds: localStorage.getItem('maxDelaySeconds'),
         ollamaApiUrl: localStorage.getItem('ollamaApiUrl'),
         ollamaModel: localStorage.getItem('ollamaModel'),
+        lmstudioApiUrl: localStorage.getItem('lmstudioApiUrl'),
+        lmstudioModel: localStorage.getItem('lmstudioModel'),
         openRouterApiKey: localStorage.getItem('openRouterApiKey'),
         openRouterModel: localStorage.getItem('openRouterModel'),
         progressiveDelay: localStorage.getItem('progressiveDelay'),
-        'preferred-language': localStorage.getItem('preferred-language')
+        'preferred-language': localStorage.getItem('preferred-language'),
+        imageGenerationSettings: localStorage.getItem('imageGenerationSettings'),
       };
       
       // Remove null/undefined values
       const cleanLlmConfig = Object.fromEntries(
-        Object.entries(llmConfig).filter(([_, value]) => value !== null && value !== undefined)
+        Object.entries(llmConfig).filter(([, value]) => value !== null && value !== undefined)
       );
       
       if (Object.keys(cleanLlmConfig).length > 0) {
@@ -337,7 +343,8 @@ export const DataSettings: React.FC<{ isActive?: boolean }> = ({ isActive = true
           description: "Выберите данные для импорта или проверьте файл"
         });
       }
-    } catch (error) {
+    } catch (e) {
+      console.error('Import error:', e);
       toast({
         title: "Ошибка импорта",
         description: "Произошла ошибка при импорте данных",
@@ -377,7 +384,8 @@ export const DataSettings: React.FC<{ isActive?: boolean }> = ({ isActive = true
           // No conflicts, import directly
           performImport(data);
         }
-      } catch (error) {
+      } catch (e) {
+        console.error('File import error:', e);
         toast({
           title: "Ошибка",
           description: 'Неверный формат файла. Ожидается JSON файл экспорта.',
@@ -461,7 +469,7 @@ export const DataSettings: React.FC<{ isActive?: boolean }> = ({ isActive = true
               <RefreshCw className="h-8 w-8 text-orange-600" />
               <div>
                 <div className="text-2xl font-bold text-orange-900">{currentCounts.llmConfig ? 'Да' : 'Нет'}</div>
-                <div className="text-sm text-orange-700">Настройки ИИ</div>
+                <div className="text-sm text-orange-700">Настройки ИИ и Изображений</div>
               </div>
             </div>
           </div>
@@ -496,6 +504,9 @@ export const DataSettings: React.FC<{ isActive?: boolean }> = ({ isActive = true
                 Слова-карточки
                 <Badge variant="secondary">{currentCounts.words}</Badge>
               </Label>
+              <div className="text-xs text-gray-500 ml-7">
+                Включая биньян, инфинитив, спряжения, примеры, изображения
+              </div>
             </div>
             
             <div className="flex items-center space-x-3">
@@ -538,9 +549,12 @@ export const DataSettings: React.FC<{ isActive?: boolean }> = ({ isActive = true
               />
               <Label htmlFor="export-llm" className="flex items-center gap-2">
                 <RefreshCw className="h-4 w-4" />
-                Настройки ИИ
+                Настройки ИИ и Изображений
                 <Badge variant="secondary">{currentCounts.llmConfig > 0 ? '✓' : '✗'}</Badge>
               </Label>
+              <div className="text-xs text-gray-500 ml-7">
+                OpenRouter, Ollama, LM Studio, генерация изображений
+              </div>
             </div>
           </div>
           
@@ -581,6 +595,9 @@ export const DataSettings: React.FC<{ isActive?: boolean }> = ({ isActive = true
                 <FileText className="h-4 w-4" />
                 Слова-карточки
               </Label>
+              <div className="text-xs text-gray-500 ml-7">
+                Включая биньян, инфинитив, спряжения, примеры, изображения
+              </div>
             </div>
             
             <div className="flex items-center space-x-3">
@@ -621,8 +638,11 @@ export const DataSettings: React.FC<{ isActive?: boolean }> = ({ isActive = true
               />
               <Label htmlFor="import-llm" className="flex items-center gap-2">
                 <RefreshCw className="h-4 w-4" />
-                Настройки ИИ
+                Настройки ИИ и Изображений
               </Label>
+              <div className="text-xs text-gray-500 ml-7">
+                OpenRouter, Ollama, LM Studio, генерация изображений
+              </div>
             </div>
           </div>
           
@@ -738,6 +758,9 @@ export const DataSettings: React.FC<{ isActive?: boolean }> = ({ isActive = true
                     Слова-карточки
                     <Badge variant="secondary">{currentCounts.words}</Badge>
                   </Label>
+                  <div className="text-xs text-gray-500 ml-7">
+                    Включая биньян, инфинитив, спряжения, примеры, изображения
+                  </div>
                 </div>
                 
                 <div className="flex items-center space-x-3">
@@ -780,9 +803,12 @@ export const DataSettings: React.FC<{ isActive?: boolean }> = ({ isActive = true
                   />
                   <Label htmlFor="sync-llm" className="flex items-center gap-2 text-sm">
                     <RefreshCw className="h-4 w-4" />
-                    Настройки ИИ
+                    Настройки ИИ и Изображений
                     <Badge variant="secondary">{currentCounts.llmConfig > 0 ? '✓' : '✗'}</Badge>
                   </Label>
+                  <div className="text-xs text-gray-500 ml-7">
+                    OpenRouter, Ollama, LM Studio, генерация изображений
+                  </div>
                 </div>
               </div>
             </div>
