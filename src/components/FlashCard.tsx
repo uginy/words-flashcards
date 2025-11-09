@@ -186,6 +186,28 @@ const FlashCard: React.FC<FlashCardProps> = ({ word: propWord, reverse, onMarkAs
     );
   };
 
+  const isVerbCard = word.category === 'פועל';
+  const infinitiveLabel = word.infinitive?.trim() || word.hebrew;
+  const binyanLabel = word.binyan?.trim();
+  const renderVerbDetails = () => {
+    if (!isVerbCard) return null;
+
+    return (
+      <div className="mt-6 text-center space-y-1">
+        {infinitiveLabel && (
+          <div className="text-3xl font-semibold leading-tight text-gray-900">
+            {infinitiveLabel}
+          </div>
+        )}
+        {binyanLabel && (
+          <div className="text-xs uppercase tracking-wider text-gray-500">
+            {binyanLabel}
+          </div>
+        )}
+      </div>
+    );
+  };
+
   return (
     <div>
       <div className="w-full max-w-7xl mx-auto px-2 sm:px-0">
@@ -325,12 +347,14 @@ const FlashCard: React.FC<FlashCardProps> = ({ word: propWord, reverse, onMarkAs
                     <h2 className={`text-5xl font-bold mb-2 ${categoryColors.text}`}>{word.hebrew}</h2>
                     <p className={`text-xl ${categoryColors.text} mb-3`}>[{word.transcription}]</p>
                     <p className={`text-lg ${categoryColors.text} mt-2`}>{word.russian}</p>
+                    {renderVerbDetails()}
 
                     {word.examples && word.examples.length > 0 && renderExamples(word.examples)}
                   </>
                 ) : (
                   <>
                     <h3 className={`text-4xl font-medium mb-1 ${categoryColors.text}`}>{word.russian}</h3>
+                    {renderVerbDetails()}
 
                     {word.examples && word.examples.length > 0 && renderExamples(word.examples)}
                     {word.category === "פועל" && word.conjugations && (

@@ -45,6 +45,8 @@ export function processWordsArray(llmItems: LLMBatchResponseItem[], originalWord
       finalWordConjugations = undefined;
     }
 
+    const infinitiveValue = typeof currentItem.infinitive === 'string' ? currentItem.infinitive.trim() : undefined;
+    const binyanValue = typeof currentItem.binyan === 'string' ? currentItem.binyan.trim() : undefined;
     const llmExamples = currentItem.examples;
     let finalWordExamples: { hebrew: string; russian: string }[] | null | undefined;
     if (llmExamples === null) {
@@ -66,6 +68,8 @@ export function processWordsArray(llmItems: LLMBatchResponseItem[], originalWord
       transcription,
       russian,
       category: category,
+      infinitive: infinitiveValue || undefined,
+      binyan: binyanValue || undefined,
       conjugations: finalWordConjugations,
       examples: finalWordExamples,
       showTranslation: false,

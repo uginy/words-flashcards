@@ -29,6 +29,8 @@ export interface LLMBatchResponseItem {
   hebrew: string;
   transcription: string;
   russian: string;
+  infinitive?: string | null;
+  binyan?: string | null;
   conjugations?: {
     past: { [pronoun: string]: string } | null;
     present: { [pronoun: string]: string } | null;

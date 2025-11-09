@@ -8,6 +8,8 @@ export interface Word {
   russian: string;
   transcription: string;
   category: WordCategory;
+  infinitive?: string | null;
+  binyan?: string | null;
   conjugations?: {
     past?: { [pronoun: string]: string } | null;
     present?: { [pronoun: string]: string } | null;

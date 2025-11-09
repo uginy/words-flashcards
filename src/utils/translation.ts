@@ -12,7 +12,7 @@ export const parseAndTranslateWords = (text: string): Word[] => {
       continue; // Expect at least category, hebrew, transcription, russian
     }
 
-    const [categoryStr, hebrew, transcription, russian, conjugations, example] = parts;
+    const [categoryStr, hebrew, transcription, russian, conjugations, example, infinitiveFromLine, binyanFromLine] = parts;
 
     let category: WordCategory;
     switch (categoryStr.toLowerCase()) {
@@ -42,6 +42,9 @@ export const parseAndTranslateWords = (text: string): Word[] => {
       continue;
     }
 
+    const infinitiveValue = infinitiveFromLine?.trim();
+    const binyanValue = binyanFromLine?.trim();
+
     newWords.push({
       id: Date.now().toString() + Math.random().toString(36).substring(2, 11), // Ensure unique ID
       hebrew,
@@ -50,6 +53,8 @@ export const parseAndTranslateWords = (text: string): Word[] => {
       category,
       conjugations: conjugations ? JSON.parse(conjugations) as Word['conjugations'] : undefined,
       examples: example ? [{ hebrew: hebrew, russian: example }] : undefined,
+      infinitive: infinitiveValue && infinitiveValue.length > 0 ? infinitiveValue : undefined,
+      binyan: binyanValue && binyanValue.length > 0 ? binyanValue : undefined,
       isLearned: false, // Corrected from 'learned' to 'isLearned'
       dateAdded: Date.now(),
     });
