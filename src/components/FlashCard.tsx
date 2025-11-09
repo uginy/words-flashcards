@@ -326,6 +326,11 @@ const FlashCard: React.FC<FlashCardProps> = ({ word: propWord, reverse, onMarkAs
                       </span>
                     </h2>
                     <p className={`text-xl ${categoryColors.text} mb-3`}>[{word.transcription}]</p>
+                    {isVerbCard && binyanLabel && (
+                      <p className="text-xs uppercase tracking-wider text-gray-500 mb-1">
+                        {binyanLabel}
+                      </p>
+                    )}
                     <p className="text-sm text-gray-500 mt-2">Нажмите, чтобы увидеть перевод</p>
                     {word.examples && word.examples.length > 0 && renderExamples(word.examples)}
                   </>

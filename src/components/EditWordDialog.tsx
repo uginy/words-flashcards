@@ -111,6 +111,50 @@ const EditWordDialog: React.FC<EditWordDialogProps> = ({
               </SelectContent>
             </Select>
           </div>
+          {editedWord.category === "פועל" && (
+            <>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <label htmlFor="infinitive" className="text-right">
+                  Инфинитив
+                </label>
+                <input
+                  id="infinitive"
+                  className="col-span-3 px-3 py-2 border rounded-md"
+                  value={editedWord.infinitive || ''}
+                  dir="rtl"
+                  onChange={(e) =>
+                    setEditedWord({ ...editedWord, infinitive: e.target.value || null })
+                  }
+                />
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <label htmlFor="binyan" className="text-right">
+                  Биньян
+                </label>
+                <Select
+                  value={editedWord.binyan || ''}
+                  onValueChange={(value) =>
+                    setEditedWord({ ...editedWord, binyan: value || null })
+                  }
+                >
+                  <SelectTrigger className="col-span-3">
+                    <SelectValue placeholder="Выберите биньян" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="PAAL">PAAL (פע"ל)</SelectItem>
+                    <SelectItem value="PIEL">PIEL (פיע"ל)</SelectItem>
+                    <SelectItem value="HITPAEL">HITPAEL (התפע"ל)</SelectItem>
+                    <SelectItem value="PUAL">PUAL (פוע"ל)</SelectItem>
+                    <SelectItem value="NIFAL">NIFAL (נפע"ל)</SelectItem>
+                    <SelectItem value="HIFIL">HIFIL (הפע"יל)</SelectItem>
+                    <SelectItem value="HUFAL">HUFAL (הופע"ל)</SelectItem>
+                    <SelectItem value="HITCIL">HITCIL (התצע"י)</SelectItem>
+                    <SelectItem value="">Другое</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </>
+          )}
           {editedWord.examples && editedWord.examples.length > 0 && (
             <div className="grid grid-cols-4 items-start gap-4">
               <label className="text-right">

@@ -17,6 +17,8 @@ IMPORTANT RULES AND FIELD FORMATS:
     - "transcription": romanized form
     - "russian": translation to Russian
     - "category": from the list above
+    - "infinitive": For verbs only, provide the Hebrew infinitive form (לפעיל). For non-verbs, omit this field.
+    - "binyan": For verbs only, provide the verb pattern/binyan (one of: PAAL, PIEL, HITPAEL, PUAL, NIFAL, HIFIL, HUFAL, HITCIL, or other). For non-verbs, omit this field.
 
 4.  **Conjugations** (for verbs only):
     For category "פועל", provide conjugations in EXACTLY this format (in Hebrew only).
@@ -53,6 +55,8 @@ Return a single JSON object as arguments to the 'save_hebrew_word_details' funct
   "transcription": "hamekorit",
   "russian": "оригинальное слово",
   "category": "שם עצם",
+  "infinitive": null,
+  "binyan": null,
   "conjugations": null,
   "examples": [
     { "hebrew": "דוגמה בעברית 1", "russian": "пример на русском 1" },
@@ -68,6 +72,8 @@ Example of the full argument for 'save_hebrew_word_details' for two words "לכ�
       "transcription": "lichtov",
       "russian": "писать",
       "category": "פועל",
+      "infinitive": "לכתוב",
+      "binyan": "PAAL",
       "conjugations": {
         "past": { "אני": "כתבתי", "אתה": "כתבת", "הן": "כתבו" },
         "present": { "אני": "כותב", "אתה": "כותב", "הן": "כותבות" },
@@ -84,6 +90,8 @@ Example of the full argument for 'save_hebrew_word_details' for two words "לכ�
       "transcription": "sefer",
       "russian": "книга",
       "category": "שם עצם",
+      "infinitive": null,
+      "binyan": null,
       "conjugations": null,
       "examples": [
         { "hebrew": "קראתי ספר מעניין.", "russian": "Я прочитал интересную книгу." },
@@ -123,12 +131,14 @@ IMPORTANT RULES AND FIELD FORMATS:
     **CRITICAL: If the input Hebrew word is a verb that appears to be in a conjugated form, it should be converted to its infinitive form (לפעיל form) in the "hebrew" field. For example, if processing "עובד" (working), convert it to "לעבוד" (to work).**
 2.  **"category"**: Must be one of the exact Hebrew strings: "פועל" (verb), "שם עצם" (noun), "שם תואר" (adjective), "פרזות" (phrases), "אחר" (other).
 3.  **"transcription"**, **"russian"**: Must be provided.
-4.  **"conjugations"**:
+4.  **"infinitive"**: For verbs only, provide the Hebrew infinitive form (לפעיל). For non-verbs, omit this field.
+5.  **"binyan"**: For verbs only, provide the verb pattern/binyan (one of: PAAL, PIEL, HITPAEL, PUAL, NIFAL, HIFIL, HUFAL, HITCIL, or other). For non-verbs, omit this field.
+6.  **"conjugations"**:
     - Provide for verbs ("פועל") only. For non-verbs (including phrases "פרזות"), this field should be null.
     - If provided, it must be an object with keys: "past", "present", "future", "imperative".
     - Each tense key should map to an object of pronoun-conjugation pairs (e.g., "אני": "כתבתי") or be null if that specific tense is not applicable. All conjugations must be in Hebrew.
     - Pronouns should be the standard Hebrew pronouns as listed in the example below.
-5.  **"examples"**:
+7.  **"examples"**:
     - Provide 2-3 usage examples.
     - Each example must be an object with "hebrew" and "russian" string fields.
     - The "examples" field itself should be an array of these objects. Use an empty array [] if no examples are available.
@@ -141,6 +151,8 @@ Example of the full JSON object you should return for two words "לכתוב" (ve
       "transcription": "lichtov",
       "russian": "писать",
       "category": "פועל",
+      "infinitive": "לכתוב",
+      "binyan": "PAAL",
       "conjugations": {
         "past": { "אני": "כתבתי", "אתה": "כתבת", "את": "כתבת", "הוא": "כתב", "היא": "כתבה", "אנחנו": "כתבנו", "אתם": "כתבתם", "אתן": "כתבתן", "הם": "כתבו", "הן": "כתבו" },
         "present": { "אני": "כותב", "אתה": "כותב", "את": "כותבת", "הוא": "כותב", "היא": "כותבת", "אנחנו": "כותבים", "אתם": "כותבים", "אתן": "כותבות", "הם": "כותבים", "הן": "כותבות" },
@@ -157,6 +169,8 @@ Example of the full JSON object you should return for two words "לכתוב" (ve
       "transcription": "sefer",
       "russian": "книга",
       "category": "שם עצם",
+      "infinitive": null,
+      "binyan": null,
       "conjugations": null,
       "examples": [
         { "hebrew": "קראתי ספר מעניין.", "russian": "Я прочитал интересную книгу." },
