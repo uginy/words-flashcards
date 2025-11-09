@@ -31,6 +31,7 @@ const WordTable: FC<WordTableProps> = ({ onEditWord }) => {
   const refineWord = useWordsStore(state => state.refineWord);
   const refiningWords = useWordsStore(state => state.refiningWords);
   const generateWordImage = useWordsStore(state => state.generateWordImage);
+  const generateImagesForMultipleWords = useWordsStore(state => state.generateImagesForMultipleWords);
   const clearWordImage = useWordsStore(state => state.clearWordImage);
   const imageGenerationStatus = useWordsStore(state => state.imageGenerationStatus);
   const { toast } = useToast();
@@ -104,6 +105,19 @@ const WordTable: FC<WordTableProps> = ({ onEditWord }) => {
     toast({ title: "Успех", description: 'Все слова удалены.' });
   }, [clearAllWords, toast]);
 
+  const handleBatchGenerateImages = useCallback(() => {
+    const wordsWithoutImages = allWords.filter(w => !w.image && w.hebrew);
+    if (wordsWithoutImages.length === 0) {
+      toast({ 
+        title: "Нечего генерировать", 
+        description: 'Все слова уже имеют иконки.',
+      });
+      return;
+    }
+    const wordIds = wordsWithoutImages.map(w => w.id);
+    generateImagesForMultipleWords(wordIds, toastWrapper);
+  }, [allWords, generateImagesForMultipleWords, toastWrapper, toast]);
+
   return (
     <div className="w-full min-w-0">
       {editingWord && (
@@ -141,6 +155,13 @@ const WordTable: FC<WordTableProps> = ({ onEditWord }) => {
             </h3>
             <div className="flex flex-wrap gap-2 w-full sm:w-auto justify-start sm:justify-end">
               <TooltipProvider>
+                <button
+                  onClick={handleBatchGenerateImages}
+                  className="px-3 py-1.5 text-sm bg-indigo-500 text-white rounded hover:bg-indigo-600 transition-colors"
+                  disabled={Object.values(imageGenerationStatus).some(s => s.status === 'generating')}
+                >
+                  🎨 Сгенерировать иконки
+                </button>
                 <DeleteButton
                   onDelete={performClearAllWords}
                   tooltipText="Очистить все слова"

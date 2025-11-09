@@ -760,6 +760,7 @@ interface WordsStore extends WordsState {
   clearDraftInputText: () => void;
   refineWord: (wordId: string, toast?: ToastFn) => Promise<void>; // New method for word refinement
   generateWordImage: (wordId: string, toast?: ToastFn) => Promise<void>;
+  generateImagesForMultipleWords: (wordIds: string[], toast?: ToastFn) => Promise<void>;
   clearWordImage: (wordId: string, toast?: ToastFn) => void;
   // currentWord removed; use getCurrentWord(words, currentIndex) instead
 }
@@ -1376,6 +1377,100 @@ export const useWordsStore = create<WordsStore>((set, get) => {
           variant: 'destructive',
         });
       }
+    },
+
+    generateImagesForMultipleWords: async (wordIds, toast) => {
+      const words = get().words.filter(w => wordIds.includes(w.id) && w.hebrew && !w.image);
+      
+      if (words.length === 0) {
+        toast?.({
+          title: 'Нечего генерировать',
+          description: 'Все выбранные слова уже имеют иконки или не содержат текст на иврите.',
+        });
+        return;
+      }
+
+      const imageSettings = loadImageSettings();
+      if (imageSettings.provider === 'banana-gemini' && !imageSettings.banana.apiKey) {
+        toast?.({
+          title: 'Настройте API',
+          description: 'Укажите API ключ Gemini Banana в разделе "Image Generation API".',
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      toast?.({
+        title: 'Генерация запущена',
+        description: `Генерируем иконки для ${words.length} слов...`,
+      });
+
+      let successCount = 0;
+      let errorCount = 0;
+
+      for (const word of words) {
+        try {
+          set(state => ({
+            ...state,
+            imageGenerationStatus: {
+              ...state.imageGenerationStatus,
+              [word.id]: { status: 'generating' },
+            },
+          }));
+
+          const imageAsset = await generateWordImageAsset({
+            word,
+            settings: imageSettings,
+          });
+
+          if (!imageAsset.dataUrl) {
+            throw new Error('Провайдер не вернул изображение');
+          }
+
+          let storageKey: string | undefined = word.image?.storageKey || `word-image-${word.id}`;
+          try {
+            await saveWordImageData(storageKey, imageAsset.dataUrl);
+          } catch (storageError) {
+            console.error('Не удалось сохранить изображение локально', storageError);
+            storageKey = undefined;
+          }
+
+          const imageWithStorage = {
+            ...imageAsset,
+            storageKey,
+          };
+
+          set(state => ({
+            ...state,
+            words: state.words.map(w => (w.id === word.id ? { ...w, image: imageWithStorage } : w)),
+            imageGenerationStatus: {
+              ...state.imageGenerationStatus,
+              [word.id]: { status: 'idle' },
+            },
+          }));
+
+          successCount++;
+        } catch (error) {
+          const message = error instanceof Error ? error.message : 'Неизвестная ошибка';
+          set(state => ({
+            ...state,
+            imageGenerationStatus: {
+              ...state.imageGenerationStatus,
+              [word.id]: { status: 'error', error: message },
+            },
+          }));
+          errorCount++;
+        }
+
+        // Small delay between requests to avoid rate limiting
+        await new Promise(resolve => setTimeout(resolve, 500));
+      }
+
+      toast?.({
+        title: 'Генерация завершена',
+        description: `Успешно: ${successCount}, Ошибок: ${errorCount}`,
+        variant: errorCount > 0 ? 'destructive' : 'default',
+      });
     },
 
     clearWordImage: (wordId, toast) => {
