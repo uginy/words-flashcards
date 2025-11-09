@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useSpeechSynthesis } from '../hooks/useSpeechSynthesis';
 import CompactConjugation from './CompactConjugation';
 import { SpeakerIcon } from './SpeakerIcon';
@@ -6,6 +6,9 @@ import { useWordsStore } from '../store/wordsStore';
 import { getCurrentWord } from '../store/wordsStore';
 import { hasUserInteracted } from '../utils/userInteraction';
 import { getBinyanHebrewName } from '../utils/binyanMapping';
+import { useAutoModeStore } from '../store/autoModeStore';
+import AutoModeControls from './AutoModeControls';
+import { getTTSManager } from '../services/tts/TTSManager';
 
 import type { Word } from '../types';
 
@@ -28,10 +31,21 @@ const FlashCard: React.FC<FlashCardProps> = ({ word: propWord, reverse, onMarkAs
   const nextWord = useWordsStore((state) => state.nextWord);
   const resetWordProgress = useWordsStore((state) => state.resetWordProgress);
 
+  // Auto mode state
+  const { 
+    isPlaying, 
+    currentPosition, 
+    hebrewDelay, 
+    russianDelay, 
+    cardDelay,
+    nextPosition,
+    setPosition 
+  } = useAutoModeStore();
 
   const word = propWord ?? getCurrentWord(words, currentIndex);
 
   const [flipped, setFlipped] = useState(false);
+  const autoModeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   
   const { speak, error: speechError } = useSpeechSynthesis({
     text: word?.hebrew || '',
@@ -42,7 +56,7 @@ const FlashCard: React.FC<FlashCardProps> = ({ word: propWord, reverse, onMarkAs
   useEffect(() => {
     let timeoutId: NodeJS.Timeout | undefined;
     
-    if (!flipped && word?.hebrew && hasUserInteracted()) {
+    if (!flipped && word?.hebrew && hasUserInteracted() && !isPlaying) {
       timeoutId = setTimeout(() => {
         speak();
       }, 1000);
@@ -53,7 +67,84 @@ const FlashCard: React.FC<FlashCardProps> = ({ word: propWord, reverse, onMarkAs
         clearTimeout(timeoutId);
       }
     };
-  }, [word?.hebrew, flipped, speak]);
+  }, [word?.hebrew, flipped, speak, isPlaying]);
+
+  // Auto mode logic - play cards automatically
+  useEffect(() => {
+    if (!isPlaying || !word || !hasUserInteracted()) {
+      return;
+    }
+
+    const ttsManager = getTTSManager();
+    let cancelled = false;
+
+    const playAutoSequence = async () => {
+      try {
+        // Reset flip state
+        setFlipped(false);
+
+        // 1. Speak Hebrew
+        await ttsManager.speak(word.hebrew, { lang: 'he-IL' });
+        if (cancelled) return;
+
+        // Wait after Hebrew
+        await new Promise(resolve => {
+          autoModeTimeoutRef.current = setTimeout(resolve, hebrewDelay);
+        });
+        if (cancelled) return;
+
+        // 2. Speak Russian translation
+        await ttsManager.speak(word.russian, { lang: 'ru-RU' });
+        if (cancelled) return;
+
+        // Wait after Russian
+        await new Promise(resolve => {
+          autoModeTimeoutRef.current = setTimeout(resolve, russianDelay);
+        });
+        if (cancelled) return;
+
+        // Wait before next card
+        await new Promise(resolve => {
+          autoModeTimeoutRef.current = setTimeout(resolve, cardDelay);
+        });
+        if (cancelled) return;
+
+        // Move to next card
+        const totalWords = propTotalWords ?? words.length;
+        nextPosition(totalWords);
+        
+        // Update the actual card index
+        if (onNext) {
+          onNext();
+        } else {
+          nextWord();
+        }
+      } catch (error) {
+        console.error('Auto mode playback error:', error);
+      }
+    };
+
+    playAutoSequence();
+
+    return () => {
+      cancelled = true;
+      if (autoModeTimeoutRef.current) {
+        clearTimeout(autoModeTimeoutRef.current);
+        autoModeTimeoutRef.current = null;
+      }
+      ttsManager.stop();
+    };
+  }, [isPlaying, word, hebrewDelay, russianDelay, cardDelay, words.length, propTotalWords, nextPosition, onNext, nextWord]);
+
+  // Sync auto mode position with current index when not playing
+  useEffect(() => {
+    if (!isPlaying) {
+      const idx = propCurrentIndex !== undefined ? propCurrentIndex : currentIndex;
+      if (idx !== currentPosition) {
+        setPosition(idx);
+      }
+    }
+  }, [isPlaying, currentIndex, propCurrentIndex, currentPosition, setPosition]);
 
 
   const renderExamples = (examples: Array<{ hebrew?: string, russian?: string } | string>) => {
@@ -97,6 +188,9 @@ const FlashCard: React.FC<FlashCardProps> = ({ word: propWord, reverse, onMarkAs
   };
 
   const handleFlip = () => {
+    // Disable manual flip in auto mode
+    if (isPlaying) return;
+    
     setFlipped(!flipped);
     // Stop any ongoing speech when flipping to reverse side
     if (!flipped) {
@@ -212,6 +306,14 @@ const FlashCard: React.FC<FlashCardProps> = ({ word: propWord, reverse, onMarkAs
   return (
     <div>
       <div className="w-full max-w-7xl mx-auto px-2 sm:px-0">
+        {/* Auto Mode Controls */}
+        <div className="w-full flex justify-center pb-4">
+          <AutoModeControls 
+            totalWords={propTotalWords ?? words.length}
+            currentIndex={propCurrentIndex !== undefined ? propCurrentIndex : currentIndex}
+          />
+        </div>
+
         <div className="w-full flex flex-col gap-3 sm:flex-row sm:justify-between sm:items-center pb-6">
           <div className="flex gap-2">
             <button
@@ -221,6 +323,7 @@ const FlashCard: React.FC<FlashCardProps> = ({ word: propWord, reverse, onMarkAs
                 e.stopPropagation();
                 handleMarkLearned();
               }}
+              disabled={isPlaying}
             >
               Знаю
             </button>
@@ -230,6 +333,7 @@ const FlashCard: React.FC<FlashCardProps> = ({ word: propWord, reverse, onMarkAs
                 className="w-full sm:w-auto px-3 py-2 rounded-md bg-blue-500 text-white text-sm hover:bg-blue-600 transition-colors"
                 onClick={handleResetProgress}
                 title="Сбросить прогресс изучения"
+                disabled={isPlaying}
               >
                 Сбросить уровень ({word.learningStage})
               </button>
@@ -240,11 +344,12 @@ const FlashCard: React.FC<FlashCardProps> = ({ word: propWord, reverse, onMarkAs
             {/* Previous button */}
             <button
               type="button"
-              className="w-full sm:w-auto px-3 py-2 rounded-md bg-gray-500 text-white text-base sm:text-lg hover:bg-gray-600 transition-colors"
+              className="w-full sm:w-auto px-3 py-2 rounded-md bg-gray-500 text-white text-base sm:text-lg hover:bg-gray-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               onClick={(e) => {
                 e.stopPropagation();
                 handlePreviousWord();
               }}
+              disabled={isPlaying}
             >
               ← Предыдущее
             </button>
@@ -255,11 +360,12 @@ const FlashCard: React.FC<FlashCardProps> = ({ word: propWord, reverse, onMarkAs
             {/* Next button */}
             <button
               type="button"
-              className="w-full sm:w-auto px-3 py-2 rounded-md bg-orange-500 text-white text-base sm:text-lg hover:bg-orange-600 transition-colors"
+              className="w-full sm:w-auto px-3 py-2 rounded-md bg-orange-500 text-white text-base sm:text-lg hover:bg-orange-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               onClick={(e) => {
                 e.stopPropagation();
                 handleSkip();
               }}
+              disabled={isPlaying}
             >
               Далее →
             </button>

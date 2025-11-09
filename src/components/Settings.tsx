@@ -11,6 +11,7 @@ import {
 import { loadTableSettings, saveTableSettings } from '@/utils/tableSettings';
 import { TTSSettings } from './settings/TTSSettings';
 import { DataSettings } from './settings/DataSettings';
+import AutoModeSettings from './AutoModeSettings';
 import { useToast } from '../hooks/use-toast';
 import { useOllamaModels } from '../hooks/useOllamaModels';
 import {
@@ -38,7 +39,7 @@ interface OpenRouterModel {
   context_length: number;
 }
 
-type TabType = 'table' | 'tts' | 'llm' | 'data' | 'images';
+type TabType = 'table' | 'tts' | 'llm' | 'data' | 'images' | 'automode';
 type LLMProviderTab = 'openrouter' | 'ollama' | 'lmstudio';
 
 const Settings: React.FC = () => {
@@ -320,6 +321,7 @@ const Settings: React.FC = () => {
     { id: 'llm' as TabType, label: 'ИИ Модель', icon: '🤖' },
     { id: 'tts' as TabType, label: 'Озвучка', icon: '🔊' },
      { id: 'images' as TabType, label: 'Изображения', icon: '🖼️' },
+    { id: 'automode' as TabType, label: 'Авто-режим', icon: '▶️' },
     { id: 'table' as TabType, label: 'Таблица', icon: '📊' },
     { id: 'data' as TabType, label: 'Данные', icon: '💾' },
   ];
@@ -611,6 +613,9 @@ const Settings: React.FC = () => {
 
       case 'tts':
         return <TTSSettings />;
+
+      case 'automode':
+        return <AutoModeSettings />;
 
       case 'data':
         return <DataSettings isActive={activeTab === 'data'} />;
